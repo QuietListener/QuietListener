@@ -1,0 +1,8 @@
+---
+layout: post
+title:  "git hub 博客终于搭建好了!"
+date:   2015-11-16 12:50:22
+categories: fellings
+---
+ github 博客搭建好了，以后可以自由折腾了
+ 记录自己的代码，记录重要的事情
