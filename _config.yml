@@ -1,11 +1,11 @@
 # Site settings
 title: quiet listener
 email: no email
-description:  态度的背后是实力，实力的背后是练习，努力做一个有态度的程序员
+description:  一个程序员；一个喜欢游泳，骑行，音乐，做饭，有态度的程序员。态度的背后是实力，实力的背后是练习。
 baseurl: "" # the subpath of your site, e.g. /blog/
 url: "http://yourdomain.com" # the base hostname & protocol for your site
 twitter_username: jekyllrb
-github_username:  QuiteListener
+github_username:  QuietListener
 
 # Build settings
 markdown: kramdown
