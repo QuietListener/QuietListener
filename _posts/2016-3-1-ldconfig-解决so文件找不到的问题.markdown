@@ -1,4 +1,10 @@
-
+---
+layout: post
+title:  linux解决so文件找不到的问题
+date:   2016-3-1 17:49:00
+categories: linux
+---
+=======
 在安装libbpg文件的过程中，需要libpng下载lipng后，make ,make install.然而奇迹还是没有按照我的预期发生
 出现错误:libpng16.so.16.21: cannot open shared object file: No such file or directory
 但是在lib文件夹里找能找到<br>
