@@ -46,5 +46,21 @@ root@siskin packing]# ls /etc/ld.so.conf.d/ -l<br>
 /usr/lib64/qt-3.3/lib<br>
 回到我们的问题，我们的libpng16.so.16 在 /usr/local/lib/ 里面<br>
 我们新建一个 usr-local-lib.conf,并将/usr/local/lib/加入到文件中，执行sudo ldconfig <br>
-问题解决了，/usr/local/lib/ 中的所有动态库都会加入到系统动态库cache中去<br>
+问题解决了，/usr/local/lib/ 中的所有动态库都会加入到系统动态库cache中去
+<hr>
+
+
+<div class="ds-thread" data-thread-key="287e6d0d98390bd93815852979622c8b" data-title="ldconfig-解决so文件找不到的问" data-url="https://quietlistener.github.io/linux/2016/03/01/ldconfig-%E8%A7%A3%E5%86%B3so%E6%96%87%E4%BB%B6%E6%89%BE%E4%B8%8D%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98.html"></div>
+       
+<script type="text/javascript">
+        var duoshuoQuery = {short_name:"quietlistener"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
 
