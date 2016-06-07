@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  制作gem并测试
-date:   2016-3-4 17:49:00
-categories: linux
+title:  ruby中的坑
+date:   2016-6-7 16:49:00
+categories: ruby
 ---
 在命令行制作ruby gem,[传送门](https://github.com/QuietListener/mygem)
