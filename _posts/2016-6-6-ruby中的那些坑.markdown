@@ -1,0 +1,39 @@
+---
+layout: post
+title:  ruby中的那些坑
+date:   2016-6-6 16:12:00
+categories: ruby
+---
+
+###2016年6月7日 ActiveRecord的坑
+项目使用的是ActiveRecord,今天实习生报了一个错误,系统提交了任务但是没有修改最后更新时间：updated_at,自己在本地复现。debug断电跟踪发现要修改的对象所有属性没有改变，ActiveRecord没有修改数据库。<br/>
+做了一个实验：
+
+	1.9.3-p545 :001 > u = User.first
+	User Load (13.3ms)  SELECT `users`.* FROM `users` LIMIT 1
+	 => #<User id: 1, name: "god", name_en: nil, desc: nil, created_at: "2016-01-04 18:40:06", updated_at: "2016-03-25 02:18:51", password: "40bd001563085fc35165329ea1ff5c5ecbdbbeef"> 
+	1.9.3-p545 :002 > u.save
+	(0.2ms)  BEGIN
+	(7.8ms)  COMMIT
+	=> true 
+	`1.9.3-p545 :003 > 
+
+
+
+如果不修改user的属性，save不会执行update 操作。
+
+
+
+<div class="ds-thread" data-thread-key="1" data-title="ruby中的那些坑" data-url="https://quietlistener.github.io/ruby/2016/03/02/ruby中的那些坑.html"></div>
+       
+<script type="text/javascript">
+        var duoshuoQuery = {short_name:"quietlistener"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
