@@ -1,0 +1,24 @@
+---
+layout: post
+title:  ruby中重用代码的奇技淫巧
+date:   2016-7-3 11:34:00
+categories: ruby
+---
+
+做了这几年程序员，在代码层面上，就是做了2件事。一，提高代码运行效率，二，尽量做到代码重用。用过java之后，再用ruby，才能感受到ruby在代码重用上的牛逼之处.这大大增加了开发效率。
+
+
+
+<div class="ds-thread" data-thread-key="10" data-title="ruby中重用代码的奇技淫巧" data-url="https://quietlistener.github.io/ruby/2016/07/03/ruby中重用代码的奇技淫巧.html"></div>
+       
+<script type="text/javascript">
+        var duoshuoQuery = {short_name:"quietlistener"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+</script>
