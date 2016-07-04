@@ -15,6 +15,7 @@ Linux iZ237c9otg7Z 2.6.32-504.8.1.el6.x86_64 #1 SMP Wed Jan 28 21:11:36 UTC 2015
 
 ## 安装
 ### 安装libfastcommon
+
 ```
 [www@iZ237c9otg7Z programs]$ git clone https://github.com/happyfish100/libfastcommon.git
 [www@iZ237c9otg7Z libfastcommon]$ ./make.sh 
@@ -22,6 +23,7 @@ Linux iZ237c9otg7Z 2.6.32-504.8.1.el6.x86_64 #1 SMP Wed Jan 28 21:11:36 UTC 2015
 ```
 
 ###安装fastdfs
+
 ```
 [www@iZ237c9otg7Z programs]$ git clone https://github.com/happyfish100/fastdfs.git
 [www@iZ237c9otg7Z fastdfs]$ ./make.sh 
@@ -44,10 +46,12 @@ anti-steal.jpg  client.conf  http.conf  mime.types storage.conf  storage_ids.con
 
 ```
 ####编辑tracker配置文件storage.conf
+
 ``` 
 port=22122 # the tracker server port
 base_path=/var/www/data/fdfs #the base path to store data and log files
 ```
+
 #### 启动tracker
 启动后的情况可以看log,log在base_path(/var/www/data/fdfs/logs/trackerd.log)中
 
@@ -77,12 +81,15 @@ store_path0=/var/www/data/fdfs_store1 # if store_path0 not exists, it's value is
 ##测试
 
 ####配置client.conf
+
 ```
 base_path=/var/www/data/fdfs_client # the base path to store log files
 tracker_server=127.0.0.1:22122
 ```
 ###使用fdfs_test测试上传一个问题 anti-steal.jpg  
+
 ```
+
 www@iZ237c9otg7Z conf]$ fdfs_test ~/programs/fastdfs/conf/client.conf upload anti-steal.jpg   
 This is FastDFS client test program v5.08
 
@@ -114,9 +121,9 @@ file size=23981
 file crc32=2553063749
 example file url: http://10.161.182.210/group1/M00/00/00/CqG20ld6J9OAOEG7AABdrZgsqUU439_big.jpg
 ```
+
 ###在本地访问上传到文件
 在输出信息中可以看到 上传文件被重命名了，remote_filename=M00/00/00/CqG20ld6J9OAOEG7AABdrZgsqUU439_big.jpg
-
 可以在本地硬盘中看到当前上传的文件
 
 ```
