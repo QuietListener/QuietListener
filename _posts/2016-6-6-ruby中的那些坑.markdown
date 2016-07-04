@@ -5,7 +5,7 @@ date:   2016-6-6 16:12:00
 categories: ruby
 ---
 
-###2016年6月7日 ActiveRecord的坑
+### 2016年6月7日 ActiveRecord的坑
 项目使用的是ActiveRecord,今天实习生报了一个错误,系统提交了任务但是没有修改最后更新时间：updated_at,自己在本地复现。debug断电跟踪发现要修改的对象所有属性没有改变，ActiveRecord没有修改数据库。<br/>
 做了一个实验：
 
@@ -22,6 +22,56 @@ categories: ruby
 
 如果不修改user的属性，save不会执行update 操作。
 
+### 2016年6月7日 lambda 和 proc return
+```
+
+def foo1
+  proc = lambda{ "foo1"}
+  info = proc.call() +" hello"
+  return info
+end
+
+
+def foo2
+  proc = lambda{ return "foo2"}
+  info = proc.call() +" hello"
+  return info
+end
+
+
+def foo3
+  proc = Proc.new(){ next "foo3"}
+  info = proc.call() +" hello"
+  return info
+end
+
+
+def foo4
+  proc = Proc.new{ return "foo4"}
+  info = proc.call()  +" hello"
+  return info
+end
+
+
+
+puts foo1()
+puts foo2()
+puts foo3()
+puts foo4()
+
+```
+
+结果
+
+```
+ foo1 hello
+ foo2 hello
+ foo3 hello
+ foo4
+
+```
+
+Proc return是从调用ta的代码处return，lambda跟调用一个方法的行为一样
 
 
 <div class="ds-thread" data-thread-key="1" data-title="ruby中的那些坑" data-url="https://quietlistener.github.io/ruby/2016/03/02/ruby中的那些坑.html"></div>
