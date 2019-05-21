@@ -1,6 +1,6 @@
 # Site settings
 title: quiet listener
-encoding: UTF-8
+encoding: utf-8
 email: no email
 description:  一个程序员；一个喜欢游泳，骑行，音乐，做饭，有态度的程序员。态度的背后是实力，实力的背后是练习。
 baseurl: "" # the subpath of your site, e.g. /blog/
