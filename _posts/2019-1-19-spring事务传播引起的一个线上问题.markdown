@@ -1,0 +1,99 @@
+---
+layout: post
+title:  spring事务传播引起的一个线上问题
+date:   2019-1-19 14:32:00
+categories: redis
+---
+
+###1. 业务
+业务中单词学习记录提交有可能失败，当学习记录失败后数据放到一个mysql表里面。会有一个线程去扫描这个表，并做修复处理。下面这一段逻辑就是负责处理这些失败的数据。
+
+```
+    @ChooseDatabase
+    @Transactional(transactionManager = DataSourceCfg.TM_NAME)
+    public void executeFailSubmitRecordTask(Long userId, FailedSubmitRecord task) {
+        try {
+            SubmitRecord sr = parseRawMessage(task.getContent());
+            processSubmitRecord(sr.getUserId(), sr);
+            failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_SUCCESS);
+        } catch (Exception e) {
+            logger.error("executeFailSubmitRecordTask error : id =  " + task.getId(), e);
+            failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_ERROR);
+        }
+    }
+
+```
+#### 下面分析一下
+##### 1. executeFailSubmitRecordTask这个方法就是从这个库里面拿数据，然后重新处理。
+
+
+```
+SubmitRecord sr = parseRawMessage(task.getContent());
+processSubmitRecord(sr.getUserId(), sr);
+failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_SUCCESS);
+```
+这段代码就是重新处理数据，最后把记录状态为INC_TASK_STATUS_SUCCESS.
+如果try里面的逻辑失败了，调用failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_ERROR);重新将状态标记为失败。
+##### 2. 出现的问题
+现象是:try里面失败了 会执行failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_ERROR); 也按理说会成功的,却抛出了一个异常: 
+
+```
+org.springframework.transaction.UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only
+
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.processRollback(AbstractPlatformTransactionManager.java:873)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.commit(AbstractPlatformTransactionManager.java:710)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.commitTransactionAfterReturning(TransactionAspectSupport.java:532)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:304)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:98)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:185)
+	at org.springframework.aop
+```
+
+这个异常说:在执行下面代码并commit的时候，发现其所在的事务已经是rollback状态了。
+```
+failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_ERROR);
+```
+
+
+**看了一下updateState的代码实现**
+```$xslt
+ @ChooseDatabase
+    @Transactional(transactionManager = DataSourceCfg.TM_NAME)
+    public int updateState(Long userId, int id, int state)
+    {
+        return failedSubmitRecordMapper.updateState(id,state);
+    }
+```
+
+**问题就在这里** 
+>@Transaction 默认的事务传播(propagation)是 Propagation.REQUIRED,如果在在执行某个有事务方法时候，如果没有事务，新建一个，如果已经有了加入这个事务
+
+当执行
+```
+ failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_SUCCESS);
+```
+失败的时候已经有一个事务。并且出错了，Spring的TransactionManager将事务状态(TransactionStatus)设置为rollBackOnly（setRollbackOnly）然后进入 catch 块里面执行
+```
+ failedSubmitRecordService.updateState(task.getUserId(), task.getId(), Constants.INC_TASK_STATUS_ERROR);
+
+```
+发现已经有一个transaction存在，加入这个transaction，但是在commit时候发现这个事务的状态(TransactionStatus)已经为 Rollback。
+所以抛出Exception 
+
+```
+org.springframework.transaction.UnexpectedRollbackException: Transaction rolled back because it has been marked as rollback-only
+```
+
+### 2. 解决方法
+修改代码，propagation 修改为 Propagation.REQUIRES_NEW，问题解决。**Propagation.REQUIRES_NEW 表示每次都新建一个Transaction**
+
+```$xslt
+    @ChooseDatabase
+    @Transactional(transactionManager = DataSourceCfg.TM_NAME, propagation = Propagation.REQUIRES_NEW)
+    public int updateState(Long userId, int id, int state)
+    {
+        return failedSubmitRecordMapper.updateState(id,state);
+    }
+```
+
+   
