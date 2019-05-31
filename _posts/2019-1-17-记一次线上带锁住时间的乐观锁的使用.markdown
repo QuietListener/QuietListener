@@ -1,0 +1,52 @@
+---
+layout: post
+title:  记一次线上带锁住时间的乐观锁的使用
+date:   2019-1-9 14:32:00
+categories: redis
+---
+
+### 1. 业务场景与问题
+#### 1. 业务
+1. 业务中每日背单词数据是走的异步接口 流程如下
+   * client提交数据到消息队列(kafka),
+   * 后端服务从消息队列取数据，更新每日背单词数量
+2. 比如能用户在20181013背了100个单词，这100个单词数据是分2次提交的到服务器(kafka)：第一次提交30个，第二次提交70个。后端服务从kafka拿到这两个数据会在数据库**add_count** 表生成2条记录 如下:
+   
+
+user_id | add_count |  dateint | state | created_at | updated_at | lock_end_time
+-|-|-|-|-|-|-
+1   |     30  |   20181013 |   0   
+1    |    70   |  20181013  |  0
+
+记录user每天背的单词总数的表是 **user_daily_count**
+user_id  |  count |   created_at    |  updated_at 
+-|-|-|-
+
+后台会启动若干多线程去扫描 **add_count** 表，，把单词数目加到 对应日期**user_daily_count**的表中
+```
+select  *  from add_count where lock_end_time < now() add state =0 limit 10;
+```
+
+##### 2. 问题
+问题就是在多线程环境下，取出一个add_count的时候,可能其他线程也拿到了这个相同的对象。如果直接把他加到user_daily_count表中，可能出现重复加的情况。
+
+### 2. 解决方法
+这时候需要一把 *锁* 把addCount锁住。
+有两种选择：**悲观锁(会有性能问题)**，**乐观锁()**
+
+这里选择**乐观锁**:
+比如addCount对应的是下面这条数据，
+user_id | add_count |  dateint | state | created_at | updated_at | lock_end_time
+-|-|-|-|-|-|-
+1   |     30  |   20181013 |   0   
+
+为了保证我们能锁住这调记录，并且锁住他3秒钟，我们需要执行一条sql来更新state。
+假设我们已经取得了一条add_count数据，执行下面sql
+```
+update add_count set state = 1 ,lock_end_time = now()+3 where id = #{addCount.id} and lock_end_time = #{ addCount.lockEndTime}
+```
+**注意这句 lock_end_time = #{ addCount.lockEndTime} 如果其他线程修改了lock_end_time 那这个update语句就会更新0条记录，否则更新当前这条记录。也就是如果锁成功，返回1，否则返回0.**
+而且这条记录会被锁住3秒钟(lock_end_time = now()+3),这3秒钟足够执行相应的业务逻辑了
+这样就保证只有一个线程能取得这条记录并执行后面的操作
+
+
