@@ -7,8 +7,9 @@ categories: react-native
 
 ## 1. 注意事项
 1. **加锁时候一定要是原子操作，set k v NX PX timeoutMs 满足这个需求**
-2. **解锁的时候一定要比较加锁时候使用的value。例如下面lua脚本** 
- *if  redis.call('get', KEYS[1]) == ARGV[1]*
+2. **解锁的时候一定要比较加锁时候使用的value。例如下面lua脚本**   
+
+ >*if  redis.call('get', KEYS[1]) == ARGV[1]*
 ```
  String script = "if  redis.call('get', KEYS[1]) == ARGV[1] " +
                 "then " +
