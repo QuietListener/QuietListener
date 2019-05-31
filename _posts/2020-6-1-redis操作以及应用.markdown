@@ -5,4 +5,4 @@ date:   2019-6-1 14:32:00
 categories: redis
 ---
 ### redis基本操作，应用场景
-![redis](../images/redis.png)
+![redis](https://github.com/QuietListener/quietlistener.github.io/blob/master/images/redis.png)
