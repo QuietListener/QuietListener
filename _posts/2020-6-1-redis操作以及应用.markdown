@@ -1,0 +1,8 @@
+---
+layout: post
+title:  redis基本操作以及应用
+date:   2019-6-1 14:32:00
+categories: redis
+---
+### redis基本操作，应用场景
+![redis](../images/redis.png)
