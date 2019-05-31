@@ -35,7 +35,8 @@ select  *  from add_count where lock_end_time < now() add state =0 limit 10;
 有两种选择：**悲观锁(会有性能问题)**，**乐观锁()**
 
 这里选择**乐观锁**:
-比如addCount对应的是下面这条数据，
+比如addCount对应的是下面这条数据
+
 user_id | add_count |  dateint | state | created_at | updated_at | lock_end_time
 -|-|-|-|-|-|-
 1   |     30  |   20181013 |   0   
