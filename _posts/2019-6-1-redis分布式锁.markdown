@@ -5,9 +5,9 @@ date:   2019-6-1 14:32:00
 categories: react-native
 ---
 
-## 注意事项
-**1.加锁时候一定要是原子操作，set k v NX PX timeoutMs 满足这个需求**
-**2.解锁的时候一定要比较加锁时候使用的value。例如下面lua脚本** 
+## 1. 注意事项
+1. **加锁时候一定要是原子操作，set k v NX PX timeoutMs 满足这个需求**
+2. **解锁的时候一定要比较加锁时候使用的value。例如下面lua脚本** 
  *if  redis.call('get', KEYS[1]) == ARGV[1]*
 ```
  String script = "if  redis.call('get', KEYS[1]) == ARGV[1] " +
@@ -30,12 +30,12 @@ categories: react-native
 
 **所以要注意的是锁超时时间也要足够大，不要等到到期了业务还没有处理完成。**
 
-## 隐患
+## 2. 隐患
 1. 如果redis是 master-slave模式，或者分布式模式, 当在master上加锁成功，此时master宕机，数据还没有sync到slave。这时候切redis换到slave上，将造成加2个线程同时获得锁。
 2. value 的值不能重复，重复了可能把别人的锁解了。使用 当前时间+客户端id+随机数就不会有太大问题。
 
 
-### 下面是一个简单的实现
+### 3. 下面是一个简单的实现
 
 ```
 package andy.com.db;
