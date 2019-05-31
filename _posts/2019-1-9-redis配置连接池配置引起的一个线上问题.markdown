@@ -1,0 +1,39 @@
+---
+layout: post
+title:  redis配置连接池配置引起的一个线上问题
+date:   2019-6-1 14:32:00
+categories: redis
+---
+
+### 1. 问题：
+上线百词斩资源相关的新api，晚上8点的时候大量服务响应超多1000毫秒，最大的10多秒。导致直接切回原来的老服务。
+
+### 2. 排查
+1. 排查发现有的业务请求就达到6秒
+* 当时的redis配置**
+
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20190119-redis-config1.png)
+ 每个业务实例只能建立32个链接，而且没有链接的话最多等1000ms。
+
+* 当时tomcat服务器配置
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20190119-tomcat-config.png)
+ 
+### 3. 原因: 
+更具上面的配置，tomcat最多有64个worker进程。当高峰期来到的时候，64个worker都在运行。但是只能分得32个redis链接，而且没有拿到链接还需要等1秒。最终造成了ResponseTime非常高。
+
+### 4. 修复
+修改reids连接池和tomcat线程池一样大都为128，poolMaxWaitMs改为50ms。
+
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20190119-redis-config2.png)
+
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20190119-tomcat-config2.png)
+ 
+
+ 
+### 5. 新问题
+由于使用的是springcloud，前端有一个zuul网关，网关配置了hystrix限流,
+按理说出问题的时候，hystirx应该启动限流功能的但是却没有。
+当时hystrix配置
+ 
+ReadTimeout为6000，设置得太大，当业务卡住很慢的时候，这个配置没有起作用。修改后减小ReadTimeout到2000ms。
+ ![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20190119-springcloud.png)
