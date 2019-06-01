@@ -2,7 +2,7 @@
 layout: post
 title:  记一次java cpu100%排查(nio处理读写的方式)
 date:   2018-10-29 14:32:00
-categories: react-native
+categories: java jvm nio
 ---
 
 ### 1.背景

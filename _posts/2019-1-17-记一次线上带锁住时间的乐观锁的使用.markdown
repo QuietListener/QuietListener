@@ -2,7 +2,7 @@
 layout: post
 title:  记一次线上带锁住时间的乐观锁的使用
 date:   2019-1-9 14:32:00
-categories: redis
+categories: mysql 锁
 ---
 
 ### 1. 业务场景与问题

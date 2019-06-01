@@ -2,7 +2,7 @@
 layout: post
 title:  高并发系统的限流方法
 date:   2018-6-5 14:32:00
-categories: react-native
+categories: 限流 高并发
 ---
 高并发系统上，比如秒杀系统，流量巨大，为了保护后端业务(各个核心系统，如下单系统，库存系统等)不被流量冲垮，必须进行限流。
 

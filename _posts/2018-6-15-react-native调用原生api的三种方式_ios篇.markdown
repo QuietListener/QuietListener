@@ -2,7 +2,7 @@
 layout: post
 title:  react-native 调用原生api的三种方式(ios篇)
 date:   2018-6-5 14:32:00
-categories: react-native
+categories: react-native ios
 ---
 
 # react-native 调用原生api的三种方式(ios篇)

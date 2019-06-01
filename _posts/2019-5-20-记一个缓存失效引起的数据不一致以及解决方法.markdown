@@ -1,0 +1,107 @@
+---
+layout: post
+title:  记一个缓存失效引起的数据不一致以及解决方法
+date:   2019-5-20 14:32:00
+categories: redis 缓存
+---
+### 1.背景
+单词pk上线后，陆续有多个用户报了，打赢了比赛不加星星的问题。最后查问题发现是缓存的问题。自己手贱，业务代码有问题:**"先删缓存再更新数据库。“**  
+
+下面是错误的业务逻辑
+1. 更新数据，删除缓存
+```
+     public int updateLevel(int sessionId, RankUserInfo info) {
+        String tableName = getUserInfoTableName(sessionId);
+        String key = CacheKey.RankUserInfoKeySession(sessionId, info.getUserId());
+        helper.del(key);//删除缓存
+        rankUserInfoMapper.updateLevel(tableName, info);//更新数据库
+        return 1;
+    }
+```
+
+2. 获取数据，设置缓存
+
+```
+public RankUserInfo getByUserId(int sessionId, long userId) {
+
+        String key = CacheKey.RankUserInfoKeySession(sessionId, userId);
+        //从缓存拿数据
+        RankUserInfo r = helper.getObj(key, new TypeToken<RankUserInfo>() {}.getType()); 
+
+        //能拿到数据直接返回
+        if(r != null){
+            return r;
+        }
+        //没有缓存，从数据库中取
+        String tableName = getUserInfoTableName(sessionId);
+        r = rankUserInfoMapper.getByUserId(tableName, userId);
+
+        //重新设置缓存
+        if (r != null) {
+            helper.setObj(key, r);
+        }
+        return r;
+}
+```
+
+### 2. 问题分析
+这种 **"先删缓存，再更新数据的"** 做法会带来数据的不一致
+例如
+* 线程1 删除缓存成功
+* 线程2 获取数据，发现没有缓存，从数据库取数据(老数据)，并更新缓存
+* 线程1 更新数据库完成，数据库为新数据
+
+**这样就缓存和数据库的数据就不一致了**
+### 3.解决问题
+改为先更新数据库，后删缓存
+```
+     public int updateLevel(int sessionId, RankUserInfo info) {
+        String tableName = getUserInfoTableName(sessionId);
+        String key = CacheKey.RankUserInfoKeySession(sessionId, info.getUserId());
+        rankUserInfoMapper.updateLevel(tableName, info);//更新数据库
+        helper.del(key);//删除缓存
+        return 1;
+    }
+```
+
+**其实这样也不保险**，更新了数据库的数据，但是删除数据失败了，这时候缓存于数据又不一致了。
+
+我们加入重试机制  
+
+1. 失败立即重试 最多重试2次
+2. 上面如果还是失败，加入一个队列中，起一个线程再重试  
+
+下面是 **helper.del(String key)** 的实现
+
+```
+public void del(String key) {
+
+        int tryCount = 3;
+        boolean succeed = false;
+        Exception e1 = null;
+        for (int i = 0; i < tryCount && succeed == false; i++) {//重试3次
+            try {
+                jedisManager.del(key);
+                succeed = true;
+            } catch (Exception e) {
+                logger.error(String.format("del error, key=%s", key), e);
+                succeed = false;
+                e1 = e;
+            }
+        }
+
+        //重试3次还不行，加入一个队列中，等300毫秒再试试
+        if (succeed == false) {
+            RetryKey rk = null;
+            try {
+                rk = new RetryKey(key, System.currentTimeMillis() + 300); //300毫秒后再重试
+                L.trace("RedisDeleteFailed", key, e1);
+                delFailedKeys.add(rk); //加入重试队列
+            } catch (Exception e) {
+                logger.error("add retrt queue error ", rk, e);
+            }
+        }
+    }
+ ```   
+
+改为这样，这几天就没有报加星星有问题的问题了

@@ -2,7 +2,7 @@
 layout: post
 title:  redis分布式锁
 date:   2019-6-1 14:32:00
-categories: react-native
+categories: redis 分布式锁 锁
 ---
 
 ## 1. 注意事项

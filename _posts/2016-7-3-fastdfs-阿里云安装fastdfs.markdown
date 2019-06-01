@@ -2,7 +2,7 @@
 layout: post
 title:  fastdfs-阿里云安装fastdfs
 date:   2016-7-3 11:34:00
-categories: 数据库
+categories: 数据库 
 ---
 公司现在的文件备份方式是2台机器，使用rsync进行同步，扩展性和容错性都不能满足需求。
 调研了一下 fastdfs，能满足公司也无需求。
