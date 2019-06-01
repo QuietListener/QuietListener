@@ -1,0 +1,92 @@
+---
+layout: post
+title:  记一次java cpu100%排查(nio处理读写的方式)
+date:   2018-10-29 14:32:00
+categories: react-native
+---
+
+### 1.背景
+蓝灯罢工了.自己花了几天，DIY了一把代理，可以绕过长城。思路是:  
+
+**浏览器**<--->**本地代理server**<--->加密数据--->**国外代理server**<--->**指定网站(google.com)**
+
+1. chrome网络代理设置为本地代理服务器的ip和端口，
+2. 本地代理服务器收到数据后，进行加密，然后发送到国外的代理服务器，
+3. 国外的服务器收到数据进行解密，发送给指定网站
+由于本地代理server于国外代理server之间的通信是加了密的，所以中间环节没有人能知道传书的内容。
+
+最后大概就是下面这个样子(本地客户端)
+
+![cpu](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2018-10-29-proxy.png)
+
+### 2. 问题
+上线能正常使用，但是cpu跑到了100%。
+
+![cpu](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2018-10-29-cpu.png)
+
+#### 3.排查
+1. 从上图发现，跑到100%的进程id是4184；使用**top -Hp 4184** 可以查看进程为4184下面的每个线程的cpu使用情况。发现id为4185的线程cpu资源很高。
+
+![cpu](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2018-10-29-top.png)
+
+2. 4185转为16进制是:0x1059,下面用jstack -l 4184 查看线程id为0x1059的情况。
+
+```
+[www@host ~]$ jstack  -l  4184 | grep -A20 -B2 0x1059
+- None
+
+"main" #1 prio=5 os_prio=0 tid=0x00007efc7c008800 nid=0x1059 runnable [0x00007efc83ebe000]
+   java.lang.Thread.State: RUNNABLE
+at sun.nio.ch.EPollArrayWrapper.epollWait(Native Method)
+at sun.nio.ch.EPollArrayWrapper.poll(EPollArrayWrapper.java:269)
+at sun.nio.ch.EPollSelectorImpl.doSelect(EPollSelectorImpl.java:93)
+at sun.nio.ch.SelectorImpl.lockAndDoSelect(SelectorImpl.java:86)
+- locked <0x00000000f5878b70> (a sun.nio.ch.Util$3)
+- locked <0x00000000f58c71a8> (a java.util.Collections$UnmodifiableSet)
+- locked <0x00000000f588e658> (a sun.nio.ch.EPollSelectorImpl)
+at sun.nio.ch.SelectorImpl.select(SelectorImpl.java:97)
+at org.firewall.server.remote.RemoteServer.service(RemoteServer.java:46)
+at org.firewall.server.remote.RemoteServer.main(RemoteServer.java:66)
+
+   Locked ownable synchronizers:
+- None
+
+"VM Thread" os_prio=0 tid=0x00007efc7c094000 nid=0x105a runnable 
+
+"VM Periodic Task Thread" os_prio=0 tid=0x00007efc7c0f0000 nid=0x1061 waiting on condition 
+
+JNI global references: 253
+
+
+```
+
+可以看到这个线程处于runnable状态， 并且一直在执行下面这一行代码。
+>at org.firewall.server.remote.RemoteServer.service(RemoteServer.java:46)
+具体执行的是下面这段代码
+```
+                    if (key.isWritable()) {
+                        final Handler h = (Handler) key.attachment();
+                        h.send(key);
+                    }
+```
+
+**最终问题为就算没有数据要发送，nio的key一直处于可写状态，所以cpu一直处于空转状态。**
+
+
+### 4.问题解决
+每次发送数据后将，key设置为只读
+>key.interestOps(SelectionKey.OP_READ);
+
+每次读到数据后将key设置为 读写状态:
+> key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+
+这样，如果没有读到数据，就不会处理write事件。
+
+
+
+
+
+
+
+
+
