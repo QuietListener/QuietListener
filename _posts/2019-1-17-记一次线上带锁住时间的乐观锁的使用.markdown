@@ -19,10 +19,13 @@ user_id | add_count |  dateint | state | created_at | updated_at | lock_end_time
 1    |    70   |  20181013  |  0
 
 记录user每天背的单词总数的表是 **user_daily_count**
-user_id  |  count |   created_at    |  updated_at 
--|-|-|-
+
+user_id | count | dateint | created_at | updated_at 
+-|-|-|-|-
+111 | 0 | 20181013 |
 
 后台会启动若干多线程去扫描 **add_count** 表，，把单词数目加到 对应日期**user_daily_count**的表中
+
 ```
 select  *  from add_count where lock_end_time < now() add state =0 limit 10;
 ```
