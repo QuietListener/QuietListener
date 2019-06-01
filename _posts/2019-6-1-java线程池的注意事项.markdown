@@ -1,0 +1,62 @@
+---
+layout: post
+title:  java线程池注意事项
+date:   2019-6-1 14:32:00
+categories: java 线程池
+---
+
+java线程池用得很多，主要的实现类是 **ThreadPoolExecutor**是**ExecutorService**的具体实现。  
+***下面是构造函数***
+```
+ public ThreadPoolExecutor(int corePoolSize,       //初始线程数量
+                              int maximumPoolSize, //最大线程数量
+                              long keepAliveTime, //线程空闲多久后回收
+                              TimeUnit unit,
+                              BlockingQueue<Runnable> workQueue, //存放任务的对垒
+                              RejectedExecutionHandler handler) {//当workQueue满了的时候异常处理
+        this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+             Executors.defaultThreadFactory(), handler);
+    }
+```
+
+#### ThreadPoolExecutor有几点需要注意：
+1. 最大线程数目的选取
+2. 优雅的关闭线程池
+3. 选取适当的 拒绝执行策略：RejectedExecutionHandler
+
+
+#### 1. ThreadPoolExecutor 最大线程数的选取(maximumPoolSize)
+##### 根据业务类型是 **io密集型**还是**cpu密集型**
+
+ * 对于CPU密集型可以使用 maximumPoolSize=CPU数目+1;
+ * 对于IO密集型可以使用 maximumPoolSize=2*CPU数目+1;
+ * 混合型的: maximumPoolSize=CPU数据*(1+waitTime/computeTime) 比如核心数为4，一个任务使用4ms为IO，1ms秒计算，那就选取 (1+4)*4=20。这是cpu跑满的情况，如果你只想cpu利用率为50%。那就是20\*0.5=10;
+
+#### 2.优雅地关闭pool
+注意: shutdown 和 shutdownNow的语义。
+ 
+```
+   pool.shutdown(); // 这里是禁止新的任务提交，
+   try {
+      // 等待正在执行的任务结束，这里等60秒 ，阻塞的
+      if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+        pool.shutdownNow(); // 关闭正在执行的任务。
+        // 再等待50秒
+        if (!pool.awaitTermination(60, TimeUnit.SECONDS))
+            System.err.println("Pool did not terminate");
+      }
+    } catch (InterruptedException ie) {
+      // 如果awaitTermination被interrupt 立即关闭线程。
+      pool.shutdownNow();
+      // Preserve interrupt status
+      Thread.currentThread().interrupt();
+    }
+```
+
+#### 3.选取适当的“拒绝执行策略” RejectedExecutionHandler
+当线程池不再接受任务时候再加入任务 由RejectedExecutionHandler来处理
+默认有四种处理方式:
+1. AbortPolicy，直接抛异常
+2. DiscardPolicy,直接丢掉:
+3. DiscardOldestPolicy 丢掉最老的，立即执行最新的 
+4. CallerRunsPolicy 不在线程池中执行这个task，直接在调用线程中执行
