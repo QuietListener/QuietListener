@@ -5,4 +5,5 @@ date:   2019-6-1 14:32:00
 categories: redis
 ---
 ### redis基本操作，应用场景
+老是记不住，每次都要查，干脆用mindNote整理出来，清晰得多了
 ![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis.png)
