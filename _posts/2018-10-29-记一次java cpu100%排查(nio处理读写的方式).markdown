@@ -24,12 +24,12 @@ categories: react-native
 
 ![cpu](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2018-10-29-cpu.png)
 
-#### 3.排查
-1. 从上图发现，跑到100%的进程id是4184；使用**top -Hp 4184** 可以查看进程为4184下面的每个线程的cpu使用情况。发现id为4185的线程cpu资源很高。
+### 3.排查
+ 1. 从上图发现，跑到101.7%的进程id是4184；使用**top -Hp 4184** 可以查看进程为4184下面的每个线程的cpu使用情况。发现id为4185的线程cpu资源很高。
 
 ![cpu](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2018-10-29-top.png)
 
-2. 4185转为16进制是:0x1059,下面用jstack -l 4184 查看线程id为0x1059的情况。
+ 2. 4185转为16进制是:0x1059,下面用**jstack -l 4184** 查看线程id为0x1059的情况。
 
 ```
 [www@host ~]$ jstack  -l  4184 | grep -A20 -B2 0x1059
@@ -62,7 +62,8 @@ JNI global references: 253
 
 可以看到这个线程处于runnable状态， 并且一直在执行下面这一行代码。
 >at org.firewall.server.remote.RemoteServer.service(RemoteServer.java:46)
-具体执行的是下面这段代码
+
+查看源代码后，发现具体执行的是下面这段代码
 ```
                     if (key.isWritable()) {
                         final Handler h = (Handler) key.attachment();
@@ -70,17 +71,17 @@ JNI global references: 253
                     }
 ```
 
-**最终问题为就算没有数据要发送，nio的key一直处于可写状态，所以cpu一直处于空转状态。**
+**最终问题定位为：就算没有数据要发送，nio的key也一直处于可写状态，所以cpu一直处于空转状态。**
 
 
-### 4.问题解决
-每次发送数据后将，key设置为只读
+### 4.解决问题
+每次发送数据后将，key设置为 **只读**
 >key.interestOps(SelectionKey.OP_READ);
 
-每次读到数据后将key设置为 读写状态:
+每次读到数据后将key设置为 **读写** 状态:
 > key.interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 
-这样，如果没有读到数据，就不会处理write事件。
+这样，只有有读到的数据才会去处理write事件了。
 
 
 
