@@ -2,7 +2,7 @@
 layout: post
 title:  mysql insert ignore 实现一个幂等操作
 date:   2018-5-19 14:32:00
-categories: 限流 高并发
+categories: 幂等 mysql
 ---
 
 ###一、背景
