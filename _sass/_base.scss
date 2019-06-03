@@ -159,7 +159,7 @@ pre {
     margin-left: auto;
     padding-right: $spacing-unit;
     padding-left: $spacing-unit;
-    @extend %clearfix;
+    @extend %clearfix;max-width
 
     @include media-query($on-laptop) {
         max-width: -webkit-calc(1200px - (#{$spacing-unit}));
