@@ -94,6 +94,7 @@ rankAuditService.insertIgnore(ra) ，这个对应的sql是
 ```
 
 这段代码用了 insert ignore。如果插入成功返回1，执行  
+
 ```
 rankUserInfoService.addEnergy(activitiId, userInfo, level.getEnergyCost());
 rankUserInfoService.levelUp(activitiId, userInfo, level.getMaxStar());
