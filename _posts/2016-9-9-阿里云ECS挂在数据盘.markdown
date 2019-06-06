@@ -119,8 +119,8 @@ proc                    /proc                   proc    defaults        0 0
 UUID=901c4424-935e-4b44-988a-a978e12d9985 /var/www/data  ext4 defaults  0 0
 ```
 fuser
-https://chrisjean.com/forcing-a-device-to-unmount-in-ubuntu-linux/
-http://blog.chinaunix.net/uid-20615025-id-29840.html
+>https://chrisjean.com/forcing-a-device-to-unmount-in-ubuntu-linux/
+>http://blog.chinaunix.net/uid-20615025-id-29840.html
 
 
 
