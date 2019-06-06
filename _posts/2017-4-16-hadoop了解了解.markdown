@@ -1,0 +1,167 @@
+---
+layout: post
+title:  hadoop了解了解
+date:   2017-4-16 14:32:00
+categories: 分布式 hadoop
+---
+
+**YARN**是什么： which stands for Yet Another Resource Negotiator in Hadoop
+
+### 1. Hadoop历史
+刚开始是nutch项目用的传统存储，后来google发表了gfs论文，nutch实现了一把，
+后来google发表了mapreduce论文，nutch实现了一把，叫ndop，后来剥离出来叫hadoop，
+后来创始人加入yahoo，专门做hadoop，后来在apache顶级项目托管
+
+### 2. Hadoop的分布式文件系统
+Hadoop comes with a distributed filesystem called HDFS, which stands for Hadoop
+Distributed Filesystem
+
+### 3. hadoop优缺点
+**优点:**
+1.流式数据访问
+2.存储大文件
+3.使用普通的硬件
+
+**缺点:**
+低延迟(10毫秒级别)不适合
+大量小文件场景不适合 
+  每一个文件消耗namenode内存150bytes，100万大概消耗300M namenode内存
+不能修改文件
+
+### 4. Hdfs概念:
+#### 1. 块(block)类比文件系统的块。
+与文件系统的块不同的是，1.不足一个块大小的文件，不会独占一个块；2.块很大，默认是128M
+Hadoop的块为什么块很大?
+
+问:在hdfs中使用block有什么好处? 
+答:将文件分割成块，文件的不同部分可以存放于集群的任何地方，也方便replication
+% hdfs fsck / -files -blocks
+
+#### 2. NameNode 和 Datanode
+1. 两种node工作在master-worker模式
+2. NameNode 管理系统的namespace，他维护系统的文件树，以及整个系统的文件和目录的元信息(meta data)。这些信息会以2个文件存在到磁盘: namespace image和edit log.
+
+3. datanode作为数据存储的地方，定期向namenode汇报他存储的block列表
+4. 没有namenode，整个文件系统不能够重建，所以备份namenode很重要.有2种方式来备份namenode的数据，1.写入多个文件系统，比如一个写磁盘，一个写nfs，2.使用Secondary NameNode
+
+
+
+
+### 4.安装
+
+#### 1.
+wget http://mirrors.cnnic.cn/apache/hadoop/common/stable2/hadoop-2.7.3.tar.gz
+tar -zxvf hadoop-2.7.3.tar.gz 
+
+在./.bash_profile中配置环境变量
+```
+HADOOP_HOME=$HOME/programs/hadoop-2.7.3/
+PATH=$MYSQL_HOME/bin:$PATH:$HOME/bin:${DAEMON}:${JAVA}:${ANT}:${HADOOP_HOME}/bin
+export HADOOP_HOME=$HADOOP_HOME
+```
+
+Hadoop NameNode 需要通过ssh执行集群级别的操作，需要无密码登录到其他节点。
+在namenode中使用公钥
+```
+% ssh-keygen -t rsa -f ~/.ssh/id_rsa
+使用ssh-copy-id -i ~/.ssh/id_rsa.pub remote-host 将公钥发送到远程机器
+```
+
+#### 2. 部署3太机器
+Cinder             NameNode
+Talentbigdata  DataNode
+Ares                DataNode
+
+1. 在namenode上配置 etc/hadoop/hdfs-site.xml 
+```
+<configuration>
+<property>
+<name>dfs.replication</name>
+<value>2</value>
+</property>
+
+<property>
+<name>dfs.permissions</name>
+<value>false</value>
+</property>
+
+<property>
+<name>dfs.namenode.name.dir</name><!-- 元数据存在这里-->
+<value>/var/www/data/hadoop/namenode</value>
+</property>
+</configuration>
+```
+
+2. 在datanode上配置 etc/hadoop/hdfs-site.xml 
+```
+<configuration>
+<property>
+<name>dfs.replication</name>
+<value>2</value>
+</property>
+
+<property>
+<name>dfs.permissions</name>
+<value>false</value>
+</property>
+
+<property>
+<name>dfs.datanode.data.dir</name><!-- block内容存在这里-->
+
+<value>/var/www/hadoop/datanode</value>
+</property>
+
+</configuration>
+
+```
+
+3. 格式化namenode 创建存储空文件系统，和namenode的持久化数据结构，这个过程跟datanode无关
+[www@cinder hadoop-2.7.3]$ hdfs namenode -format
+
+4. 配置 slave所在的机器（ip或者hostname）
+[www@cinder hadoop-2.7.3]$ cat etc/hadoop/slaves
+ares
+talentbigdata
+
+5. 启动hdfs
+Start-dfs.sh 会启动namenode和datanode，secondaryNode
+```
+[www@cinder hadoop-2.7.3]$ ./sbin/start-dfs.sh
+Starting namenodes on [cinder]
+cinder: starting namenode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-namenode-cinder.out
+talentbigdata: starting datanode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-datanode-talentbigdata.out
+ares: starting datanode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-datanode-ares.out
+Starting secondary namenodes [0.0.0.0]
+0.0.0.0: starting secondarynamenode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-secondarynamenode-cinder.out
+```
+同样提供了 stop-dfs.sh 来停止集群
+
+### 5.基本操作
+#### 1. 新建目录
+[www@cinder hadoop-2.7.3]$ hadoop fs -mkdir /home
+% hadoop fs -mkdir -p /user/$USER
+
+#### 2.设置目录大小限制为1T
+% hdfs dfsadmin -setSpaceQuota 1t /user/username
+
+
+
+
+### 6.tip
+Hadoop节点硬件配置计算。
+#### 1. 计算namenode吃掉的内存大小：
+一般计算不出来，这个受每个文件的block数目，文件名的长短，甚至不同版本也不同。
+一般的是1百万个文件1个G比较靠谱。
+
+#### 2. 配置log所在的位置
+export HADOOP_LOG_DIR=/var/log/hadoop
+
+#### 3. hadoop命令:
+https://segmentfault.com/a/1190000002672666
+hadoop fs -fs hdfs://cinder:9000  -ls /
+
+#### 4. 添加别名
+alias hd="hadoop fs -fs hdfs://cinder:9000"
+
+#### 5. 将文件或者目录放到hadoop中的home目录下面
+hd -put testhadoop/  /home/
