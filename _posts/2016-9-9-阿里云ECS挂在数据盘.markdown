@@ -1,0 +1,127 @@
+---
+layout: post
+title:  阿里云ECS挂载数据盘
+date:   2016-9-9 14:32:00
+categories: linux 文件系统
+---
+
+
+### 1. 在root下查看当前磁盘情况，刚买的盘为 Disk /dev/xvdc: 536.9 GB, 536870912000 bytes
+
+```
+[root@rc1 www]# fdisk -l
+
+Disk /dev/xvda: 21.5 GB, 21474836480 bytes
+255 heads, 63 sectors/track, 2610 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0007ce89
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/xvda1   *           1        2611    20970496   83  Linux
+
+Disk /dev/xvdb: 107.4 GB, 107374182400 bytes
+255 heads, 56 sectors/track, 14685 cylinders
+Units = cylinders of 14280 * 512 = 7311360 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x0cd39415
+
+    Device Boot      Start         End      Blocks   Id  System
+/dev/xvdb1               1       14685   104850872   83  Linux
+
+Disk /dev/xvdc: 536.9 GB, 536870912000 bytes
+255 heads, 63 sectors/track, 65270 cylinders
+Units = cylinders of 16065 * 512 = 8225280 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00000000
+
+
+```
+
+
+### 2. 格式化为ext4文件系统
+```
+[root@rc1 www]# mkfs.ext4 /dev/xvdc 
+mke2fs 1.41.12 (17-May-2010)
+文件系统标签=
+操作系统:Linux
+块大小=4096 (log=2)
+分块大小=4096 (log=2)
+Stride=0 blocks, Stripe width=0 blocks
+32768000 inodes, 131072000 blocks
+6553600 blocks (5.00%) reserved for the super user
+第一个数据块=0
+Maximum filesystem blocks=4294967296
+4000 block groups
+32768 blocks per group, 32768 fragments per group
+8192 inodes per group
+Superblock backups stored on blocks: 
+	32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208, 
+	4096000, 7962624, 11239424, 20480000, 23887872, 71663616, 78675968, 
+	102400000
+
+正在写入inode表: 完成                            
+Creating journal (32768 blocks): 完成
+Writing superblocks and filesystem accounting information: 完成
+
+This filesystem will be automatically checked every 25 mounts or
+180 days, whichever comes first.  Use tune2fs -c or -i to override.
+```
+### 3. 挂载磁盘
+```
+[root@rc1 www]# mount /dev/xvdc /var/www/data2/
+[root@rc1 www]# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/xvda1       20G  7.3G   12G  39% /
+tmpfs           498M     0  498M   0% /dev/shm
+/dev/xvdb1       99G   30G   64G  33% /var/www/data
+/dev/xvdc       493G  198M  467G   1% /var/www/data2
+[root@rc1 www]# 
+```
+
+### 4. 修改/etc/fstab 重启系统会自动挂载
+```
+#
+# /etc/fstab
+# Created by anaconda on Tue Jun 10 10:10:23 2014
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+UUID=2cf9a36f-eafe-4f5a-ada1-cf3994dcd11f / ext4 defaults,barrier=0 1 1
+tmpfs                   /dev/shm                tmpfs   defaults        0 0
+devpts                  /dev/pts                devpts  gid=5,mode=620  0 0
+sysfs                   /sys                    sysfs   defaults        0 0
+proc                    /proc                   proc    defaults        0 0
+/dev/xvdb1  /var/www/data ext3    defaults    0  0
+/dev/xvdc  /var/www/data2 ext4    defaults    0  0
+```
+
+
+
+
+**获取 磁盘 uuid**
+```
+[root@iZ23kzithsiZ www]# blkid /dev/vdb
+/dev/vdb: UUID="901c4424-935e-4b44-988a-a978e12d9985" TYPE="ext4"
+
+
+Fstab
+#
+UUID=94e4e384-0ace-437f-bc96-057dd64f42ee / ext4 defaults,barrier=0 1 1
+tmpfs                   /dev/shm                tmpfs   defaults        0 0
+devpts                  /dev/pts                devpts  gid=5,mode=620  0 0
+sysfs                   /sys                    sysfs   defaults        0 0
+proc                    /proc                   proc    defaults        0 0
+UUID=901c4424-935e-4b44-988a-a978e12d9985 /var/www/data  ext4 defaults  0 0
+```
+fuser
+https://chrisjean.com/forcing-a-device-to-unmount-in-ubuntu-linux/
+http://blog.chinaunix.net/uid-20615025-id-29840.html
+
+
+
+
