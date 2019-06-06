@@ -7,7 +7,9 @@ categories: 幂等 mysql
 
 ### 1. centos 免安装mysql5.7
 #### 1. 下载:
+
  > wget --no-check-certificate https://dev.mysql.com//Downloads/MySQL-5.7/mysql-5.7.21-linux-glibc2.12-x86_64.tar.gz
+
 #### 2. 安装
 1. 安装依赖库 yum install libaio*
 2. mysql-5.7.21-linux-glibc2.12-x86_64.tar 解压放到 /opt/mysql-5.7.21/
