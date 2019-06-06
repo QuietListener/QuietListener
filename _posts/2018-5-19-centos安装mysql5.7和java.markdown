@@ -27,6 +27,7 @@ categories: 幂等 mysql
 
 
 4. Mysql5.7默认使用ssl安全连接 执行下面语句产生key
+
 ```
 [root@izm5e4x1zl97yhhpepmsv4z mysql-5.7.21]# ./bin/mysql_ssl_rsa_setup  --datadir=/usr/local/mysql/data
 Generating a 2048 bit RSA private key
@@ -46,7 +47,9 @@ writing new private key to 'client-key.pem'
 -----
 
 ```
+
 5. 创建 配置文件
+
 ```
 [root@izm5e4x1zl97yhhpepmsv4z support-files]# pwd
 /usr/local/mysql/mysql-5.7.21/support-files
@@ -68,6 +71,7 @@ socket=/tmp/mysql.sock
 ```
 
 6. 拷贝一些文件
+
 ```
 [root@izm5e4x1zl97yhhpepmsv4z support-files]# cp my-default.cnf /etc/my.cnf
 [root@izm5e4x1zl97yhhpepmsv4z support-files]# cp mysql.server /etc/init.d/mysqld
@@ -75,17 +79,20 @@ socket=/tmp/mysql.sock
 ```
 
 7. 编辑 /etc/init.d/mysqld配置
+
 ```
 basedir=/usr/local/mysql/mysql-5.7.21/
 datadir=/usr/local/mysql/data/
 ```
 
 8. 启动mysqld 
+
 ```
 [root@izm5e4x1zl97yhhpepmsv4z support-files]# service mysqld start
 Starting MySQL.Logging to '/usr/local/mysql/data/izm5e4x1zl97yhhpepmsv4z.err'.
                                                           [  OK  ]
  ``` 
+ 
  也可以用下面方式启动 
 *  /etc/init.d/mysqld start    
 *  nohup ./bin/mysqld --defaults-file=./support-files/my-default.cnf &
