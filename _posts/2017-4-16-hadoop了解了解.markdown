@@ -76,6 +76,7 @@ Hadoop NameNode 需要通过ssh执行集群级别的操作，需要无密码登�
 * Ares                DataNode
 
 1. 在namenode上配置 etc/hadoop/hdfs-site.xml 
+
 ```
 <configuration>
 <property>
@@ -96,6 +97,7 @@ Hadoop NameNode 需要通过ssh执行集群级别的操作，需要无密码登�
 ```
 
 2. 在datanode上配置 etc/hadoop/hdfs-site.xml 
+
 ```
 <configuration>
 <property>
@@ -140,16 +142,19 @@ Starting secondary namenodes [0.0.0.0]
 
 ```
 
+
 同样提供了 stop-dfs.sh 来停止集群
 
 ### 5.基本操作
 #### 1. 新建目录
+
 ```
 [www@cinder hadoop-2.7.3]$ hadoop fs -mkdir /home
 % hadoop fs -mkdir -p /user/$USER
 ```
 
 #### 2.设置目录大小限制为1T
+
 ```
 % hdfs dfsadmin -setSpaceQuota 1t /user/username
 ```
@@ -158,6 +163,7 @@ Starting secondary namenodes [0.0.0.0]
 
 ### 6.tip
 Hadoop节点硬件配置计算。
+
 #### 1. 计算namenode吃掉的内存大小：
 1. 一般计算不出来，这个受每个文件的block数目，文件名的长短，甚至不同版本也不同。
 2. 一般的是1百万个文件1个G比较靠谱。
