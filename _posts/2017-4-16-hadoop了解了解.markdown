@@ -18,23 +18,26 @@ Distributed Filesystem
 
 ### 3. hadoop优缺点
 **优点:**
-1.流式数据访问
-2.存储大文件
-3.使用普通的硬件
+1. 流式数据访问
+2. 存储大文件
+3. 使用普通的硬件
 
 **缺点:**
-低延迟(10毫秒级别)不适合
-大量小文件场景不适合 
-  每一个文件消耗namenode内存150bytes，100万大概消耗300M namenode内存
-不能修改文件
+1. 低延迟(10毫秒级别)不适合
+2. 大量小文件场景不适合 
+3. 每一个文件消耗namenode内存150bytes，100万大概消耗300M namenode内存
+4. 不能修改文件
 
 ### 4. Hdfs概念:
 #### 1. 块(block)类比文件系统的块。
-与文件系统的块不同的是，1.不足一个块大小的文件，不会独占一个块；2.块很大，默认是128M
-Hadoop的块为什么块很大?
+与文件系统的块不同的是:
+1. 不足一个块大小的文件，不会独占一个块；
+2. 块很大，默认是128M
+>Hadoop的块为什么块很大?
 
-问:在hdfs中使用block有什么好处? 
-答:将文件分割成块，文件的不同部分可以存放于集群的任何地方，也方便replication
+>问:在hdfs中使用block有什么好处? 
+>答:将文件分割成块，文件的不同部分可以存放于集群的任何地方，也方便replication
+
 % hdfs fsck / -files -blocks
 
 #### 2. NameNode 和 Datanode
@@ -47,7 +50,7 @@ Hadoop的块为什么块很大?
 
 
 
-### 4.安装
+### 4.安装 部署
 
 #### 1.
 wget http://mirrors.cnnic.cn/apache/hadoop/common/stable2/hadoop-2.7.3.tar.gz
@@ -68,9 +71,9 @@ Hadoop NameNode 需要通过ssh执行集群级别的操作，需要无密码登�
 ```
 
 #### 2. 部署3太机器
-Cinder             NameNode
-Talentbigdata  DataNode
-Ares                DataNode
+* Cinder             NameNode
+* Talentbigdata  DataNode
+* Ares                DataNode
 
 1. 在namenode上配置 etc/hadoop/hdfs-site.xml 
 ```
@@ -125,6 +128,7 @@ talentbigdata
 
 5. 启动hdfs
 Start-dfs.sh 会启动namenode和datanode，secondaryNode
+
 ```
 [www@cinder hadoop-2.7.3]$ ./sbin/start-dfs.sh
 Starting namenodes on [cinder]
@@ -133,35 +137,40 @@ talentbigdata: starting datanode, logging to /home/www/programs/hadoop-2.7.3/log
 ares: starting datanode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-datanode-ares.out
 Starting secondary namenodes [0.0.0.0]
 0.0.0.0: starting secondarynamenode, logging to /home/www/programs/hadoop-2.7.3/logs/hadoop-www-secondarynamenode-cinder.out
+
 ```
+
 同样提供了 stop-dfs.sh 来停止集群
 
 ### 5.基本操作
 #### 1. 新建目录
+```
 [www@cinder hadoop-2.7.3]$ hadoop fs -mkdir /home
 % hadoop fs -mkdir -p /user/$USER
+```
 
 #### 2.设置目录大小限制为1T
+```
 % hdfs dfsadmin -setSpaceQuota 1t /user/username
-
+```
 
 
 
 ### 6.tip
 Hadoop节点硬件配置计算。
 #### 1. 计算namenode吃掉的内存大小：
-一般计算不出来，这个受每个文件的block数目，文件名的长短，甚至不同版本也不同。
-一般的是1百万个文件1个G比较靠谱。
+1. 一般计算不出来，这个受每个文件的block数目，文件名的长短，甚至不同版本也不同。
+2. 一般的是1百万个文件1个G比较靠谱。
 
 #### 2. 配置log所在的位置
-export HADOOP_LOG_DIR=/var/log/hadoop
+>export HADOOP_LOG_DIR=/var/log/hadoop
 
 #### 3. hadoop命令:
-https://segmentfault.com/a/1190000002672666
-hadoop fs -fs hdfs://cinder:9000  -ls /
+>https://segmentfault.com/a/1190000002672666
+>hadoop fs -fs hdfs://cinder:9000  -ls /
 
 #### 4. 添加别名
-alias hd="hadoop fs -fs hdfs://cinder:9000"
+>alias hd="hadoop fs -fs hdfs://cinder:9000"
 
 #### 5. 将文件或者目录放到hadoop中的home目录下面
-hd -put testhadoop/  /home/
+>hd -put testhadoop/  /home/
