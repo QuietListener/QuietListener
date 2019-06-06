@@ -6,7 +6,7 @@ categories: linux rsync
 ---
 
 
-公司talent项目有大量小文件上传，为保证文件的安全，使用rsync和sersync2进行同步备份。
+公司T项目有大量小文件上传，为保证文件的安全，使用rsync和sersync2进行同步备份。
 
 **服务器A----** 同步 **---->服务器B**
 
@@ -82,7 +82,7 @@ exclude = test1/ test2/
 **配置密码文件（密码权限必须是600）**
 ```
 [root@rc2 www]# cat  /home/www/rsync/rsync.pas 
-rsync:rsync111
+rsync:password
 [root@rc2 www]# ls -lahs /home/www/rsync/rsync.pas
 4.0K -rw------- 1 root root 19 10月 13 14:26 /home/www/rsync/rsync.pas
 ```
@@ -177,7 +177,7 @@ sersync 配置文件
 [root@iZ23kzithsiZ www]# ls -lah /opt/sersync/users.pas 
 -rw------- 1 root root 13 10月 13 14:59 /opt/sersync/users.pas
 [root@iZ23kzithsiZ www]# cat  /opt/sersync/users.pas 
-rsyncgogogo_
+password
 ```
 
 用rsync测试一下:
