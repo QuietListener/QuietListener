@@ -2,14 +2,14 @@
 layout: post
 title:  ffmpeg 记录
 date:   2018-6-27 14:32:00
-categories: react-native ios
+categories: 工具 ffmpeg
 ---
 
-#### 调整音频速度
+#### 1. 调整音频速度
 >ffmpeg -i 5_51_78_20161102150107_60257_c.mp3  -filter:a "atempo=0.1"  final.mp3
 > ffmpeg -i cyxy.m4a -filter:a "atempo=1.3" -vn   cyxy_1_3.m4a
 
-#### 切割音频和视频
+#### 2. 切割音频和视频
 >ffmpeg -ss 3.727416 -t 1.80254 -i 128_BEC_M680_larrylleee.mp3 -acodec copy outputfile.mp3
 >ffmpeg -ss 3904.071 -t 369.006 -i xsk600.mp4 -acodec copy out2.mp4
 >ffmpeg -t 3.6 -ss 00:00:01 -i Screencast_2016-01-13-17-01-38.mp4  small-clip.gif（转gif）
@@ -17,29 +17,29 @@ categories: react-native ios
 **"-ss 3.727416 -t 1.80254" 表示 从3.727416秒开始 持续1.80254 秒**
 
 
-#### MP3转m4a
+#### 3. MP3转m4a
 >http://superuser.com/questions/370625/ffmpeg-command-to-convert-mp3-to-aac
 >ffmpeg -i 20150520_050544_1_2.mp3 -c:a libfdk_aac 1.m4a
 
-#### MP3转amr
+#### 5. MP3转amr
 >https://my.oschina.net/feiyan/blog/84515
 >ffmpeg -i 20150520_050544_1_2.mp3  -ab 12.2k   -ac 1 -ar 8000 2.amr
 
-#### avi 转 3gp
+#### 6. avi 转 3gp
 将视频转成3gp最少要额外三个参(比特率), -ac(声道数), -ar(声音采样率) （少了就报那个Only 8000Hz sample rate supported错)
 >ffmpeg.exe -i test.avi -ab 12.2k -ac 1 -ar 8000 test.3gp 
 
-#### 加字幕
+#### 7.加字幕
 https://trac.ffmpeg.org/wiki/HowToBurnSubtitlesIntoVideo
 >ffmpeg -i video.avi -vf subtitles=subtitle.srt out.avi
 
 
-####调视频比例
+#### 8. 调视频比例
 >ffmpeg -i %s  -strict -2  -crf 29 -r 24 -vcodec libx264 -vf scale=%s:-1 "+tmpFile
 
 
 
-#### 有用的ruby脚本
+#### 9. 有用的ruby脚本
 切割视频
 ```
 def cut_mp4(mp4_file, starttime, endtime,out_file)
@@ -60,10 +60,10 @@ def snapshot(mp4_file,time,out_file)
 end
 ```
 
-#### Ffmpeg 音频视频同步
+#### 10.Ffmpeg 音频视频同步
 >https://wjwoodrow.wordpress.com/2013/02/04/correcting-for-audiovideo-sync-issues-with-the-ffmpeg-programs-itsoffset-switch/
 
-#### Ffmpeg 降低 gif大小
+#### 11.Ffmpeg 降低 gif大小
 >http://www.bugcodemaster.com/article/convert-video-animated-gif-using-ffmpeg
 >ffmpeg -i video_320x180.mp4 -r 10 -ss 15 -t 20 -vf scale=160:90 agif_r10_d20_160x90.gif -hide_banner
 
