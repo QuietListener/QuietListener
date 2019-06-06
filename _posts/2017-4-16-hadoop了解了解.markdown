@@ -121,7 +121,9 @@ Hadoop NameNode 需要通过ssh执行集群级别的操作，需要无密码登�
 ```
 
 3. 格式化namenode 创建存储空文件系统，和namenode的持久化数据结构，这个过程跟datanode无关
->[www@cinder hadoop-2.7.3]$ hdfs namenode -format
+```
+[www@cinder hadoop-2.7.3]$ hdfs namenode -format
+```
 
 4. 配置 slave所在的机器（ip或者hostname）
 ```
