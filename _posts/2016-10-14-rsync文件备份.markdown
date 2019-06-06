@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  rsync 文件备份
-date:   2019-6-1 14:32:00
+date:   2016-10-14 14:32:00
 categories: linux rsync
 ---
 
