@@ -1,0 +1,192 @@
+---
+layout: post
+title:  rsync 文件备份
+date:   2019-6-1 14:32:00
+categories: linux rsync
+---
+
+
+公司talent项目有大量小文件上传，为保证文件的安全，使用rsync和sersync2进行同步备份。
+
+**服务器A----** 同步 **---->服务器B**
+
+### 1. 配置服务器B(部署rsync):
+```
+
+#rsync.conf
+
+######################################################################################################
+#                      ******进程相关全局配置******
+######################################################################################################
+# = 后面的值可根据自己的实际情况更改
+#    pid file 守护进程pid文件
+#    port 守护进程监听端口，可更改，由xinetd允许rsyncd时忽略此参数
+#    address 守护进程监听ip，由xinetd允许rsyncd时忽略此参数
+log file=/var/www/data/rsync/rsyncd.log
+pid file=/var/www/data/rsync/rsyncd.pid
+lock file=/var/www/data/rsync/rsyncd.lock
+
+#port = 873
+#address = 192.168.1.2
+#rsyncd 守护进程运行系统用户全局配置，也可在具体的块中独立配置,
+uid = root
+gid = root
+#允许 chroot，提升安全性，客户端连接模块，首先chroot到模块path参数指定的目录下
+#chroot为yes时必须使用root权限，且不能备份path路径外的链接文件
+use chroot = yes
+#只读
+read only = no
+#只写
+write only = no
+#允许访问rsyncd服务的ip，ip端或者单独ip之间使用空格隔开
+hosts allow = 10.26.236.81
+#不允许访问rsyncd服务的ip，*是全部(不涵盖在hosts allow中声明的ip，注意和hosts allow的先后顺序)
+hosts deny = *
+#客户端最大连接数
+max connections = 5
+#欢迎文件路径，可选的
+#motd file = /etc/rsyncd/rsyncd.motd
+#日志相关
+#    log file 指定rsync发送消息日志文件，而不是发送给syslog，如果不填这个参数默认发送给syslog
+#    transfer logging 是否记录传输文件日志
+#    log format 日志文件格式，格式参数请google
+#    syslog facility rsync发送消息给syslog时的消息级别，
+#    timeout连接超时时间
+transfer logging = yes
+log format = %t %a %m %f %b
+syslog facility = local3
+timeout = 300
+
+######################################################################################################
+#                      ******模块配置(多个)******
+######################################################################################################
+#模块 模块名称必须使用[]环绕，比如要访问data1,则地址应该rsync@192.168.1.2::bczpan
+[bczpan]
+#模块根目录，必须指定
+path=/var/www/data3/talent_fileserver/
+#是否允许列出模块里的内容
+list=yes
+#忽略错误
+#ignore errors
+#模块验证用户名称，可使用空格或者逗号隔开多个用户名
+auth users = rsync
+#模块验证密码文件 可放在全局配置里
+secrets file= /home/www/rsync/rsync.pas
+#注释
+comment = some description about this moudle
+#排除目录，多个之间使用空格隔开
+exclude = test1/ test2/
+
+```
+
+**配置密码文件（密码权限必须是600）**
+```
+[root@rc2 www]# cat  /home/www/rsync/rsync.pas 
+rsync:rsync111
+[root@rc2 www]# ls -lahs /home/www/rsync/rsync.pas
+4.0K -rw------- 1 root root 19 10月 13 14:26 /home/www/rsync/rsync.pas
+```
+
+启动服务器B
+```
+rsync --daemon --config /etc/rsyncd.conf 
+```
+
+
+
+### 2. 配置服务器A(部署sersync2)
+
+下载
+```
+wget https://github.com/wsgzao/sersync/raw/master/sersync2.5.4_64bit_binary_stable_final.tar.gz
+```
+sersync 配置文件
+```
+#confxml.xml文件内容
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<head version="2.5">
+    <host hostip="localhost" port="8008"></host>
+    <debug start="true"/>
+    <fileSystem xfs="false"/>
+    <filter start="false">
+	<exclude expression="(.*)\.svn"></exclude>
+	<exclude expression="(.*)\.gz"></exclude>
+	<exclude expression="^info/*"></exclude>
+	<exclude expression="^static/*"></exclude>
+        <exclude expression="^tmp/*"></exclude>	
+    </filter>
+    <inotify>
+	<delete start="false"/>
+	<createFolder start="true"/>
+	<createFile start="false"/>
+	<closeWrite start="true"/>
+	<moveFrom start="true"/>
+	<moveTo start="true"/>
+	<attrib start="false"/>
+	<modify start="false"/>
+    </inotify>
+
+    <sersync>
+	<localpath watch="/var/www/data/talent_fileserver_upload/">
+	    <remote ip="10.168.138.17" name="bczpan"/>
+	    <!--<remote ip="192.168.8.39" name="tongbu"/>-->
+	    <!--<remote ip="192.168.8.40" name="tongbu"/>-->
+	</localpath>
+	<rsync>
+	    <commonParams params="-artuz"/>
+	    <auth start="true" users="rsync" passwordfile="/opt/sersync/users.pas"/>
+	    <userDefinedPort start="false" port="874"/><!-- port=874 -->
+	    <timeout start="false" time="100"/><!-- timeout=100 -->
+	    <ssh start="false"/>
+	</rsync>
+	<failLog path="/tmp/rsync_fail_log.sh" timeToExecute="60"/><!--default every 60mins execute once-->
+	<crontab start="false" schedule="600"><!--600mins-->
+	    <crontabfilter start="false">
+		<exclude expression="*.php"></exclude>
+		<exclude expression="info/*"></exclude>
+	    </crontabfilter>
+	</crontab>
+	<plugin start="false" name="command"/>
+    </sersync>
+
+    <plugin name="command">
+	<param prefix="/bin/sh" suffix="" ignoreError="true"/>	<!--prefix /opt/tongbu/mmm.sh suffix-->
+	<filter start="false">
+	    <include expression="(.*)\.php"/>
+	    <include expression="(.*)\.sh"/>
+	</filter>
+    </plugin>
+
+    <plugin name="socket">
+	<localpath watch="/opt/tongbu">
+	    <deshost ip="192.168.138.20" port="8009"/>
+	</localpath>
+    </plugin>
+    <plugin name="refreshCDN">
+	<localpath watch="/data0/htdocs/cms.xoyo.com/site/">
+	    <cdninfo domainname="ccms.chinacache.com" port="80" username="xxxx" passwd="xxxx"/>
+	    <sendurl base="http://pic.xoyo.com/cms"/>
+	    <regexurl regex="false" match="cms.xoyo.com/site([/a-zA-Z0-9]*).xoyo.com/images"/>
+	</localpath>
+    </plugin>
+</head>
+
+```
+配置密码文件:
+```
+[root@iZ23kzithsiZ www]# ls -lah /opt/sersync/users.pas 
+-rw------- 1 root root 13 10月 13 14:59 /opt/sersync/users.pas
+[root@iZ23kzithsiZ www]# cat  /opt/sersync/users.pas 
+rsyncgogogo_
+```
+
+用rsync测试一下:
+```
+rsync  -artuz -R --progress --password-file=/opt/sersync/users.pas  /path/testfile  rsync@10.168.138.17::bczpan
+```
+
+启动：
+```
+ ./sersync2 -r -d
+ ```
+
