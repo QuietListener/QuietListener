@@ -92,7 +92,7 @@ datadir=/usr/local/mysql/data/
 Starting MySQL.Logging to '/usr/local/mysql/data/izm5e4x1zl97yhhpepmsv4z.err'.
                                                           [  OK  ]
  ``` 
- 
+
  也可以用下面方式启动 
 *  /etc/init.d/mysqld start    
 *  nohup ./bin/mysqld --defaults-file=./support-files/my-default.cnf &
@@ -105,7 +105,8 @@ Starting MySQL.Logging to '/usr/local/mysql/data/izm5e4x1zl97yhhpepmsv4z.err'.
 [root@izm5e4x1zl97yhhpepmsv4z support-files]# ln -s /usr/local/mysql/mysql-5.7.21/bin/mysql /usr/bin 
 ```
 
-登录初始密码是 "bin/mysqld --initialize" 时候生成的随机密码 **tyjsc?34kcqT**
+登录初始密码是 "bin/mysqld --initialize" 时候生成的随机密码 **tyjsc?34kcqT**  
+
 **登录并重新设置密码(必须重新设置root密码)**
 
 ```
