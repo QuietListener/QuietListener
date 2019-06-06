@@ -165,7 +165,7 @@ Mode: follower
 ```
 
 
-### 封装了一个ruby的分布式锁
+### 2. 封装了一个ruby的分布式锁
 ```
 #encoding:utf-8
 
