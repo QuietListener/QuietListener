@@ -1,0 +1,36 @@
+---
+layout: post
+title:  线上nginx注意事项
+date:   2019-6-1 14:32:00
+categories: nginx 高并发
+---
+
+nginx 注意事项
+### 1. 上线前先测试。用-t参数
+```
+nginx -p /home/www/projects/online/module_nginx_dispatch/ -t -c conf/nginx.conf
+```
+
+nginx 默认在 /usr/local/nginx/ 找nginx.conf 用-p指定自定义目录。上面的例子中nginx.conf的位置就是在 /home/www/projects/online/module_nginx_dispatch/conf/nginx.conf.
+
+### 2.nginx与后端服务用http 1.1 保存长链接
+```
+ upstream zuul { #后端的zuul网关
+        server 10.1.x.xx:1101 weight=2 fail_timeout=10s max_fails=100;
+        server 10.1.x.xx:1101 weight=2 fail_timeout=10s max_fails=100;
+        keepalive 256; 
+    }
+
+location /api/serive/ {
+            proxy_pass http://zuul;
+            proxy_http_version 1.1;
+            proxy_set_header Connection "";
+            proxy_read_timeout 2s;     
+        }
+```
+
+1. 访问/api/serive/时候 nginx与后端的zuul保持长链接，
+proxy_set_header Connection "" 必须设置，因为客户端可能会发送一个 **"Connection close"** 给服务器，服务器会主动关闭连接。将Connection设置为“”会保持长链接。
+2. keepalive 256 
+>   # keepalive – The number of idle keepalive connections to an upstream server that remain open for each worker process. There is no default value. 
+就是保持的最大空闲长链接数目
