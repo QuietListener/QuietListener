@@ -34,3 +34,7 @@ proxy_set_header Connection "" 必须设置，因为客户端可能会发送一�
 2. keepalive 256 
 >   # keepalive – The number of idle keepalive connections to an upstream server that remain open for each worker process. There is no default value. 
 就是保持的最大空闲长链接数目
+
+### 服务器失败
+>server 10.1.x.xx:1101 weight=2 fail_timeout=10s max_fails=100;   
+在10秒内连接失败大于或者等于100次，nginx就不再将请求分发到这个服务器了。
