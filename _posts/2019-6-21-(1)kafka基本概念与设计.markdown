@@ -2,9 +2,11 @@
 layout: post
 title:  (1)卡夫卡基本概念与设计
 date:   2019-6-21 14:32:00
-categories: nginx 高并发
+categories: 消息队列 kafka
 ---
 
 用kafka这么久了，还是系统理一下
 
 ![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2019-06-21-kafka-1.png)
+
+![下载](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/files/kafka-基本概念与设计.mindnode)

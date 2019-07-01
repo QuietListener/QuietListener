@@ -1,0 +1,14 @@
+---
+layout: post
+title:  canal订阅日志清理缓存，解决一致性问题
+date:   2019-7-1 14:32:00
+categories: 消息队列 kafka
+---
+
+#### 背景
+老系统进行重构，渐进性的重构。在重构接口study_config的读接口的时候，出现了缓存一致性问题。老系统维护了一套缓存，新系统维护了一套缓存。当老系统更新mysql数据库的时候(**user_study_config**表)，会删除老系统缓存，但是不会删除新系统缓存，这样新系统这个这边感知不到数据的变化，会出现几分钟的不一致(新系统缓存5分钟后失效)。 新系统使用java,老系统是ruby写的，有点乱。不想去修改老代码了。
+![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/user_study-config1.jpg)
+
+### 解决办法
+   新启小项目，使用canal订阅数据库的binlog,当发现 表**user_study_config**有更新操作的时候，删除新项目中对应的缓存。这样不用动老代码，也能保证缓存的一致。
+   ![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/user_study-config2.jpg)
