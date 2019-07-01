@@ -11,4 +11,4 @@ categories: 消息队列 kafka
 
 ### 解决办法
    新启小项目，使用canal订阅数据库的binlog,当发现 表**user_study_config**有更新操作的时候，删除新项目中对应的缓存。这样不用动老代码，也能保证缓存的一致。
-   ![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/user_study-config2.jpg)
+   ![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/user_study-config2.jpg?a=12)
