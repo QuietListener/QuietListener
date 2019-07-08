@@ -1,0 +1,175 @@
+---
+layout: post
+title:  java8传递代码块,减少重复性代码
+date:   2019-7-8- 14:32:00
+categories: 消息队列 kafka
+---
+
+### 1.函数作为参数
+在很多语言中 像 ruby，python，函数和其他数据类型是有相同地位的，函数也可以像字符串，int值一样当参数传递给函数，这就带来了很大的灵活性。像下面这段ruby代码中，test_block可以传入一段代码块。
+```
+#
+#函数test_block接受一个参数，并且接受一个代码块
+#
+def test_block(p)
+  newp = p
+  if block_given?
+    newp = yield p #执行代码块
+  end
+  return newp
+end
+
+#没有传入代码块
+ret = test_block(1);
+puts ret #1
+
+#传入代码块
+ret = test_block(1) do |item| #可以传入一个代码块
+  item+10
+end
+puts ret #11
+```
+
+### 2. java8 也具备了像方法中传入代码块的能力
+在java8以前，函数式不能作为参数传入方法的的，java8后提供了@Functional的功能，使java有了与ruby相似的能力。
+在重构study-api的时候遇到了很多缓存数据的代码，很多都有相同的模式。
+
+#### 1. 重复的老代码
+```
+//CollectWordService.java
+public List<CollectWord> getCollectWordByUserId(long userId) {
+        String key = CacheKey.UserCollectWordsKey(userId);
+        List<CollectWord> ret = null;
+        try {
+            ret = cacheHelper.getObj(key, new TypeToken<List<CollectWord>>() {}.getType());
+        } catch (CacheHelperException e) {
+            if (e.getCode() == CacheHelperException.CODE_NULL_FLAG) {
+                return null;
+            }
+        }
+
+        ret = collectWordMapper.queryByUserId(getCollectWordTableName(userId), userId);
+
+        if (ret == null) {
+            cacheHelper.setNullFlag(key);
+        } else {
+            cacheHelper.setObj(key, ret);
+        }
+
+        return ret;
+    }
+```
+
+```
+//WordNoteDoService.java
+public WordNoteDo getLatest(long userId) {
+        String key = CacheKey.UserLatestWordNoteKey(userId);
+
+        WordNoteDo ret = null;
+        try {
+            ret = cacheHelper.getObj(key, new TypeToken<WordNoteDo>() {
+            }.getType());
+        } catch (CacheHelperException e) {
+            if (e.getCode() == CacheHelperException.CODE_NULL_FLAG) {
+                return null;
+            }
+        }
+
+        ret = wordNoteMapper.getLatest(getTableName(userId), userId);
+
+        if (ret == null) {
+            cacheHelper.setNullFlag(key);
+        } else {
+            cacheHelper.setObj(key, ret);
+        }
+        return ret;
+    }
+```
+
+上面两段代码，非常相似，有相同的模式，也有很多的重复代码。使用java8的新功能就可以减少很多这样的代码。  
+下面这段伪代码暂时了它们的相似点。
+
+```
+public WordNoteDo getLatest(long userId) {
+        String key = 获取redis缓存的key
+
+        WordNoteDo ret = null; 
+        try {
+            ret =  获取缓存。
+        } catch (CacheHelperException e) { //缓存为空返回null
+            if (e.getCode() == CacheHelperException.CODE_NULL_FLAG) {
+                return null;
+            }
+        }
+
+        ret = 取数据库的结果
+
+        if (ret == null) { //缓存从数据库拿到的数据
+            cacheHelper.setNullFlag(key);
+        } else {
+            cacheHelper.setObj(key, ret);
+        }
+        return ret;
+    }
+```
+
+#### 2.重构
+下面我们在CacheHelper中写一个新方法,他传入一个函数(Supplier) 用于在缓存没有命中的时候获取数据库的内容，一个Type表示数据的类型
+```
+//CacheHelper.java
+ public <T> T getObjAndCache(String key, Supplier<T> func, Type type, int expireS) {
+        T ret = null;
+        try {
+            ret = getObj(key, type);
+        } catch (CacheHelperException e) {
+            logger.debug("CacheHelperException" + e.toString());
+            if (e.getCode() == CacheHelperException.CODE_NULL_FLAG) {
+                return null;
+            }
+        }
+        if(ret != null){
+            return ret;
+        }
+
+        ret = func.get();
+
+        if (ret == null) {
+            setNullFlag(key, expireS);
+        } else {
+            setObj(key, ret, expireS);
+        }
+        return ret;
+    }
+```
+
+**下面就是重构后的代码，简洁了很多**
+
+```
+//CollectWordService.java
+    public List<CollectWord> getCollectWordByUserId(long userId) {
+        String key = CacheKey.UserCollectWordsKey(userId);
+        List<CollectWord> ret = cacheHelper.getObjAndCache(key,
+                //没有命中时候获取数据库的函数
+                ()-> collectWordMapper.queryByUserId(getCollectWordTableName(userId), userId),
+                new TypeToken<List<CollectWord>>() {}.getType());
+
+        return ret;
+    }
+```
+```
+//WordNoteDoService.java
+ public WordNoteDo getLatest(long userId) {
+        String key = CacheKey.UserLatestWordNoteKey(userId);
+        WordNoteDo ret = cacheHelper.getObjAndCache(key,
+                //没有命中时候获取数据库的函数
+                ()-> wordNoteMapper.getLatest(getTableName(userId), userId),
+                new TypeToken<WordNoteDo>(){}.getType());
+        return ret;
+    }
+
+```
+
+
+
+
+
