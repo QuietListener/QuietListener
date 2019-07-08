@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  java8传递代码块,减少重复性代码
-date:   2019-7-8- 14:32:00
+date:   2019-7-8 14:32:00
 categories: 消息队列 kafka
 ---
 
@@ -31,7 +31,7 @@ puts ret #11
 ```
 
 ### 2. java8 也具备了像方法中传入代码块的能力
-在java8以前，函数式不能作为参数传入方法的的，java8后提供了@Functional的功能，使java有了与ruby相似的能力。
+在java8以前，函数是不能作为参数传入方法的的，java8后提供了@Functional的功能，使java有了与ruby相似的能力。
 在重构study-api的时候遇到了很多缓存数据的代码，很多都有相同的模式。
 
 #### 1. 重复的老代码
@@ -87,13 +87,13 @@ public WordNoteDo getLatest(long userId) {
 ```
 
 上面两段代码，非常相似，有相同的模式，也有很多的重复代码。使用java8的新功能就可以减少很多这样的代码。  
-下面这段伪代码暂时了它们的相似点。
+**下面这段伪代码展示了它们的相似点。**
 
 ```
-public WordNoteDo getLatest(long userId) {
+public SomeObj someFunc(long userId) {
         String key = 获取redis缓存的key
 
-        WordNoteDo ret = null; 
+        SomeObj ret = null; 
         try {
             ret =  获取缓存。
         } catch (CacheHelperException e) { //缓存为空返回null
@@ -104,8 +104,9 @@ public WordNoteDo getLatest(long userId) {
 
         ret = 取数据库的结果
 
-        if (ret == null) { //缓存从数据库拿到的数据
-            cacheHelper.setNullFlag(key);
+        //缓存从数据库拿到的数据
+        if (ret == null) { 
+            cacheHelper.setNullFlag(key); //缓存null
         } else {
             cacheHelper.setObj(key, ret);
         }
@@ -114,7 +115,7 @@ public WordNoteDo getLatest(long userId) {
 ```
 
 #### 2.重构
-下面我们在CacheHelper中写一个新方法,他传入一个函数(Supplier) 用于在缓存没有命中的时候获取数据库的内容，一个Type表示数据的类型
+下面我们在CacheHelper中写一个新方法,他接受一个函数(Supplier) ，用于在缓存没有命中的时候获取数据库的内容。一个Type表示返回数据的类型。
 ```
 //CacheHelper.java
  public <T> T getObjAndCache(String key, Supplier<T> func, Type type, int expireS) {
