@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  java8传递代码块,减少重复性代码
+title:  java8函数式编程,减少重复性代码
 date:   2019-7-8 14:32:00
 categories: 消息队列 kafka
 ---
@@ -30,7 +30,7 @@ end
 puts ret #11
 ```
 
-### 2. java8 也具备了像方法中传入代码块的能力
+### 2. java8 添加了函数式编程特性，也具备了像方法中传入代码块的能力
 在java8以前，函数是不能作为参数传入方法的的，java8后提供了@Functional的功能，使java有了与ruby相似的能力。
 在重构study-api的时候遇到了很多缓存数据的代码，很多都有相同的模式。
 
@@ -114,7 +114,7 @@ public SomeObj someFunc(long userId) {
     }
 ```
 
-#### 2.重构
+#### 2.重构，函数式编程
 下面我们在CacheHelper中写一个新方法,他接受一个函数(Supplier) ，用于在缓存没有命中的时候获取数据库的内容。一个Type表示返回数据的类型。
 ```
 //CacheHelper.java
