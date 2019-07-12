@@ -2,7 +2,7 @@
 layout: post
 title:  java8函数式编程,减少重复性代码
 date:   2019-7-8 14:32:00
-categories: 消息队列 kafka
+categories: java8 函数式
 ---
 
 ### 1.函数作为参数
