@@ -80,8 +80,9 @@ public class CommonService {
 }
 
 ```
-**下面是使用业务中所使用**
-**“transactionManager1” 和 “transactionManager2”** 分别是数据库1和数据库2的TransactionManager对应的Bean的名字  
+**下面是使用业务中所使用**  
+
+**“transactionManager1” 和 “transactionManager2”** 分别是数据库1和数据库2的TransactionManager对应的Bean的名字    
 **() -> dakaCredit_(userId, timeStampS, clientTimeS, timezone))** 是业务逻辑(Supplier)
 
 ```
@@ -95,7 +96,7 @@ public class CommonService {
      */
     public int dakaCredit(long userId, long timeStampS, int clientTimeS,int timezone) {
         List<String> txManagerNames = Arrays.asList(“transactionManager1”,"“transactionManager2”");
-        //需要同时成功，同时失败的业务罗
+       
         int ret = commonService.manualTransaction(txManagerNames,
                 () -> dakaCredit_(userId, timeStampS, clientTimeS, timezone)); //需要同时成功，同时失败的业务逻辑
         return ret;
@@ -121,7 +122,7 @@ public class CommonService {
         userCreditDakaDatesMapper.insertOrUpdate(ucd);
         String orderId = generateOrderId(userId);
         
-        //扣铜板，数据在库1中
+        //扣金币，数据在库1中
         int ret1 = userCreditService.updateUserCredit(userId,-1500,orderId,3,gson.toJson(extra));
         if(ret1 == 0){
             return 2;
@@ -160,3 +161,5 @@ public class CommonService {
   但是考虑到业务场景是一个比较低频的操作，而且commit失败的概率也是非常的小，还有金币不是真正的钱，对用户不敏感业务条件下。我们可以记录详细的log，如果出问题也可以从log中来恢复。这也算是一个不完美的解决方案了。
      
 
+### 4.其他方案
+  也可以使用最终一致的方法，扣款成功，但是打卡失败，将信息写一个表,然后定期重试(补偿的方案)。但是如果重试一定次数失败，还得做一些回滚操作。比如归还给用户的金币。这大大增加了业务逻辑的复杂度，而且这是一个低频接口，没有必要。
