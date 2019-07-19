@@ -84,7 +84,6 @@ public class CommonService {
 
 **“transactionManager1” 和 “transactionManager2”** 分别是数据库1和数据库2的TransactionManager对应的Bean的名字    
 **() -> dakaCredit_(userId, timeStampS, clientTimeS, timezone))** 是业务逻辑(Supplier)
-
 ```
 /**
      *
@@ -133,6 +132,10 @@ public class CommonService {
     }
 ```
 
+**注意事项:** 
+需要回滚的业务逻辑的Propagation必须为Propagation.REQUIRED，需要复用事务，如果是Propagation.REQUIRES_NEW的话就不行，因为每次都重新生成一个新事务，这个新事物就不在manualTransaction的管理范围了。
+
+
 ### 3.缺点
   很明显这个方案是有很大的缺点的。看下面的代码片段
   ```
@@ -160,6 +163,7 @@ public class CommonService {
   在flag=true的条件下所有事务都应该commit，但是有些commit失败了，有些成功了，会导致数据不一致。
   但是考虑到业务场景是一个比较低频的操作，而且commit失败的概率也是非常的小，还有金币不是真正的钱，对用户不敏感业务条件下。我们可以记录详细的log，如果出问题也可以从log中来恢复。这也算是一个不完美的解决方案了。
      
-
-### 4.其他方案
+### 4.其他方案1 XA分布式事务
+   可以使用 XA协议，实现跨库事务。 atomikos这个库实现了jta的功能。但是使用atomikos需要将DataSource替换为AtomikosDataSourceBean(原来的DataSource是com.zaxxer.hikari.HikariDataSource)，对项目影响比较大，也没有充分的时间进行测试。而且XA的效率是单机事务的1/10,应对突发流量方面会有比较大的瓶颈。所以不采用这种方案。
+### 4.其他方案2 最终一致
   也可以使用最终一致的方法，扣款成功，但是打卡失败，将信息写一个表,然后定期重试(补偿的方案)。但是如果重试一定次数失败，还得做一些回滚操作。比如归还给用户的金币。这大大增加了业务逻辑的复杂度，而且这是一个低频接口，没有必要。
