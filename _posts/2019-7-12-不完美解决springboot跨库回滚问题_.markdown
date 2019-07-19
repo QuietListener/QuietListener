@@ -133,14 +133,13 @@ public class CommonService {
 ```
 
 **注意事项:** 
-需要回滚的业务逻辑的Propagation必须为Propagation.REQUIRED，需要复用事务，如果是Propagation.REQUIRES_NEW的话就不行，因为每次都重新生成一个新事务，这个新事物就不在manualTransaction的管理范围了。
+需要回滚的业务逻辑的Propagation必须为Propagation.REQUIRED，业务逻辑能复用manualTransaction生成的事务，如果是Propagation.REQUIRES_NEW的话就不行，因为每次都重新生成一个新事务，这个新事物就不在manualTransaction的管理范围了。
 
 
 ### 3.缺点
   很明显这个方案是有很大的缺点的。看下面的代码片段
   ```
      try {
-            
             //执行业务逻辑
             T t= supplier.get();
 
@@ -154,7 +153,11 @@ public class CommonService {
                 if (flag == true) {
                     manager.commit(status);
                 } else {
-                    manager.rollback(status);
+                    try{
+                        manager.rollback(status);
+                    }catch(Exception e){
+                        logger.error("rollback error",e);
+                    }
                 }
             }
         }
@@ -165,5 +168,9 @@ public class CommonService {
      
 ### 4.其他方案1 XA分布式事务
    可以使用 XA协议，实现跨库事务。 atomikos这个库实现了jta的功能。但是使用atomikos需要将DataSource替换为AtomikosDataSourceBean(原来的DataSource是com.zaxxer.hikari.HikariDataSource)，对项目影响比较大，也没有充分的时间进行测试。而且XA的效率是单机事务的1/10,应对突发流量方面会有比较大的瓶颈。所以不采用这种方案。
-### 4.其他方案2 最终一致
+### 5.其他方案2 最终一致
   也可以使用最终一致的方法，扣款成功，但是打卡失败，将信息写一个表,然后定期重试(补偿的方案)。但是如果重试一定次数失败，还得做一些回滚操作。比如归还给用户的金币。这大大增加了业务逻辑的复杂度，而且这是一个低频接口，没有必要。
+
+### 参考资料:
+   1. 使用JTA处理分布式事务  https://www.hifreud.com/2017/07/12/spring-boot-23-jta-handle-distribute-transaction/#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99
+
