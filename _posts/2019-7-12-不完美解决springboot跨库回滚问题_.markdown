@@ -172,5 +172,5 @@ public class CommonService {
   也可以使用最终一致的方法，扣款成功，但是打卡失败，将信息写一个表,然后定期重试(补偿的方案)。但是如果重试一定次数失败，还得做一些回滚操作。比如归还给用户的金币。这大大增加了业务逻辑的复杂度，而且这是一个低频接口，没有必要。
 
 ### 参考资料:
-   1. 使用JTA处理分布式事务  https://www.hifreud.com/2017/07/12/spring-boot-23-jta-handle-distribute-transaction/#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99
-
+   1. [使用JTA处理分布式事务](https://www.hifreud.com/2017/07/12/spring-boot-23-jta-handle-distribute-transaction)
+   2. 
