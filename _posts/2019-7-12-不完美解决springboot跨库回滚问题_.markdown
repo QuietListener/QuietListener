@@ -173,4 +173,5 @@ public class CommonService {
 
 ### 参考资料:
    1. [使用JTA处理分布式事务](https://www.hifreud.com/2017/07/12/spring-boot-23-jta-handle-distribute-transaction)
-   2. [ 详解Mysql分布式事务XA（跨数据库事务）](https://blog.csdn.net/soonfly/article/details/70677138 )
+   
+   2. [详解Mysql分布式事务XA](https://blog.csdn.net/soonfly/article/details/70677138 )
