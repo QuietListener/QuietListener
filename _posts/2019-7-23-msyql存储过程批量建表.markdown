@@ -1,0 +1,69 @@
+---
+layout: post
+title:  mysql存储过程批量建表
+date:   2019-7-12 14:32:00
+categories: mysql
+---
+
+#### 创建存储过程
+```
+DROP PROCEDURE IF EXISTS `batch_create_user_collect_words_t`;
+DELIMITER $$
+CREATE PROCEDURE `batch_create_user_collect_words_t`()
+BEGIN
+    DECLARE `@i` int(11);
+    DECLARE `@createSql` VARCHAR(2560);
+    DECLARE `@createIndexSql1` VARCHAR(2560);
+    DECLARE `@createIndexSql2` VARCHAR(2560);
+    DECLARE `@createIndexSql3` VARCHAR(2560);
+    set `@i`=249;
+    WHILE `@i`<=500 DO 
+         -- `M_ID` bigint AUTO_INCREMENT PRIMARY KEY NOT NULL,
+         -- createTable     
+         SET @createSql = CONCAT('CREATE TABLE IF NOT EXISTS user_collect_words_t',`@i`,'(
+           `id` int(11) NOT NULL AUTO_INCREMENT,
+  			`user_id` int(11) NOT NULL,
+  			`topic_id` int(11) NOT NULL,
+ 			`book_id` int(11) NOT NULL,
+ 			`created_at` int(11) NOT NULL,
+  			`tag_id` int(11) DEFAULT 0,
+  			PRIMARY KEY (`id`),
+  			UNIQUE KEY `user_id` (`user_id`,`topic_id`)
+			) ENGINE=InnoDB AUTO_INCREMENT=8634754 DEFAULT CHARSET=utf8mb4');
+         prepare stmt from @createSql;
+         
+         execute stmt;
+         SET `@i`= `@i`+1; 
+    END WHILE;
+END $$
+DELIMITER;
+```
+
+
+### 创建已知的表(test_1)相同的表
+```
+DROP PROCEDURE IF EXISTS `batch_create_user_collect_words_t`;
+DELIMITER $$
+CREATE PROCEDURE `batch_create_user_collect_words_t`()
+BEGIN
+    DECLARE `@i` int(11);
+    DECLARE `@createSql` VARCHAR(2560);
+    set `@i`=2;
+    WHILE `@i`<=6 DO 
+         -- `M_ID` bigint AUTO_INCREMENT PRIMARY KEY NOT NULL,
+         -- createTable     
+         SET @createSql = CONCAT('CREATE TABLE IF NOT EXISTS user_collect_words_t',`@i`,' like test_1');
+         prepare stmt from @createSql;
+         
+         execute stmt;
+         SET `@i`= `@i`+1; 
+    END WHILE;
+END $$
+DELIMITER;
+```
+#执行存储过程 并删除存储过程
+```
+call batch_create_user_collect_words_t();
+DROP PROCEDURE IF EXISTS `batch_create_user_collect_words_t`;
+```
+
