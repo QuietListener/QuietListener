@@ -18,11 +18,12 @@ permalink: /books/
 3. 《MyBatis技术内幕》
 
 ### 数据库
-1. 《高性能mysql第三版》 todo
+1. 《高性能mysql第三版》
 
 ### 操作系统
 1. 《The AWK Programming Language》
-2. 《现代编译器的Java实现(第二版)》
+2. 《Linux命令行与shell脚本编程大全.第3版》
+
 
 
 ### 算法
