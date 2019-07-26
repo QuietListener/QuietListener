@@ -3,8 +3,6 @@ layout: page
 title: 书单
 permalink: /books/
 ---
-
-# 书单
 ## 一、技术
 ### java
 1. 《深入理解Java虚拟机(JVM高级特性与最佳实践)》 
