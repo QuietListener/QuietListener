@@ -1,6 +1,6 @@
 ---
 layout: page
-title: About
+title: 关于我
 permalink: /about/
 ---
 帝都本科4年，工作4年，现居成都,某互联网公司后台开发~
