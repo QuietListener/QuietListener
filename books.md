@@ -16,6 +16,7 @@ permalink: /books/
 9. 《深入剖析tomcat》(how tomcat works)
 
 ### 中间件
+1. [**《Java Persistence with MyBatis 3》**]()
 2. [**《Kafka技术内幕：图文详解Kafka源码设计与实现》**]()  2个星期
 3. [**《MyBatis技术内幕》**]()  1个星期
 
