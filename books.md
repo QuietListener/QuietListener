@@ -12,6 +12,8 @@ permalink: /books/
 5. 《java编程思想》
 6. 《Head First 设计模式(中文版)》
 7. [**《Spring in action (第四版)》**]()  2个星期
+8. 《Servlet和JSP学习指南》
+9. 《深入剖析tomcat》(how tomcat works)
 
 ### 中间件
 2. [**《Kafka技术内幕：图文详解Kafka源码设计与实现》**]()  2个星期
@@ -27,6 +29,8 @@ permalink: /books/
 ### ruby
 1. 《Ruby元编程》
 2. [rails实战圣经](https://ihower.tw/rails/index-cn.html)
+
+### python
 
 ### python
 
