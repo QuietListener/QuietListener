@@ -21,6 +21,7 @@ permalink: /books/
 
 ### 数据库
 1. [**《高性能mysql第三版》**]()  4个星期
+1. [**《Mysql技术内幕 InnoDB存储引擎》**]()  4个星期
 
 ### 操作系统
 1. 《The AWK Programming Language》 1个星期
