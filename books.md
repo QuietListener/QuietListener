@@ -29,7 +29,7 @@ permalink: /books/
 
 ### ruby
 1. 《Ruby元编程》
-2. [rails实战圣经](https://ihower.tw/rails/index-cn.html)
+2. [《rails实战圣经》](https://ihower.tw/rails/index-cn.html)
 
 ### python
 
