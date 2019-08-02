@@ -1,0 +1,73 @@
+---
+layout: post
+title:  spring 事务管理
+date:   2019-8-2 14:32:00
+categories: mybatis orm mysql
+---
+
+使用spring的事务 其实很简单，如下下面的代码。
+```
+//获取TransactionManager
+PlatformTransactionManager manager = applicationContext.getBean(name);
+
+//定义Transaction
+TransactionDefinition def = new DefaultTransactionDefinition();
+
+//从TransactionManager获取一个TransactionStatus
+TransactionStatus status = manager.getTransaction(def);
+
+try {
+   //业务逻辑
+
+   //提交
+   manager.commit(status);
+} catch(Exception e){
+   //回滚
+   manager.rollback(status);
+}
+
+```
+
+这里有几个比较核心的类需要知道
+### 1. TransactionStatus
+TransactionStatus表示运行着的事务的状态，一般使用其默认实现**DefaultTransactionStatus**
+```
+public interface TransactionStatus extends SavepointManager, Flushable {
+
+	boolean isNewTransaction();
+	boolean hasSavepoint();
+	void setRollbackOnly();
+	boolean isRollbackOnly();
+	void flush();
+	boolean isCompleted();
+
+}
+```
+
+### 2. TransactionDefinition
+TransactionDefinition用来定义一个Transaction，比如事务传播，隔离级别，过期时间等
+```
+public interface TransactionDefinition {
+
+	int getPropagationBehavior();
+	int getIsolationLevel();
+	int getTimeout();
+	boolean isReadOnly();
+	String getName();
+}
+```
+
+### 3. PlatformTransactionManager
+PlatformTransactionManager执行具体的事务动作(commit或者rollback)
+它有几个实现，一般使用DataSourceTransactionManager
+
+```
+public interface PlatformTransactionManager {
+
+	TransactionStatus getTransaction(@Nullable TransactionDefinition definition) throws TransactionException;
+	void commit(TransactionStatus status) throws TransactionException;
+	void rollback(TransactionStatus status) throws TransactionException;
+}
+
+```
+

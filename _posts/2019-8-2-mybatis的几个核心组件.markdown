@@ -10,7 +10,7 @@ categories: mybatis orm mysql
 2. TransactionFactory(JdbcTransactionFactory和ManagedTransactionFactory)
 3. SqlSession
 4. SqlSessionFactory
-5. Executor
+5. Executor 执行sql
 
 ## 1.Transaction
 ###1. mybatis使用Transaction来管理事务
