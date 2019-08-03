@@ -6,7 +6,7 @@ categories: mybatis orm mysql
 ---
 ## 1. 基本用法
 使用spring的事务 其实很简单，如下下面的代码。
-```
+```java
 //获取TransactionManager
 PlatformTransactionManager manager = applicationContext.getBean(name);
 

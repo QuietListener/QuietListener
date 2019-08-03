@@ -13,7 +13,7 @@ categories: mybatis orm mysql
 5. Executor 执行sql
 
 ## 1.Transaction
-###1. mybatis使用Transaction来管理事务
+### 1. mybatis使用Transaction来管理事务
 ```
 public interface Transaction { 
  Connection getConnection() throws SQLException;
@@ -24,7 +24,7 @@ public interface Transaction {
 }
 ```
 
-###2. 两种Transaction实现:
+### 2. 两种Transaction实现:
 JdbcTransaction和ManagedTransaction
 JdbcTransaction 自己管理commit和rollback
 ManagedTransaction的commit和rollback是空的由容器自己来管理(spring)，如下所示
