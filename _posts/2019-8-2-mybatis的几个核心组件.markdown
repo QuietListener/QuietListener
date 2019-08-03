@@ -13,7 +13,7 @@ categories: mybatis orm mysql
 5. Executor 执行sql
 
 ## 1.Transaction
-### 1. mybatis使用Transaction来管理事务
+###  1.mybatis使用Transaction来管理事务
 ```
 public interface Transaction { 
  Connection getConnection() throws SQLException;
