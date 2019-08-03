@@ -14,7 +14,7 @@ categories: mybatis orm mysql
 
 ## 1.Transaction
 ###  1.mybatis使用Transaction来管理事务
-```
+```java
 public interface Transaction { 
  Connection getConnection() throws SQLException;
  void commit() throws SQLException;
@@ -28,7 +28,7 @@ public interface Transaction {
 JdbcTransaction和ManagedTransaction
 JdbcTransaction 自己管理commit和rollback
 ManagedTransaction的commit和rollback是空的由容器自己来管理(spring)，如下所示
-```
+```java
 @Override
 public void commit() throws SQLException {
  // Does nothing
@@ -60,7 +60,7 @@ TransactionFactory生成Transaction，Transaction管理 connection的commit和ro
 
 使用 \<transactionManager type="JDBC"/>标签来指定 用jdbc还是managed。
 
-```
+```java
   <environment id="db1">
        <transactionManager type="JDBC"/>
        <dataSource type="POOLED">
@@ -72,7 +72,8 @@ TransactionFactory生成Transaction，Transaction管理 connection的commit和ro
 
 ## 3. SqlSession
 SqlSession是程序员编程接触最多的东西。
-```public static  User query(int id)
+```java
+public static  User query(int id)
 {
    //从SqlSessionFactory获取一个SqlSession
    SqlSession session = sqlSessionFactory.openSession();
@@ -100,7 +101,7 @@ SqlSession是程序员编程接触最多的东西。
 ```
 ### 1.SqlSessionFactory生成SqlSession
 **DefaultSqlSessionFactory是SqlSessionFactory的子类，用来生成SqlSession**
-```
+```java
 private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
  Transaction tx = null;
  try {
@@ -130,7 +131,7 @@ final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironme
 ####过程如下
 1. 获取对应的TransactionFactory，并且生成transaction
 2. 以transaction为参数生成**Executor**，
-```
+```java
 public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
  executorType = executorType == null ? defaultExecutorType : executorType;
  executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
@@ -161,7 +162,7 @@ SqlSession.commit->Executor.commit->transaction.commit->connection.commit
 
 ### 1.builid SqlsessionFactory
 需要配置文件和需要对应一个environment的名字比如”db1“
-```
+```java
 public SqlSessionFactory build(InputStream inputStream, String environment) {
  return build(inputStream, environment, null);
 }
@@ -171,7 +172,7 @@ public SqlSessionFactory build(InputStream inputStream, String environment) {
 需要指定TransactionFactory(**\<transactionManager type="JDBC"/>**)和一个Datasource  
 
 可以在配置文件的environment中指定了 TransactionFactory和DataSource
-```
+```java
 <environments default="development">
    <environment id="db1">
        <transactionManager type="JDBC"/>
