@@ -4,7 +4,7 @@ title:  spring 事务管理
 date:   2019-8-2 14:32:00
 categories: mybatis orm mysql
 ---
-
+## 1. 基本用法
 使用spring的事务 其实很简单，如下下面的代码。
 ```
 //获取TransactionManager
@@ -28,7 +28,7 @@ try {
 
 ```
 
-这里有几个比较核心的类需要知道
+## 2. 3个比较核心的类
 ### 1. TransactionStatus
 TransactionStatus表示运行着的事务的状态，一般使用其默认实现**DefaultTransactionStatus**
 ```
@@ -59,7 +59,7 @@ public interface TransactionDefinition {
 
 ### 3. PlatformTransactionManager
 PlatformTransactionManager执行具体的事务动作(commit或者rollback)
-它有几个实现，一般使用DataSourceTransactionManager
+它有几个实现，一般使用**DataSourceTransactionManager**
 
 ```
 public interface PlatformTransactionManager {
@@ -71,3 +71,183 @@ public interface PlatformTransactionManager {
 
 ```
 
+
+## 3. 要注意的几个地方
+### 1. 内部类中的非事务方法调用事务方法，不起作用
+### 2. 嵌套事务
+### 3. 嵌套事务与事务传播
+
+嵌套事务经常使用
+比如下面的代码  Foo1Service.getFoo1在一个事务中，它调用FooService.insertFoo也是事务，在调用insertFoo时候就需要根据不同的事务传播方式，有不同的动作。
+```
+public class Foo1Service {
+    @Transactional()
+    public Foo getFoo1(String fooName) {
+        System.out.println("enter getFoo1( String follName)");
+        //嵌套事务
+        fooService.insertFoo(null);
+        System.out.println("exit getFoo1( String follName)");
+        return null;
+    }
+}
+
+public class Foo1Service {
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+    }
+}
+
+```
+
+Spring 定义了6种事务传播行为如下
+```
+public enum Propagation {
+	REQUIRED(TransactionDefinition.PROPAGATION_REQUIRED),
+	SUPPORTS(TransactionDefinition.PROPAGATION_SUPPORTS),
+	MANDATORY(TransactionDefinition.PROPAGATION_MANDATORY),
+	REQUIRES_NEW(TransactionDefinition.PROPAGATION_REQUIRES_NEW),
+	NOT_SUPPORTED(TransactionDefinition.PROPAGATION_NOT_SUPPORTED),
+	NEVER(TransactionDefinition.PROPAGATION_NEVER),
+	NESTED(TransactionDefinition.PROPAGATION_NESTED);
+	private final int value;
+	Propagation(int value) {
+		this.value = value;
+	}
+	public int value() {
+		return this.value;
+	}
+}
+```
+#### 1.REQUIRED 
+如果insertFoo的Transaction定义为**Propagation.REQUIRED**,在进入insertFoo方法之前，spring会检测,如果有一个事务，就加入，如果没有事务新建一个。
+ ```
+   @Transactional(propagation = Propagation.REQUIRED)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+    }
+ ```
+ 我们执行打开log会发现
+ ```java
+ 11:42:34.888 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service.getFoo1]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+Sat Aug 03 11:42:35 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+Sat Aug 03 11:42:35 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+11:42:35.386 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+11:42:35.395 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter getFoo1( String follName)
+11:42:35.454 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Participating in existing transaction
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+exit getFoo1( String follName)
+11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+11:42:35.499 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+11:42:35.499 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+Disconnected from the target VM, address: '127.0.0.1:52955', transport: 'socket'
+ ```
+ 我们可以看到下面这一句在进入insertFoo前，加入了一个存在的事务**Participating in existing transaction**
+ ```
+ 11:42:35.454 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Participating in existing transaction
+enter insertFoo( Foo foo)
+ ```
+ 而且在执行完insertFoo后并不会commit而是在执行完getFoo1后才会commit,如下所示
+ ```
+ exit getFoo1( String follName)
+11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection
+ ```
+
+#### 2. REQUIRES_NEW
+每次都新建一个事务，如果当前有一个事务，把当前事务挂起。
+```
+   @Transactional(propagation = Propagation.REQUIRED_NEW)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+    }
+```
+**执行log**
+```java
+11:55:08.645 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service.getFoo1]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+Sat Aug 03 11:55:08 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+Sat Aug 03 11:55:09 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+11:55:09.224 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+11:55:09.242 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter getFoo1( String follName)
+11:55:09.301 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Suspending current transaction, creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo]
+Sat Aug 03 11:55:09 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+11:55:09.318 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+11:55:09.319 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+11:55:09.347 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:55:09.349 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+11:55:09.356 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+11:55:09.356 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+11:55:09.357 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Resuming suspended transaction after completion of inner transaction
+exit getFoo1( String follName)
+11:55:09.357 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:55:09.358 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+11:55:09.359 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+11:55:09.360 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+Disconnected from the target VM, address: '127.0.0.1:53304', transport: 'socket'
+
+```
+这个传播方式解决过公司线上一个问题[详细见这里](http://quietlistener.github.io/spring/transaction/propagation/2019/01/19/spring%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E5%BC%95%E8%B5%B7%E7%9A%84%E4%B8%80%E4%B8%AA%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98.html)
+
+#### 3. NESTED
+NESTED跟数据库的检查点(savepoint)相关，以下面这段代码为例
+```
+   @Transactional(propagation = Propagation.NESTED)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+    }
+ ```
+ 当进入insertFoo之前，spring发现**propagation = Propagation.NESTED** 如果当前有事务，会创建一个嵌套事务(会新建一个检查点).如果当前没有事务，新建一个（与Propagation.REQUIRED行为相同）。  
+ 这个传播方式的作用是，如果insertFoo抛出异常，不会将整个事务设置为回滚状态，只会回滚到上一个检查点，所以在上一个检查点的状态是一致的。这可以用在下面的情况下
+
+ ```
+ void fund(){
+   try{
+     //enter savepoint1
+     func1();//propagation = Propagation.NESTED
+     //exit savepoint1
+   }catch(Excepion e){ 
+      //exit savepoint1
+   }
+
+   try{
+      //enter savepoint2
+     func2();// propagation = Propagation.NESTED
+     //exit savepoint2
+   }catch(Excepion e){ 
+      //exit savepoint2
+   }
+   func3();//propagation = Propagation.REQUIRED
+ }
+ ```
+ 如果func1 ,func2 失败了，并不会有数据状态不一致
+
+
+ 我们的测试结果如下
+ ```java
+ 11:52:01.893 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+11:52:01.904 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter getFoo1( String follName)
+11:52:01.939 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating nested transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo]
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+11:52:01.971 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing transaction savepoint
+exit getFoo1( String follName)
+11:52:01.972 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:52:01.972 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+11:52:01.974 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+11:52:01.974 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+Disconnected from the target VM, address: '127.0.0.1:53241', transport: 'socket'
+
+ ```
+    
