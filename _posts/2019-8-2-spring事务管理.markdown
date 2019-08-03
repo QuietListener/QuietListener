@@ -73,9 +73,7 @@ public interface PlatformTransactionManager {
 
 
 ## 3. 要注意的几个地方
-### 1. 内部类中的非事务方法调用事务方法，不起作用
-### 2. 嵌套事务
-### 3. 嵌套事务与事务传播
+### 1. 嵌套事务与事务传播
 
 嵌套事务经常使用
 比如下面的代码  Foo1Service.getFoo1在一个事务中，它调用FooService.insertFoo也是事务，在调用insertFoo时候就需要根据不同的事务传播方式，有不同的动作。
@@ -130,7 +128,7 @@ public enum Propagation {
         System.out.println("exit insertFoo( Foo foo)");
     }
  ```
- 我们执行打开log会发现
+ 我们执行看看log
  ```java
  11:42:34.888 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service.getFoo1]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
 Sat Aug 03 11:42:35 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
@@ -148,17 +146,22 @@ exit getFoo1( String follName)
 11:42:35.499 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
 Disconnected from the target VM, address: '127.0.0.1:52955', transport: 'socket'
  ```
+
  我们可以看到下面这一句在进入insertFoo前，加入了一个存在的事务**Participating in existing transaction**
- ```
- 11:42:35.454 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Participating in existing transaction
-enter insertFoo( Foo foo)
- ```
  而且在执行完insertFoo后并不会commit而是在执行完getFoo1后才会commit,如下所示
- ```
- exit getFoo1( String follName)
+ ```java
+ //已经有一个事务则加入
+11:42:35.454 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Participating in existing transaction
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+//执行完insertFoo并不会commit
+exit getFoo1( String follName)
+
+//在执行完getFoo1后才会commit
 11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
-11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection
+11:42:35.496 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql:
  ```
+ 
 
 #### 2. REQUIRES_NEW
 每次都新建一个事务，如果当前有一个事务，把当前事务挂起。
@@ -196,6 +199,33 @@ exit getFoo1( String follName)
 Disconnected from the target VM, address: '127.0.0.1:53304', transport: 'socket'
 
 ```
+我们可以看到在进入insertFoo之前 spring 挂起了 当前线程并新起了一个事务。执行完后会在新的事务上commit
+
+```java
+//挂起当前事务
+11:55:09.301 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Suspending current transaction, creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo]
+Sat Aug 03 11:55:09 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+
+//新获取一个连接
+11:55:09.318 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+
+//DataSourceTransactionManager切(switch)到新连接
+11:55:09.319 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+
+//在新连接上commit
+11:55:09.347 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+11:55:09.349 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+
+//释放新连接
+11:55:09.356 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+
+//返回老的transaction并恢复(resuming)挂起的事务
+11:55:09.356 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+11:55:09.357 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Resuming suspended transaction after completion of inner transaction
+```
+
 这个传播方式解决过公司线上一个问题[详细见这里](http://quietlistener.github.io/spring/transaction/propagation/2019/01/19/spring%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E5%BC%95%E8%B5%B7%E7%9A%84%E4%B8%80%E4%B8%AA%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98.html)
 
 #### 3. NESTED
@@ -211,7 +241,7 @@ NESTED跟数据库的检查点(savepoint)相关，以下面这段代码为例
  这个传播方式的作用是，如果insertFoo抛出异常，不会将整个事务设置为回滚状态，只会回滚到上一个检查点，所以在上一个检查点的状态是一致的。这可以用在下面的情况下
 
  ```
- void fund(){
+ void fun(){
    try{
      //enter savepoint1
      func1();//propagation = Propagation.NESTED
@@ -235,19 +265,179 @@ NESTED跟数据库的检查点(savepoint)相关，以下面这段代码为例
 
  我们的测试结果如下
  ```java
+ 
  11:52:01.893 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
 11:52:01.904 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
 enter getFoo1( String follName)
+
+//创建一个嵌套transaction
 11:52:01.939 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating nested transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo]
 enter insertFoo( Foo foo)
 exit insertFoo( Foo foo)
+
+//释放检查点(savepoint)这里并不会commit
 11:52:01.971 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing transaction savepoint
 exit getFoo1( String follName)
 11:52:01.972 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+
+//提交事务
 11:52:01.972 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
 11:52:01.974 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+
+//连接交还给连接池
 11:52:01.974 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
 Disconnected from the target VM, address: '127.0.0.1:53241', transport: 'socket'
 
  ```
     
+
+如果嵌套事务有异常回滚只回滚到检查点，不会回滚整个事务
+
+```java
+   
+   @Transactional(propagation = Propagation.NESTED)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+        throw new RuntimeException("ddd");
+    }
+``` 
+
+**看log**
+```java
+14:05:46.603 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating new transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service.getFoo1]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+Sat Aug 03 14:05:47 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+Sat Aug 03 14:05:47 CST 2019 WARN: Establishing SSL connection without server's identity verification is not recommended. According to MySQL 5.5.45+, 5.6.26+ and 5.7.6+ requirements SSL connection must be established by default if explicit option isn't set. For compliance with existing applications not using SSL the verifyServerCertificate property is set to 'false'. You need either to explicitly disable SSL by setting useSSL=false, or set useSSL=true and provide truststore for server certificate verification.
+14:05:47.466 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Acquired Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] for JDBC transaction
+14:05:47.481 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Switching JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] to manual commit
+enter getFoo1( String follName)
+14:05:47.559 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Creating nested transaction with name [andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo]
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+
+//看这里 只会回滚到检查点(SavePoint)
+14:05:47.614 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Rolling back transaction to savepoint
+java.lang.RuntimeException: ddd
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService.insertFoo(FooService.java:28)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService$$FastClassBySpringCGLIB$$1f9bdce6.invoke(<generated>)
+	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:218)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.invokeJoinpoint(CglibAopProxy.java:746)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:294)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:98)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:186)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:688)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.FooService$$EnhancerBySpringCGLIB$$138cb61c.insertFoo(<generated>)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service.getFoo1(Foo1Service.java:27)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service$$FastClassBySpringCGLIB$$39664113.invoke(<generated>)
+	at org.springframework.cglib.proxy.MethodProxy.invoke(MethodProxy.java:218)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.invokeJoinpoint(CglibAopProxy.java:746)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:294)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:98)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:186)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:688)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.Foo1Service$$EnhancerBySpringCGLIB$$2e166c3.getFoo1(<generated>)
+	at andy.com.springFramework.dataAccess.annotationTransactionImplementation.Test1.testRequired(Test1.java:24)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:498)
+	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+	at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+	at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+	at org.junit.internal.runners.statements.RunBefores.evaluate(RunBefores.java:26)
+	at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+	at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+	at com.intellij.junit4.JUnit4IdeaTestRunner.startRunnerWithArgs(JUnit4IdeaTestRunner.java:68)
+	at com.intellij.rt.execution.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:47)
+	at com.intellij.rt.execution.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:242)
+	at com.intellij.rt.execution.junit.JUnitStarter.main(JUnitStarter.java:70)
+exit getFoo1( String follName)
+14:05:48.630 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Initiating transaction commit
+14:05:48.630 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Committing JDBC transaction on Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java]
+14:05:48.632 [main] DEBUG o.s.j.d.DataSourceTransactionManager - Releasing JDBC Connection [jdbc:mysql://localhost:3306/test_00?createDatabaseIfNotExist=true&amp;characterEncoding=utf-8&amp;useUnicode=true, UserName=root@localhost, MySQL Connector Java] after transaction
+14:05:48.632 [main] DEBUG o.s.jdbc.datasource.DataSourceUtils - Returning JDBC Connection to DataSource
+Disconnected from the target VM, address: '127.0.0.1:54678', transport: 'socket'
+
+Process finished with exit code 0
+
+
+```
+
+#### 2. @Transactional 只对 public方法有效
+**private proteced的方法不会生效**
+
+#### 3. Transactional不回滚
+  Transactional 默认只对UncheckedException执行回滚,如果要对所有Exception回滚，需要加上相应配置**rollbackFo**
+  ```
+    @Transactional(propagation = Propagation.NESTED,rollbackFor = Exception.class)
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+        System.out.println("exit insertFoo( Foo foo)");
+        //throw new RuntimeException("ddd");
+    }
+  ```
+
+#### 4. 同一个类中，非事务方法调用事务方法，不起作用
+
+```java
+
+
+public class FooService {
+
+    public Foo getFoo(String fooName) {
+        System.out.println("getFoo");
+        this.insertFoo(null);
+        return null;
+    }
+
+    @Transactional
+    public void insertFoo(Foo foo) {
+        System.out.println("enter insertFoo( Foo foo)");
+
+        System.out.println("exit insertFoo( Foo foo)");
+        //throw new RuntimeException("ddd");
+    }
+}
+
+```
+当调用下面的吗的时候
+
+```java
+ fooService.getFoo(null)
+```
+
+
+上面这段代码getFoo调用insertFoo，insertFoo需要事务支持，执行log如下
+```java
+14:15:53.680 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.transaction.config.internalTransactionalEventListenerFactory'
+14:15:53.682 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'dataSource0'
+14:15:53.748 [main] DEBUG o.s.b.f.s.DefaultListableBeanFactory - Creating shared instance of singleton bean 'txManager'
+enter getFoo
+enter insertFoo( Foo foo)
+exit insertFoo( Foo foo)
+exit getFoo
+Disconnected from the target VM, address: '127.0.0.1:54886', transport: 'socket'
+```
+根本没有事务 为什么 insertFoo的@Transactional没有起作用呢?
+SpringAOP 自己调用本类的方法是不会拦截的。
+解决办法
+```
+    public Foo getFoo(String fooName) {
+        System.out.println("enter getFoo");
+        //this.insertFoo(null);
+        ((FooServiceInterface)AopContext.currentProxy()).insertFoo(null);
+        System.out.println("exit getFoo");
+        return null;
+    }
+```
