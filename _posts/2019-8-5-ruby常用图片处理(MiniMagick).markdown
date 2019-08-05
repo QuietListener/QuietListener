@@ -7,7 +7,7 @@ categories: ruby
 
  MiniMagick是ruby中很好用的一个图片处理库
 
- #### 1.resize 调整分辨率
+#### 1.resize 调整分辨率
  ```ruby
   def self.resize_image(source_path,dest_path,standard_size=[400,300])
     puts "resize_image#{source_path}"
