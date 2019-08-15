@@ -5,7 +5,7 @@ date:   2019-8-15 14:32:00
 categories: java web servlet
 ---
 ### 1.写在前面
-java 做web这一块，现在已经非常成熟了，很多人上手的时候，框架封装也是非常完善，不少新手也是直接从springmvc，struts2，jsf等框架开始。甚至我自己工作中一直接触的，都是struts2，springmvc，springboot这些封装到牙齿的东西。java web最本质的东西，时间久了也生疏了很多。在这里理一下。
+java 做web这一块，现在已经非常成熟了，框架封装也是非常完善，不少新手也是直接从springmvc，struts2，jsf等框架开始。甚至我自己工作中一直接触的，都是struts2，springmvc，springboot这些封装到牙齿的东西。java web最本质的东西，时间久了也生疏了很多。在这里理一下。
 
 ### 2. Servlet
 #### 1. servlet先关的几个包和接口(类)
@@ -24,9 +24,10 @@ interface有:
 4. ServletContext
 5. ServletConfig
 6. RequestDispatcher
-7. Filter
+7. Filter 
+
 类有:
-1. GenericServlet.
+1. GenericServlet
 >public abstract class GenericServlet implements Servlet, ServletConfig,java.io.Serializable
 
 #### 2.servlet于servlet容器
@@ -228,7 +229,7 @@ HttpServlet 继承自GenericServlet， 重载了
 public void service(ServletRequest req, ServletResponse res)，
 ```
 然后调service方法时候将ServletRequest转化为HttpServletRequest
-在调用**String method = req.getMethod();** 获取http请求类型(get post 等)，调用对应的方法(get,post等)。所以我们继承HttpServlet之后只需要，试下doGet，doPost等方法即可。
+在调用**String method = req.getMethod();** 获取http请求类型(get post 等)，调用对应的方法(get,post等)。所以我们继承HttpServlet之后只需要实现doGet，doPost等方法即可。
 
 
 #### 2. HttpServlet写服务
@@ -280,19 +281,17 @@ public class WelcomeServlet extends HttpServlet {
 
 ```
 
-使用web.xml部署应用程序有不少好处:
+使用web.xml部署应用程序有不少好处:  
  a. 不用重新编译servlet  
  b. 可以使用@WebServlet不能使用的一些配置，比如load-on-startup参数，(配置了load-on-startup就不是在第一次调用servlet时候初始化，而是启动容器后就初始化，这对一些耗时的servlet初始化很有效)
 
 
 
- ### 4. jsp和MVC
- #### 1. mvc模式
+### 4. jsp和MVC
+#### 1. mvc模式
  mvc模式是将数据和view解耦的一种开啊模式，jsp是一种常用的view实现。
  一般使用servlet作为controller，生成特定的model(数据)，然后根据某些条件，将model于view(jsp)结合，生成用户需要的view。
-
- #### 2. servlet和jsp实现一个mvc模式的例子
-
+#### 2. servlet和jsp实现一个mvc模式的例子
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/servlet-mvc.png)
 
@@ -460,7 +459,8 @@ testInitContextParams = <%=application.getInitParameter("testInitContextParams")
 
 ```
 
-**结果**
+**结果**  
+
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/servlet-listener.png)
 
 
@@ -573,8 +573,7 @@ web.xml
 ### 7. 异步Servlet和Filter
 Servlet3.0增加的一个特性，当jsp/servlet需要一个长时间处理的操作时候，他会将哪些操作分配一个新的线程，从而将这个请求处理线程返回到线程池中，服务下一个请求。
 
-//下面表明分别在两个线程中执行
-async
+实验一下分别在两个线程中执行 asyncServlet
 ```java
 public class AsyncServlet extends HttpServlet {
 
@@ -625,5 +624,6 @@ web.xml
 </web-app>
 ```
 
-结果
+结果  
+
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/servlet-async.png)
