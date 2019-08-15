@@ -288,10 +288,11 @@ public class WelcomeServlet extends HttpServlet {
 
 
 ### 4. jsp和MVC
-#### 1. mvc模式
+####  1. mvc模式
  mvc模式是将数据和view解耦的一种开啊模式，jsp是一种常用的view实现。
  一般使用servlet作为controller，生成特定的model(数据)，然后根据某些条件，将model于view(jsp)结合，生成用户需要的view。
-#### 2. servlet和jsp实现一个mvc模式的例子
+ 
+ #### 2. servlet和jsp实现一个mvc模式的例子
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/servlet-mvc.png)
 
