@@ -11,3 +11,4 @@ theme: jekyll-theme-hacker
 
 # Build settings
 markdown: kramdown
+toc_levels: 1..5
