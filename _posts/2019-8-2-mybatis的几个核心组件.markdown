@@ -128,9 +128,9 @@ final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironme
 }
 
 ```
-####过程如下
-1. 获取对应的TransactionFactory，并且生成transaction
-2. 以transaction为参数生成**Executor**，
+#### 过程如下
+##### 1. 获取对应的TransactionFactory，并且生成transaction
+##### 2. 以transaction为参数生成**Executor**，
 ```java
 public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
  executorType = executorType == null ? defaultExecutorType : executorType;
@@ -150,7 +150,7 @@ public Executor newExecutor(Transaction transaction, ExecutorType executorType) 
  return executor;
 }
 ```
-3. 以executor为参数生成 sqlSession
+##### 3. 以executor为参数生成 sqlSession
 return new DefaultSqlSession(configuration, executor, autoCommit);
 
 **所以sqlSession调用commit其实是调用下面过程**
