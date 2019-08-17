@@ -79,9 +79,10 @@ public class StuffController extend HttpServlet{
 
 下面是使用AOP技术改造后的代码。
 1. 定义了一个AuthFlag注解。
-2. 定义了一个AuthAop,@Around("@annotation(AuthFlag)")表示添加了@AuthFlag的方法将会使用到 方法advice的功能。
-3. StuffController只需要在doGet方法上添加@AuthFlag就拥有了鉴权的功能。
-这样 Auth和业务逻辑耦合就非常的小，而且减少了很多重复代码。
+2. 定义了一个AuthAop,@Around("@annotation(AuthFlag)")表示添加了@AuthFlag的方法将会使用到 方法advice的功能。  
+3. StuffController只需要在doGet方法上添加@AuthFlag就拥有了鉴权的功能。  
+
+**这样 Auth和业务逻辑耦合就非常的小，而且减少了很多重复代码**
 
 
 ```java
