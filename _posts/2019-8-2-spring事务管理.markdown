@@ -374,10 +374,10 @@ Process finished with exit code 0
 
 ```
 
-#### 2. @Transactional 只对 public方法有效
+### 2. @Transactional 只对 public方法有效
 **private proteced的方法不会生效**
 
-#### 3. Transactional不回滚
+### 3. Transactional不回滚
   Transactional 默认只对UncheckedException执行回滚,如果要对所有Exception回滚，需要加上相应配置**rollbackFo**
   ```
     @Transactional(propagation = Propagation.NESTED,rollbackFor = Exception.class)
@@ -388,7 +388,7 @@ Process finished with exit code 0
     }
   ```
 
-#### 4. 同一个类中，非事务方法调用事务方法，不起作用
+### 4. 同一个类中，非事务方法调用事务方法，不起作用
 
 ```java
 
