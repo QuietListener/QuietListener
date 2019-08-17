@@ -53,7 +53,7 @@ public class A {
 
 ### 4. AOP（Aspect Oriental Programming）面向切面编程
 #### 1.如果不使用AOP，很多耦合很紧
-下面 日志功能和鉴权功能耦合在一起
+下面 日志功能,鉴权功能和业务逻辑耦合在一起
 ```java
 public class StuffController extend HttpServlet{
 
