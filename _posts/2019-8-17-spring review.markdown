@@ -187,7 +187,7 @@ public class TypeBDisk implements Disk {
 
 
 ### 2. @Configuration
-Configuration 表明这个类是一个配置类，该类应该包含在Spring上限为中如何创建Bean的细节
+Configuration 表明这个类是一个配置类，该类应该包含在Spring上下文中如何创建Bean的细节
 
 ### 3. @ComponentScan
 自动扫描并将带有@Component注释的类创建为对应的Bean   
