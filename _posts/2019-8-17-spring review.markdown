@@ -148,7 +148,7 @@ public class StuffController extend HttpServlet{
      1. 自动装配
      2. JavaConfig装配
      3. xml装配
-   使用得比较多的是自动装配
+使用得比较多的是自动装配
 
 ##  2. 自动装配  
    自动装配使用注解(Annotation)进行装配，主要涉及到的注解有
