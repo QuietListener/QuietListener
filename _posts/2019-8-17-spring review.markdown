@@ -152,7 +152,7 @@ public class StuffController extend HttpServlet{
 ## 2. 自动装配  
    自动装配使用注解(Annotation)进行装配，主要涉及到的注解有
 
-``java
+```java
 
 @Configuration
 @Component
