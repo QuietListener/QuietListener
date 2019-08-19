@@ -141,3 +141,210 @@ public class StuffController extend HttpServlet{
     4. FileSystemXmlApplicationContext从文件系统下的一个或者多个xml配置中加载上下文
     5. XmlWebApplicationContext从web应用下的一个或者多个xml配置中加载上下文
 
+
+
+# 4. 装配Bean
+## 1. spring有三种装配方式
+     1. 自动装配
+     2. JavaConfig装配
+     3. xml装配
+   使用得比较多的是自动装配
+## 2. 自动装配  
+   自动装配使用注解(Annotation)进行装配，主要涉及到的注解有
+
+``java
+
+@Configuration
+@Component
+@ComponentScan
+@AutoWire
+@Primary
+@Qualifier
+@Scope
+@LookUp
+@Import
+```
+
+### 1. @Component
+@Component表明该类会作为组件，Spring会为这个类创建bean ，还可以使用value为主键指定一个名字
+
+```java
+@Component(value = "BDisk")
+public class TypeBDisk implements Disk {
+    private int rand = 0;
+    public TypeBDisk(){
+        this.rand = new Random().nextInt(100000);
+    }
+
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName()+this.rand);
+    }
+}
+
+```
+
+
+### 2. @Configuration
+Configuration 表明这个类是一个配置类，该类应该包含在Spring上限为中如何创建Bean的细节
+
+### 3. @ComponentScan
+自动扫描并将带有@Component注释的类创建为对应的Bean   
+可以通过basePackages指定要扫描的包名
+```java
+@ComponentScan(basePackages = { "andy.com.springFramework.core.basic.wire.autowire.pb"})
+public class AutoConfig1 {
+}
+```
+### 4. @AutoWire @Qualifier
+@AutoWire 表示自动注入，可以使用在属性上，required=false表示spring上下文中没有需要的实例，不报错。
+@Qualifier("BDisk")指定名字为"BDisk"的实例
+
+```java
+@Component
+public class Player {
+
+    @Autowired(required = true)
+    @Qualifier("BDisk")
+    private Disk disk;
+
+    @Autowired
+    private TypeADisk adisk;
+
+}
+```
+### 5.@Primary
+当一个接口有多个实现的时候，使用@Primary的会被优先选择
+例如 disk有多个实现，会选择，在Player中会选择有@Primary注解的实例(TypeADisk)。
+```java
+
+@Component
+public class Player {
+
+
+    @Autowired(required = true)
+    private Disk disk;
+}
+
+@Component
+@Primary //当有多个disk实例时候优选选择
+public class TypeADisk implements Disk {
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName());
+    }
+}
+
+@Component
+public class TypeBDisk implements Disk {
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName());
+    }
+}
+
+
+```
+
+
+### 6. @Scope和@LookUp
+#### 1.Scope
+spring默认Bean的scope有singleton和prototype，默认是singleton(单例)的。
+singleton每次都使用同一个实例，prototype表示每次都新初始化一个新实例。
+
+```java
+
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) //每次都创建一个新的
+public class TypeADisk implements Disk {
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName()+rand);
+    }
+}
+
+```
+
+#### 2. 一个的Singleton实例引用一个Prototype的实例引发的问题
+当一个Singleton的实例引用一个Prototype的时候，会发现每次还是使用的同一个Prototype实例，因为Singleton的类只会实例化一次。
+例如下面的代码 虽然TypeADisk是Prototype的但是，Player是单例，每次都使用的同一个TypeADisk实例。
+
+```java
+
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) //每次都创建一个新的
+public class TypeADisk implements Disk {
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName()+rand);
+    }
+}
+
+
+@Component
+public class Player {
+
+    //TypeADisk是Prototype的但是每次都使用同一个TypeADisk实例
+    @Autowired
+    private TypeADisk adisk;
+
+    public void playa(){
+        adisk.play();
+    }
+}
+```
+
+#### 3. 使用@Lookup解决上面的问题
+@Lookup只能使用在方法上，每次调用@Lookup修饰的方法，spring都会返回一个新的实例。
+
+```java
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) //每次都创建一个新的
+public class TypeADisk implements Disk {
+    @Override
+    public void play() {
+        System.out.println(this.getClass().getName());
+    }
+}
+
+@Component
+public class Player {
+
+    public void playa(){
+        getAdisk().play();
+    }
+
+    @Lookup
+    public TypeADisk getAdisk(){
+        return null;
+    }
+}
+```
+
+### 7. @Import
+@Import用来导入其他的@Configuration配置过的bean
+例如
+```java
+@Configuration
+//扫描带有@Component的类，并将其创建一个Bean
+@ComponentScan(basePackages = { "andy.com.springFramework.core.basic.wire.autowire.pa"})
+public class AutoConfig {
+}
+
+@Configuration
+@Import({AutoConfig.class})
+public class AutoConfigAll {
+}
+```
+### 8. 使用AnnotationConfigApplicationContext来开始Spring应用程序
+
+```java
+ public void tets(){
+        ApplicationContext context = new AnnotationConfigApplicationContext(AutoConfigAll.class);
+
+        TypeADisk aDisk = context.getBean(TypeADisk.class);
+        TypeBDisk bDisk = context.getBean(TypeBDisk.class);
+ }
+```
+
+
