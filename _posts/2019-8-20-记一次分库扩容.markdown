@@ -22,7 +22,7 @@ categories: java web servlet
 **4. 有两类服务，一类只读，一类读写。**
 **5. 读写服务的数据来自前端的一个kafka消息队列。**
 
- 下面是一个当前架构图  
+**下面是一个当前架构图**  
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/extend-db1.jpg)
 
 
