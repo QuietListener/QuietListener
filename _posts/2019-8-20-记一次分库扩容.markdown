@@ -51,7 +51,6 @@ inc_word_count_by_book 存在都在读写操作。当分库后应用对A1和A2�
 
 # 5.扩容步骤
 ## 1.步骤  
-
 1. 买一台4核8G+2T的数据库A2,修改隔离级别为Repeatable Read。（2000+/月）
 2. 使用阿里云DTS,将数据库A1同步到A2，并让A2追上A1(耗时**100+个小时**，一共**130+亿**条数据)
 3. 修改数据库配置，将A2添加到项目，并按用户做好用户切分。(每个库800万个用户)
@@ -64,4 +63,4 @@ inc_word_count_by_book 存在都在读写操作。当分库后应用对A1和A2�
 
 ## 2.图示  
 
-![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/extend-db1.jpg)
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/extend-db2.jpg)
