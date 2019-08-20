@@ -34,7 +34,7 @@ categories: java web servlet
 
 # 4.问题
 ## 1. 按用户id取模的问题
-record_t这种表迁移很简单，比如讲 record_t1100到record_t1227表同步到新库就好了，但是取模的表extra_t就不好按用户id来迁移了。
+record_t这种表迁移很简单，比如讲 record_t1100到record_t1227表同步到新库就好了，但是取模的表extra_t就不好按用户id来迁移了。  
 **解决办法：**只删除record_t表(drop table record_txx)，不删除extra_t表(本来占用空间也很少)
 
 ## 2. 主键冲突
