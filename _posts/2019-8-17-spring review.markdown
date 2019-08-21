@@ -349,3 +349,99 @@ public class AutoConfigAll {
 ```
 
 
+##  2. 使用Java代码装配
+
+### 1. 使用java代码装配的场景
+有的时候我们没有源代码，不能使用 @Component和@AutoWire 来自动装配，比如第三方库，这时候就需要使用java代码来装配。或者使用java代码装配更方便的地方
+
+### 2.在方法上使用@Bean来装配
+
+#### 1.代码
+```java
+/**
+ * 播放机
+ */
+public class CdPlayer {
+    private Disc disc;
+
+    public Disc getDisk() {
+        return disc;
+    }
+
+    public void setDisk(Disc disc) {
+        this.disc = disc;
+    }
+}
+
+/**
+ * CD
+ */
+public class Disc {
+
+    private String name;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+
+
+/**
+ * 装配类
+ */
+@Configuration
+public class JavaConfig {
+
+    @Bean(name="disc")
+    public Disc getDisc(){
+        return new Disc();
+    }
+
+    @Bean(name="player1")
+    public CdPlayer newCdPlayer(){
+        CdPlayer player = new CdPlayer();
+        //当调用getDisc时候，spring会拦截返回同一个Disc对象
+        player.setDisk(getDisc());
+        return player;
+    }
+
+    /**
+     * 结合@AutoWire在参数上来装配
+     * @param disc
+     * @return
+     */
+    @Bean(name="player2")
+    public CdPlayer new1CdPlayer(@Autowired Disc disc){
+        CdPlayer player = new CdPlayer();
+        player.setDisk(disc);
+        return player;
+    }
+}
+
+
+```
+#### 2.测试
+
+```java
+    @Test
+    public void tets(){
+       
+        ApplicationContext context = new AnnotationConfigApplicationContext(JavaConfig.class);
+        Disc d1 = context.getBean(Disc.class);
+        Disc d2 = context.getBean(Disc.class);
+
+        //使用同一个Disc对象
+        assert d1 == d2;
+
+        CdPlayer player1 = (CdPlayer)context.getBean("player1");
+        CdPlayer player2 = (CdPlayer)context.getBean("player2");
+
+        //使用同一个Disc对象
+        assert player1.getDisk() == player2.getDisk();
+        assert d1 == player1.getDisk();
+    }
+```    
