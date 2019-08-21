@@ -445,3 +445,77 @@ public class JavaConfig {
         assert d1 == player1.getDisk();
     }
 ```    
+
+
+## 3.使用XML来配置，(xml用得很少了)。
+
+
+## 4. 混合配置
+### 1. JavaConfig配置导入xml配置
+common.xml 是一个spring的xml配置文件。
+```java
+
+@Configuration
+@Import({AnotherConfig.class})
+@ImportResource("classpath:common.xml") //common.xml在项目的classpath中
+public class JavaConfig {
+
+    @Bean(name="disc")
+    public Disc getDisc(){
+        return new Disc();
+    }
+
+    @Bean(name="player1")
+    public CdPlayer newCdPlayer(){
+        CdPlayer player = new CdPlayer();
+        //当调用getDisc时候，spring会拦截返回同一个Disc对象
+        player.setDisk(getDisc());
+        return player;
+    }
+
+    /**
+     * 结合@AutoWire在参数上来装配
+     * @param disc
+     * @return
+     */
+    @Bean(name="player2")
+    public CdPlayer new1CdPlayer(@Autowired Disc disc){
+        CdPlayer player = new CdPlayer();
+        player.setDisk(disc);
+        return player;
+    }
+}
+
+
+```
+### 2. xml中导入JavaConfig配置和其他xml配置
+common.xml 是一个spring的xml配置文件。
+
+```xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+    <!--导入JavaConfig中的配置-->
+    <bean class="andy.com.springFramework.core.basic.wire.javaConfig.JavaConfig"></bean>
+
+    <!--导入其他xml配置-->
+    <import resource="classpath:common.xml"></import>
+
+</beans>
+
+```
