@@ -489,7 +489,8 @@ public class JavaConfig {
 
 ```
 ### 2. xml中导入JavaConfig配置和其他xml配置
-common.xml 是一个spring的xml配置文件。
+common.xml 是一个spring的xml配置文件。  
+andy.com.springFramework.core.basic.wire.javaConfig.JavaConfig是一个有@Configuration的配置类
 
 ```xml
 
@@ -519,3 +520,88 @@ common.xml 是一个spring的xml配置文件。
 </beans>
 
 ```
+
+
+
+### 3. @Profile切换环境
+@Profile可以决定组装哪些类。  
+使用 -Dspring.profiles.active=xxx 参数来指定 要组装的bean。  
+例如 -Dspring.profiles.active=prod，只会组装@Proifle("prod")修饰的方法(或者类)，不会实例化@Proifle("dev")等其他修饰的方法(或者类)    
+
+**也可以用在ServletContext中配置。**
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
+                     http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+        version="3.0"
+        metadata-complete="true">
+
+   <servlet>
+       <servlet-name>ListenerServlet</servlet-name>
+       <servlet-class>andy.com.demo.listener.ListenerServlet</servlet-class>
+       <load-on-startup>20</load-on-startup>
+   </servlet>
+
+   <servlet-mapping>
+       <servlet-name>ListenerServlet</servlet-name>
+       <url-pattern>/listenerServlet</url-pattern>
+   </servlet-mapping>
+
+   <!-- 初始化ServletContext时候会用到 添加 spring.profiles.active-->
+   <context-param>
+       <param-name>spring.profiles.active</param-name>
+       <param-value>prod</param-value>
+   </context-param>
+
+</web-app>
+
+```
+
+
+**不用重新打包就能实现切换环境，非常好用。**，能保证测试的包和发布的包是同一个包，减少重新打包带来的风险。比如测试测好了，重新打包上线，新包可能会有一些偶然的变化，导致
+测试好的代码也有上线失败的风险。
+
+#### 1.代码与测试
+```java
+
+public class ProjectConf {
+    private String name;
+
+    public ProjectConf(String name){
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+
+@Configuration
+public class JavaConfig {
+
+    @Bean
+    @Profile("dev")
+    public ProjectConf devConfig() {
+        return new ProjectConf("dev");
+    }
+
+    @Bean
+    @Profile("prod")
+    public ProjectConf prodConfig() {
+        return new ProjectConf("prod");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(JavaConfig.class);
+        ProjectConf projectConf = context.getBean(ProjectConf.class);
+        System.out.println(projectConf.getName());
+    }
+}
+
+```
+
