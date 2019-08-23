@@ -215,30 +215,40 @@
 
         @include media-query($on-laptop) {
             font-size: 32px;
+           
         }
     }
 
     h2 {
         font-size: 32px;
         font-weight: 400;
+        color: #454545;
+       
         @include media-query($on-laptop) {
             font-size: 28px;
+            color: #454545;
         }
     }
 
     h3 {
         font-size: 24px;
         font-weight: 300;
+        color: #4498fa;
         @include media-query($on-laptop) {
             font-size: 22px;
+            font-weight: 300;
+            color: #4498fa;
         }
     }
 
     h4 {
         font-size: 18px;
         font-weight: 200;
+        color: #5eca59;
         @include media-query($on-laptop) {
             font-size: 18px;
+            font-weight: 200;
+            color: #5eca59;
         }
     }
 
