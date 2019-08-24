@@ -69,3 +69,66 @@ b. 查找 **删除版本号** 要么没有定义，要么大于**当前事务版
 
 ***innodb的MVCC实现大多数读都不用加锁，性能好。但是要牺牲存储空间,毕竟多了两个隐藏列。***
 
+
+
+
+## 2. 索引
+### 1. 基础
+>   索引在数据量很大的时候 能加速 查询，提高几个数量级。
+>   索引可以包含**1个列或者多个列**，
+>   索引中列的**顺序**也很重要,msyql只能使用最左前缀列。
+>   创建一个包含两个列的索引，和两个包含一个列的索引完全不一样。
+
+### 2. 索引的基本数据结构(B-Tree)
+   索引中对多个列进行排序的依据是和 **create table**中一致的,
+```sql
+CREATE TABLE `user_done_word_v2_t0` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `book_id` int(11) DEFAULT '0',
+  `word_topic_id` int(11) NOT NULL,
+  `first_at` int(11) DEFAULT '0',
+  `score` int(11) DEFAULT '0',
+  `wrong_times` int(11) DEFAULT '0',
+  `done_times` int(11) DEFAULT '0',
+  `total_used_time` int(11) DEFAULT '0',
+  `name` varchar(255),
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `del` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_uid_bid_wid` (`user_id`,`book_id`,`word_topic_id`,),
+  KEY `uid_wid_name` (`user_id`,`word_topic_id`,`name`)
+  KEY `uid_wid_name_1` (`name`,`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8
+```   
+所以使用的时候 应该使用**左前缀**。
+#### 可以使用索引的查询类型
+##### 1.全职匹配
+  例如:使用  这三个列 `user_id`,`word_topic_id`,`name`
+##### 2.匹左配最   
+  例如: 只使用 user_id 和 word_topic_id
+
+##### 3. 匹配列的前缀
+  例如 使用 KEY `uid_wid_name_1` (`name`,`user_id`) ，    
+  查询name以”Jh“开头的人
+##### 4. 匹配范围
+   例如 使用 KEY `uid_wid_name_1` (`name`,`user_id`) ，    
+   查询name在 ”Allen“和”Brown“之间的人
+##### 5.精确匹配某左前列 并 范围匹配后一列。
+   例如使用:   KEY `uid_wid_name` (`user_id`,`word_topic_id`,`name`)   
+   查询 user_id = 1 word_topic_id=1   查询name在 ”Allen“和”Brown“之间的人
+
+#### order by
+由于索引是有序的，索引可以按某种方式查到值，也就一按这种方式用于排序。 满足上面1到5的查询类型，也满足排序需求。
+
+#### 索引的限制(哪些情况不能使用索引)
+##### 如果不是按照做前列开始查找，无法使用索引
+ 例如：select * from user_done_word_v2_t0 where word_topic_id = 1。不能使用索引
+##### 不能跳过索引仲的列
+   例如：select * from user_done_word_v2_t0 where user_id = 1 and name = "Jhonth"。就只能使用第一列。
+##### 如果查询中有某个列有范围查询，它右边所有列都无法使用索引优化查询。
+
+
+
+
