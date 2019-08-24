@@ -103,32 +103,112 @@ CREATE TABLE `user_done_word_v2_t0` (
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8
 ```   
 所以使用的时候 应该使用**左前缀**。
-#### 可以使用索引的查询类型
-##### 1.全职匹配
+### 可以使用索引的查询类型
+#### 1.全职匹配
   例如:使用  这三个列 `user_id`,`word_topic_id`,`name`
-##### 2.匹左配最   
+#### 2.匹左配最   
   例如: 只使用 user_id 和 word_topic_id
 
-##### 3. 匹配列的前缀
+#### 3. 匹配列的前缀
   例如 使用 KEY `uid_wid_name_1` (`name`,`user_id`) ，    
   查询name以”Jh“开头的人
-##### 4. 匹配范围
+#### 4. 匹配范围
    例如 使用 KEY `uid_wid_name_1` (`name`,`user_id`) ，    
    查询name在 ”Allen“和”Brown“之间的人
-##### 5.精确匹配某左前列 并 范围匹配后一列。
+#### 5.精确匹配某左前列 并 范围匹配后一列。
    例如使用:   KEY `uid_wid_name` (`user_id`,`word_topic_id`,`name`)   
    查询 user_id = 1 word_topic_id=1   查询name在 ”Allen“和”Brown“之间的人
 
-#### order by
+### order by
 由于索引是有序的，索引可以按某种方式查到值，也就一按这种方式用于排序。 满足上面1到5的查询类型，也满足排序需求。
 
-#### 索引的限制(哪些情况不能使用索引)
-##### 如果不是按照做前列开始查找，无法使用索引
+### 索引的限制(哪些情况不能使用索引)
+#### 如果不是按照做前列开始查找，无法使用索引
  例如：select * from user_done_word_v2_t0 where word_topic_id = 1。不能使用索引
-##### 不能跳过索引仲的列
+#### 不能跳过索引仲的列
    例如：select * from user_done_word_v2_t0 where user_id = 1 and name = "Jhonth"。就只能使用第一列。
-##### 如果查询中有某个列有范围查询，它右边所有列都无法使用索引优化查询。
+#### 如果查询中有某个列有范围查询，它右边所有列都无法使用索引优化查询。
 
 
+### 索引的一些最佳实践与坑
+#### 1.在函数中使用索引列，msyql不会使用索引加速查询
+```sql
+CREATE TABLE `People` (
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(55) NOT NULL,
+  `dob` date NOT NULL,
+  `gender` enum('m','f','u') NOT NULL DEFAULT 'u',
+  KEY `last_name` (`last_name`,`first_name`,`dob`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
 
+直接使用索引列
+```sql
+mysql> explain select * from People where last_name = "a";
++----+-------------+--------+------------+------+---------------+-----------+---------+-------+------+----------+-------+
+| id | select_type | table  | partitions | type | possible_keys | key       | key_len | ref   | rows | filtered | Extra |
++----+-------------+--------+------------+------+---------------+-----------+---------+-------+------+----------+-------+
+|  1 | SIMPLE      | People | NULL       | ref  | last_name     | last_name | 52      | const |    2 |   100.00 | NULL  |
++----+-------------+--------+------------+------+---------------+-----------+---------+-------+------+----------+-------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+在函数中使用索引列
+```sql
+mysql> explain select * from People where CHARACTER_LENGTH(last_name) = 1;
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+| id | select_type | table  | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | People | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    5 |   100.00 | Using where |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+
+#### 2. 长字符串的前缀索引
+text，varchar，bolb 字符串很长，有时候只需要前面N个字符也能有很好的区分度，不需要全部索引。
+可以使用 **KEY `first_name` (`first_name`(3))** 添加索引  
+
+或者使用 **alter table People add key (first_name(3))**
+
+```sql
+CREATE TABLE `People` (
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(55) NOT NULL,
+  `dob` date NOT NULL,
+  `gender` enum('m','f','u') NOT NULL DEFAULT 'u',
+  KEY `last_name` (`last_name`,`first_name`,`dob`),
+  KEY `first_name` (`first_name`(3))
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
+
+
+添加前缀索引前  ，没有使用索引，type也是All(全表扫描)  
+```sql
+mysql> explain select * from  People where first_name like "ddd%"
+    -> ;
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+| id | select_type | table  | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | People | NULL       | ALL  | NULL          | NULL | NULL    | NULL |   10 |    11.11 | Using where |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+添加前缀索引后  ,我们看到使用了索引first_name,type也变成了range。  
+```sql
+mysql> alter table People add key (first_name(3));
+Query OK, 0 rows affected (0.04 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> explain select * from  People where first_name like "ddd%"
+    -> ;
++----+-------------+--------+------------+-------+---------------+------------+---------+------+------+----------+-------------+
+| id | select_type | table  | partitions | type  | possible_keys | key        | key_len | ref  | rows | filtered | Extra       |
++----+-------------+--------+------------+-------+---------------+------------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | People | NULL       | range | first_name    | first_name | 5       | NULL |    1 |   100.00 | Using where |
++----+-------------+--------+------------+-------+---------------+------------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
 
