@@ -212,3 +212,84 @@ mysql> explain select * from  People where first_name like "ddd%"
 1 row in set, 1 warning (0.00 sec)
 ```
 
+#### 3.每列都是索引，不太好
+```sql
+CREATE TABLE `People1` (
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(55) NOT NULL,
+  `dob` date NOT NULL,
+  `gender` enum('m','f','u') NOT NULL DEFAULT 'u',
+  KEY `last_name` (`last_name`),
+  KEY `first_name` (`first_name`),
+  KEY `dob` (`dob`),
+  KEY `gender` (`gender`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
+
+使用or 连接的两个索引，其实没有使用索引，任然是全表扫描(type是ALL).
+```sql
+mysql> explain select * from People1 where last_name = "a" or first_name="b";
++----+-------------+---------+------------+------+----------------------+------+---------+------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys        | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+---------+------------+------+----------------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | People1 | NULL       | ALL  | last_name,first_name | NULL | NULL    | NULL |   10 |    40.00 | Using where |
++----+-------------+---------+------------+------+----------------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+使用 and 也只能用到一个索引:
+```sql
+mysql> explain select * from People1 where last_name = "a" and first_name="b";
++----+-------------+---------+------------+------+----------------------+------------+---------+-------+------+----------+-------------+
+| id | select_type | table   | partitions | type | possible_keys        | key        | key_len | ref   | rows | filtered | Extra       |
++----+-------------+---------+------------+------+----------------------+------------+---------+-------+------+----------+-------------+
+|  1 | SIMPLE      | People1 | NULL       | ref  | last_name,first_name | first_name | 57      | const |    1 |    40.00 | Using where |
++----+-------------+---------+------------+------+----------------------+------------+---------+-------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+#### 4.选择索引列的顺序
+  **原则上将区分度更大的列放在最前面。**
+  比如有两个列 c1 和 c2; 
+  ```sql
+  select count(disctinct(c1))/count(*) as c1_select,  count(disctinct(c2))/count(*) as c2_select from xxx ;
+  ```
+  返回:   
+  ```sql
+  c1_select : 0.001  
+  c2_select : 0.2
+  ```
+就应该选择c2为第一列。
+**注意事项**
+选了区分度更大的列也可能有问题，比如c2。  
+假设c2有一个值占了10%的量，比如c2是用户类型，c2有一个值是试用用户，有20%的用户是试用用用户，假设一个表有2000w行，使用c2查询使用用户时候会扫描200w行数据，使用了c2索引，也会非常慢。这就需要程序上做特殊处理了。
+
+
+#### 5.聚族索引
+  聚族索引是一种数据存储方式。每个表只能有一个聚族索引(就是Primary Key).InnoDb中在叶子节点保存所有的数据，非叶子节点只保存索引列。
+##### 1. 聚族索引的好处:
+1. 包相关数据放在一起(物理上一起)，按照聚族索引来查找的话，比如按用户Id这个主键来查找的话，由于相邻用户Id的用户数据放在一起，只需要读取很少的磁盘块就能拿到用户数据。减少了IO。
+2. 按照主键顺序插入非常快。
+
+##### 2. 聚族索引的缺点。
+1. 如果数据小，全部在内存中，没有太大优势。
+2. 主键更新或者插入新行后，面临”主键分裂“问题。当主键要求必须将某一行插入到一个已满的”页“中的时候，需要将这个页分裂为两个页，页分裂会占用更多的空间。
+3. 非聚族索引会更大，因为耳机索引叶子节点不是存的具体数据，而是引用行的主键。
+4. 二级索引要慢一些，二级索引找到数据的主键后，再使用主键找到具体的数据的具体位置。
+
+
+
+#### 6. 覆盖索引
+我们在查找的数据直接来自索引，不用回表来获取数据。
+```sql
+mysql> explain select dob  from People1 where dob < "2019-08-04" ;
++----+-------------+---------+------------+-------+---------------+------+---------+------+------+----------+--------------------------+
+| id | select_type | table   | partitions | type  | possible_keys | key  | key_len | ref  | rows | filtered | Extra                    |
++----+-------------+---------+------------+-------+---------------+------+---------+------+------+----------+--------------------------+
+|  1 | SIMPLE      | People1 | NULL       | range | dob           | dob  | 3       | NULL |    8 |   100.00 | Using where; Using index |
++----+-------------+---------+------------+-------+---------------+------+---------+------+------+----------+--------------------------+
+1 row in set, 1 warning (0.00 sec)
+```
+比如我们有一个key是dob，我们也只需要dob。Extra中就有"Using index"表示数据直接来自索引。
+
+
