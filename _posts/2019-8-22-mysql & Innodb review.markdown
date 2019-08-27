@@ -280,7 +280,22 @@ mysql> explain select * from People1 where last_name = "a" and first_name="b";
 
 
 #### 6. 覆盖索引
-我们在查找的数据直接来自索引，不用回表来获取数据。
+我们在查找的数据直接来自索引，不用回表来获取数据。  
+下面是mysql工作的过程。
+>mysql使用索引扫描是很快的，只需要从一条记录移动到下一条记录，如果索引不能覆盖所有的查询所需的全部列，就不得不烧苗一条索引就回表查询一次对应的行。
+```sql
+CREATE TABLE `People1` (
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(55) NOT NULL,
+  `dob` date NOT NULL,
+  `gender` enum('m','f','u') NOT NULL DEFAULT 'u',
+  KEY `last_name` (`last_name`),
+  KEY `first_name` (`first_name`),
+  KEY `dob` (`dob`),
+  KEY `gender` (`gender`),
+  KEY `aaa` (`last_name`,`first_name`,`dob`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
 ```sql
 mysql> explain select dob  from People1 where dob < "2019-08-04" ;
 +----+-------------+---------+------------+-------+---------------+------+---------+------+------+----------+--------------------------+
@@ -290,6 +305,36 @@ mysql> explain select dob  from People1 where dob < "2019-08-04" ;
 +----+-------------+---------+------------+-------+---------------+------+---------+------+------+----------+--------------------------+
 1 row in set, 1 warning (0.00 sec)
 ```
-比如我们有一个key是dob，我们也只需要dob。Extra中就有"Using index"表示数据直接来自索引。
+比如我们有一个key是dob，我们也只需要dob。Extra中就有"Using index"表示数据直接来自索引。   
 
 
+
+#### 7.使用索引烧苗来排序
+1. mysql可以使用同一个索引既满足排序，又满足查找行，应该尽可能设计得同时满足这两个任务。  
+2. 当索引的列顺序和order by字句孙旭完全一致，并且所有列的排序方向都一样时，mysql可以使用索引进行排序。
+3. 如果关联了多张表，只有order by 字句的引用全部为第一个表示，才能使用索引做排序。
+4. order by 和查询一样 需要满足左前缀
+5. 如果在条件中使用了常量，可以使用第二列进行排序
+
+```sql
+CREATE TABLE `People1` (
+  `last_name` varchar(50) NOT NULL,
+  `first_name` varchar(55) NOT NULL,
+  `dob` date NOT NULL,
+  `gender` enum('m','f','u') NOT NULL DEFAULT 'u',
+  KEY `last_name` (`last_name`),
+  KEY `first_name` (`first_name`),
+  KEY `dob` (`dob`),
+  KEY `gender` (`gender`),
+  KEY `aaa` (`last_name`,`first_name`,`dob`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+```
+
+last_name使用常量，order by可以使用第二列 first_name来排序。
+```sql
+select * from People1 where last_name="johin" order by first_name;
+```
+
+
+#### 8. 索引和锁
+InnoDB只有在访问行的时候才会对行加锁，所以多使用索引，就减少InnoDB访问的行数，从而减少锁的数量。
