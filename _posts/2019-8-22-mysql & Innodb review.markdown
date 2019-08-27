@@ -281,8 +281,10 @@ mysql> explain select * from People1 where last_name = "a" and first_name="b";
 
 #### 6. 覆盖索引
 我们在查找的数据直接来自索引，不用回表来获取数据。  
+
 下面是mysql工作的过程。
->mysql使用索引扫描是很快的，只需要从一条记录移动到下一条记录，如果索引不能覆盖所有的查询所需的全部列，就不得不烧苗一条索引就回表查询一次对应的行。
+>mysql使用索引扫描是很快的，只需要从一条记录移动到下一条记录，如果索引不能覆盖所有的查询所需的全部列，就不得不烧苗一条索引就回表查询一次对应的行。  
+
 ```sql
 CREATE TABLE `People1` (
   `last_name` varchar(50) NOT NULL,
