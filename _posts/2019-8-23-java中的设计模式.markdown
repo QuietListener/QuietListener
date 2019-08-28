@@ -5,4 +5,44 @@ date:   2019-8-23 14:32:00
 categories:  java 设计模式
 ---
 
-todo
+# 1. 单例(singleton)模式
+## 例子:
+Runtime.getRuntime()
+
+# 2. 代理(proxy)模式
+## 例子
+1. spring aop
+
+# 3. 命令(command)模式
+## 例子
+1. hystrix 
+
+# 4. 装饰(decorator)模式
+## 例子
+1. java io库
+
+# 5. 模板方法模式
+## 例子
+1. spring JdbcTemplate
+2. spring RedisTemplate
+
+# 6. 工厂(factory)模式
+## 例子
+1. Slf4j LoggerFactory
+2. Spring中的 BeanFactory
+
+# 7. 建造者(builder)模式
+## 例子:
+1. guava cache
+2. GsonBuilder
+
+# 8. 适配器(adapter)模式
+https://www.ibm.com/developerworks/cn/java/j-lo-adapter-pattern/index.html
+
+# 9. 门面(facade)模式
+## 例子
+1. slf4j = simple logger facade 4 java
+
+# 10. 观察者(Observer)模式
+##
+1. jdk自带 java.util.observable
