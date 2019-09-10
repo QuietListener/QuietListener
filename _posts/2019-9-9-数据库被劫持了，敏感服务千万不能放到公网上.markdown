@@ -4,7 +4,7 @@ title:  iptable控制端口开闭(数据库被劫持了，敏感服务千万不�
 date:   2019-9-9 14:32:00
 categories:  iptable,端口
 ---
-# 背景
+# 1.背景
 自己做的一个side project突然挂了，上去一看数据库被人黑了。原来不小心将mysql 的 3306端口，放在了公网。
 
 ```sql
@@ -41,7 +41,7 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 ```
 
 
-# 关闭所有INPUT端口，只保留必要的端口
+# 2.关闭所有INPUT端口，只保留必要的端口
 ```shell
 [root@host www]# iptables -A INPUT -p tcp --dport 27722 -j ACCEPT; #打开指定端口
 [root@host www]# iptables -A INPUT -p tcp --dport 10001 -j ACCEPT;
