@@ -42,7 +42,10 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 
 
 # 2.关闭所有INPUT端口，只保留必要的端口
-```shell
+```java
+[root@host www]# iptables -A INPUT -i lo -j ACCEPT #local地址可以访问
+[root@host www]# iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT #已经建立的链接不受影响  
+[root@host www]# iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT #可以被ping通(icmp)
 [root@host www]# iptables -A INPUT -p tcp --dport 27722 -j ACCEPT; #打开指定端口
 [root@host www]# iptables -A INPUT -p tcp --dport 10001 -j ACCEPT;
 [root@host www]# iptables -A INPUT -p tcp --dport 80 -j ACCEPT;
@@ -55,19 +58,28 @@ iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
 iptables: Flushing firewall rules:                         [  OK  ]
 iptables: Unloading modules:                               [  OK  ]
 iptables: Applying firewall rules:                         [  OK  ]
-[root@host www]# iptables -nL --line-number
+[root@host website]# iptables -L -n --line-num
 Chain INPUT (policy DROP)
 num  target     prot opt source               destination         
-1    DROP       tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:3306 
-2    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:27722 
-3    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:8080 
-4    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:80 
-5    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:10001 
+1    ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           
+2    ACCEPT     icmp --  0.0.0.0/0            0.0.0.0/0           icmp type 8 
+3    ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0           state ESTABLISHED 
+4    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:27722 
+5    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:8080 
+6    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:80 
+7    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:10001 
+8    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:53 
+9    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:443 
 
 Chain FORWARD (policy ACCEPT)
 num  target     prot opt source               destination         
 
 Chain OUTPUT (policy ACCEPT)
 num  target     prot opt source               destination         
+
+Chain l (0 references)
+num  target     prot opt source               destination      
 ```
 
+
+# iptable 一些操作
