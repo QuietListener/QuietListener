@@ -42,8 +42,7 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 
 
 # 2.关闭所有INPUT端口，只保留必要的端口
-```java
-
+```sh
 [root@host www]iptables -A INPUT -i lo -j ACCEPT #local地址可以访问
 [root@host www]iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT #已经建立的链接不受影响  
 [root@host www]iptables -A INPUT -p icmp -m icmp --icmp-type 8 -j ACCEPT #可以被ping通(icmp)
@@ -52,9 +51,9 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 [root@host www]iptables -A INPUT -p tcp --dport 80 -j ACCEPT;
 [root@host www]iptables -A INPUT -p tcp --dport 8080 -j ACCEPT;
 [root@host www]iptables -P INPUT DROP; # 关闭所有input端口
-[root@host www]# service iptables  save;
+[root@host www]service iptables  save;
 iptables: Saving firewall rules to /etc/sysconfig/iptables:[  OK  ]
-[root@host www]# service iptables restart;
+[root@host www]service iptables restart;
 iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
 iptables: Flushing firewall rules:                         [  OK  ]
 iptables: Unloading modules:                               [  OK  ]
