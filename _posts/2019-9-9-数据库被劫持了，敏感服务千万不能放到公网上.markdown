@@ -1,0 +1,72 @@
+---
+layout: post
+title:  iptable控制端口开闭(数据库被劫持了，敏感服务千万不能放到公网上)
+date:   2019-9-9 14:32:00
+categories:  iptable,端口
+---
+# 背景
+自己做的一个side project突然挂了，上去一看数据库被人黑了。原来不小心将mysql 的 3306端口，放在了公网。
+
+```sql
+mysql> show tables;
++------------------+
+| Tables_in_bullet |
++------------------+
+| ticket_WARNING   |
+| ticket_encrypt   |
+| user_WARNING     |
+| user_encrypt     |
++------------------+
+4 rows in set (0.00 sec)
+
+mysql> 
+
+```sql
+
+mysql> select * from ticket_WARNING \G;
+*************************** 1. row ***************************
+         id: 1
+    message: Your `ticket` table has been encrypted. For decription you need to pay 0.060000 bitcoin to the address 19UcgJcmKDr65QJYKQVU8n74eLcA9KQtpv
+After payment you should go to the http://bp7hhvchre5ifqd6.onion/order/19UcgJcmKDr65QJYKQVU8n74eLcA9KQtpv using tor client and get your unique secret key.
+After receiving the key, you must execute mysql request: UPDATE ticket SET field = AES_DECRYPT(field, 'YOUR-SECRET-KEY');
+
+If you want, you can check how this works on this table. Field "secretProof" is encrypted with a simple key, execute the request:
+UPDATE ticket_WARNING SET secretProof = AES_DECRYPT(secretProof, 'keyForProof');
+
+Attention. This key does not work for your master data. Do not use it, otherwise you may permanently damage the data. To get the key you need, contact us.Field `tableStruct` contains the original names and type of your table. The key for decoding is the same as key for prof: keyForProof
+        btc: 19UcgJcmKDr65QJYKQVU8n74eLcA9KQtpv
+       site: http://bp7hhvchre5ifqd6.onion/order/19UcgJcmKDr65QJYKQVU8n74eLcA9KQtpv
+
+```
+
+
+#. 关闭所有INPUT端口，只保留必要的端口
+```shell
+[root@host www]# iptables -A INPUT -p tcp --dport 27722 -j ACCEPT;
+[root@host www]# iptables -A INPUT -p tcp --dport 10001 -j ACCEPT;
+[root@host www]# iptables -A INPUT -p tcp --dport 80 -j ACCEPT;
+[root@host www]# iptables -A INPUT -p tcp --dport 8080 -j ACCEPT;
+[root@host www]# iptables -P INPUT DROP;
+[root@host www]# service iptables  save;
+iptables: Saving firewall rules to /etc/sysconfig/iptables:[  OK  ]
+[root@host www]# service iptables restart;
+iptables: Setting chains to policy ACCEPT: filter          [  OK  ]
+iptables: Flushing firewall rules:                         [  OK  ]
+iptables: Unloading modules:                               [  OK  ]
+iptables: Applying firewall rules:                         [  OK  ]
+[root@host www]# iptables -nL --line-number
+Chain INPUT (policy DROP)
+num  target     prot opt source               destination         
+1    DROP       tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:3306 
+2    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:27722 
+3    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:8080 
+4    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:80 
+5    ACCEPT     tcp  --  0.0.0.0/0            0.0.0.0/0           tcp dpt:10001 
+
+Chain FORWARD (policy ACCEPT)
+num  target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+num  target     prot opt source               destination         
+```
+
