@@ -41,7 +41,7 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 ```
 
 
-#. 关闭所有INPUT端口，只保留必要的端口
+# 关闭所有INPUT端口，只保留必要的端口
 ```shell
 [root@host www]# iptables -A INPUT -p tcp --dport 27722 -j ACCEPT; #打开指定端口
 [root@host www]# iptables -A INPUT -p tcp --dport 10001 -j ACCEPT;
