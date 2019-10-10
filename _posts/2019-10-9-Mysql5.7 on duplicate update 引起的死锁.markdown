@@ -5,7 +5,7 @@ date:   2019-10-9 14:32:00
 categories:  iptable,端口
 ---
 # 1.背景
-用户选新书的时候，会将学习过的书中的单词导入，有的用户会导入三，四千个数据，由于数据量大，导致了耗时太长。在[kafka分而治之解决一个耗时异步接口问题](http://quietlistener.github.io/kafka/2019/07/01/kafka%E5%88%86%E8%80%8C%E6%B2%BB%E4%B9%8B%E8%A7%A3%E5%86%B3%E4%B8%80%E4%B8%AA%E8%80%97%E6%97%B6%E5%BC%82%E6%AD%A5%E6%8E%A5%E5%8F%A3%E9%97%AE%E9%A2%98.html) 中将数据拆分为100个一批这样并发操作，加快速度。
+用户选新书的时候，会将学习过的书中的单词导入，有的用户会导入三，四千个数据，由于数据量大，导致了耗时太长。在[kafka分而治之解决一个耗时异步接口问题](http://quietlistener.github.io/kafka/2019/07/01/kafka%E5%88%86%E8%80%8C%E6%B2%BB%E4%B9%8B%E8%A7%A3%E5%86%B3%E4%B8%80%E4%B8%AA%E8%80%97%E6%97%B6%E5%BC%82%E6%AD%A5%E6%8E%A5%E5%8F%A3%E9%97%AE%E9%A2%98.html) 中将数据拆分为100个一批这样并发操作，加快速度。每一批100个数据，在一个事务中执行。所有数据可能同时在多个线程中并行执行。
 
 但是最近老有用户报，同步记录不够，一看log发现很多死锁
 
@@ -62,7 +62,7 @@ Record lock, heap no 650 PHYSICAL RECORD: n_fields 4; compact format; info bits 
  
 2. 1. insert ignore 返回 1，不执行任何操作
    2. insert ignore 返回 0，说明已经有相同记录，执行update 
-   
+
 3. 并将transaction缩小(将一些操作溢出到transaction以外)。解决了这个问题
 
 # 3. 总结
