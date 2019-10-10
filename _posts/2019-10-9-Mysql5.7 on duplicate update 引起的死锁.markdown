@@ -63,7 +63,7 @@ Record lock, heap no 650 PHYSICAL RECORD: n_fields 4; compact format; info bits 
 2. 1. insert ignore 返回 1，不执行任何操作
    2. insert ignore 返回 0，说明已经有相同记录，执行update 
 
-3. 并将transaction缩小(将一些操作溢出到transaction以外)。解决了这个问题
+3. 并将transaction缩小(将一些操作移出到transaction以外)。
 
 # 3. 总结
    在高并发的情况下 
