@@ -52,7 +52,7 @@ Record lock, heap no 650 PHYSICAL RECORD: n_fields 4; compact format; info bits 
 ```
 
 都是 insert ... on duplicate key 导致的。
-mysql是版本是5.7
+**mysql是版本是5.7,隔离级别是Repeatable Read**
 
 # 2.解决
 先看了一下是插入意向锁，等待GAP锁导致的死锁。google搜了一下，发现mysql5.7 执行 insert ... on duplicate key 会有这个死锁问题。
@@ -69,6 +69,6 @@ mysql是版本是5.7
    1. 事务范围应该尽量的小，耗时的操作尽量移除到事务以外
    2. 批量插入操作尽量按key排序，降低争用gap锁的风险
    3. 在有unique key 和 key的表上慎重使用 insert ... on duplicate key
-   
+
 # 4. 参考资料：
 [一条Insert on duplicate引发的血案](https://zhuanlan.zhihu.com/p/29349080)
