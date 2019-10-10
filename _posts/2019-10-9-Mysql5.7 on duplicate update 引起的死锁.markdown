@@ -64,5 +64,11 @@ mysql是版本是5.7
    insert ignore 返回 0，说明已经有相同记录，执行update 
 并将transaction缩小(将一些操作溢出到transaction以外)。解决了这个问题
 
-# 3.参考资料：
+# 3. 总结
+   在高并发的情况下 
+   1. 事务范围应该尽量的小，耗时的操作尽量移除到事务以外
+   2. 批量插入操作尽量按key排序，降低争用gap锁的风险
+   3. 在有unique key 和 key的表上慎重使用 insert ... on duplicate key
+   
+# 4. 参考资料：
 [一条Insert on duplicate引发的血案](https://zhuanlan.zhihu.com/p/29349080)
