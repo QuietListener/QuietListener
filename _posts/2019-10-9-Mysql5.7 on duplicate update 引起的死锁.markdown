@@ -72,5 +72,5 @@ Record lock, heap no 650 PHYSICAL RECORD: n_fields 4; compact format; info bits 
    3. 在有unique key 和 key的表上慎重使用 insert ... on duplicate key
 
 # 4. 参考资料：
-[一条Insert on duplicate引发的血案](https://zhuanlan.zhihu.com/p/29349080)
-[MySQL】如何阅读死锁日志](http://blog.itpub.net/22664653/viewspace-2145133/)
+1. [一条Insert on duplicate引发的血案](https://zhuanlan.zhihu.com/p/29349080)
+2. [MySQL】如何阅读死锁日志](http://blog.itpub.net/22664653/viewspace-2145133/)
