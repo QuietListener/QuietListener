@@ -1,0 +1,75 @@
+---
+layout: post
+title:  kafka消费积累问题排查
+date:   2019-10-23 14:32:00
+categories:  kafka
+---
+# 1.背景
+修了一个bug，每一个kafka 记录消费时间长了30%。但是当晚高峰的时候kafka的数据积累量不断的增加，达到10w+，打开log发现很多的kafka日志:
+
+```java
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-6][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.AbstractCoordinator] - (Re-)joining group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-3][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.ConsumerCoordinator] - Revoking previously assigned partitions [] for group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-3][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.AbstractCoordinator] - (Re-)joining group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-2][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.ConsumerCoordinator] - Revoking previously assigned partitions [] for group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-2][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.AbstractCoordinator] - (Re-)joining group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-8][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.ConsumerCoordinator] - Revoking previously assigned partitions [] for group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-8][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.AbstractCoordinator] - (Re-)joining group studyRecordGroup
+[INFO][2019-10-22 22:00:01][studyRecordConsumer-23][study-record-consumer][][][][10.1.7.176][o.a.k.c.c.i.ConsumerCoordinator] - Revoking previously assigned partitions [] for group studyRecordGroup
+
+```
+我们使用的 是 kafka-clients.0.10.0.0 配置
+```java
+kafka:
+  ## 接入点，通过控制台获取
+  bootstrapServers: ...
+  ##手动commit
+  enableAutoCommit: false
+  sessionTimeoutMs: 30000
+  maxPollRecords: 100
+  groupId: studyRecordGroup
+  topic: studyRecord
+  threadSize: 24
+  heartbeatIntervalMs: 5000
+  fetchMinBytes: 1
+  maxPartitionFetchBytes: 1048576
+  autoOffsetReset: latest
+```
+
+# 原因
+
+代码如下
+```java
+  while (!this.stopped) {
+            ConsumerRecords<String, String> records = consumer.poll(PollTimeout);
+            /*消费records*/
+            consumer.commitSync();
+  }
+
+```
+我们最多每次拉取100条记录(maxPollRecords: 100), 由于我们的消费一个记录时间变长了，在我们调用consumer.commitSync()的时候 已经超过了 sessionTimeoutMs，kafka认为consumer可能已经离开Group了 。consumer.commitSync()会失败，因为kafka已经rebalance了。而刚开始poll下来的数据，又需要重新消费一遍，然后有可能又拉下来100个数据，又超时，这样滚雪球造成了消息越积越多。
+
+
+# 解决方案
+1. server端增加partition的个数，增加并发能力，减少消息堆积。
+2. 减小 maxPollRecords 到10，每次拉取的数据减少，poll间隔减小，减少发生session超时的几率。
+
+
+```java
+kafka:
+  ## 接入点，通过控制台获取
+  bootstrapServers: ...
+  ##手动commit
+  enableAutoCommit: false
+  sessionTimeoutMs: 30000
+  ## 改为最次最多10个
+  maxPollRecords: 10 
+  groupId: studyRecordGroup
+  topic: studyRecord
+  threadSize: 24
+  heartbeatIntervalMs: 5000
+  fetchMinBytes: 1
+  maxPartitionFetchBytes: 1048576
+  autoOffsetReset: latest
+```
+
