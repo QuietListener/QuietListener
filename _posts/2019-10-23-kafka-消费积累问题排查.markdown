@@ -78,4 +78,5 @@ kafka:
 # 参考
 1. [kafka consumer 参数](http://kafka.apache.org/0100/documentation.html#consumerapi)
 2. [总结kafka的consumer消费能力很低的情况下的处理方案](https://www.jianshu.com/p/4e00dff97f39)
+3. [kafka源码解析](https://matt33.com/tags/kafka/)
 
