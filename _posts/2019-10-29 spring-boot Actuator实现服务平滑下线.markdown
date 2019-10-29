@@ -46,9 +46,12 @@ xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?stat
 可以register或者un-register这台机器
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20191029-springboot-acurator.jpg)
 
-## 2.下线服务
-  1. 现在我们需要在下线服务前 调用这个接口，先将服务在eureka中”标记为下线“ 。
-  2.
+## 2.下线服务过程
+  ```
+air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
+air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
+
+  ```
 
 # 参考
 1. [分布式事务-本地消息表：最终一致性](https://quguang.wang/post/transaction-local-msg-tb/)
