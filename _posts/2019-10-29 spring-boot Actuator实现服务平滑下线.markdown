@@ -47,13 +47,12 @@ xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?stat
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20191029-springboot-acurator.jpg)
 
 ## 2.下线服务过程
-  ```
+```
 air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
 air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
-
-  ```
+```
 
 # 参考
-1. [分布式事务-本地消息表：最终一致性](https://quguang.wang/post/transaction-local-msg-tb/)
+1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
 
 
