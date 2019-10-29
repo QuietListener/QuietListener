@@ -14,6 +14,41 @@ categories:  java spring-boot
  当B下线后，通知注册中心快速感知B下线，当A没有http请求到B的时候再杀掉B。
 
 # 3.spring-boot 的 Actuator
+Spring boot actuator 提供了很多的 函数可以查看机器，服务状态，和一些接口来控制服务。
+其中有一个service-register接口，可以控制当前服务在“服务中心”(eureka) 注册或者注销的操作。
+如下：
+## 1.开启 service-register接口
+#### 1. pom中加入
+```xml
+       <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+#### 2. 在application-xxx.yml中添加
+```xml
+management:  #actuator
+  server:
+    port: 6082
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: "*"
+```
+
+#### 3. register or un-register
+```shell
+xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=UP"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"  
+xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=DOWN"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
+```
+可以register或者un-register这台机器
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20191029-springboot-acurator.jpg)
+
+## 2.下线服务
+  1. 现在我们需要在下线服务前 调用这个接口，先将服务在eureka中”标记为下线“ 。
+  2.
 
 # 参考
 1. [分布式事务-本地消息表：最终一致性](https://quguang.wang/post/transaction-local-msg-tb/)
