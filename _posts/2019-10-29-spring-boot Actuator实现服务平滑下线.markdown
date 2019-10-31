@@ -17,7 +17,7 @@ categories:  java spring-boot
 # 3.spring-boot 的 Actuator
 Spring boot actuator 提供了很多的 函数可以查看机器，服务状态，和一些接口来控制服务。
 其中有一个service-register接口，可以控制当前服务在“服务中心”(eureka) 注册或者注销的操作。
-如下  aabb：
+如下  aa：
 ## 1.开启 service-register接口
 #### 1. pom中加入
 ```xml
