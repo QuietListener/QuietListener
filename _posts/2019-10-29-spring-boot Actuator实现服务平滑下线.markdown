@@ -61,9 +61,9 @@ shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -
 
 例如:
 当我们设置服务状态为OUT_OF_SERVICE时候, overriddenStatus和status都为OUT_OF_SERVICE。    
-这时候服务再向eureka server发心跳，eureka server依然会认为服务是OUT_OF_SERVICE。(开始我不知道overriddenStatus的作用，以为状态会变成UP状态)    
+这时候服务再向eureka server发心跳，eureka server依然会认为服务是OUT_OF_SERVICE,因为overriddenStatus不为UNKNOW。(开始我不知道overriddenStatus的作用，以为状态会变成UP状态)    
 
-3. 为什么需要有  overriddenStatus  ?  
+**为什么需要有  overriddenStatus ?**   
   试想一下假如没有overriddenStatus，只有status一个状态。 我们调用 curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"成功,此时status = OUT_OF_SERVICE。服务标记为已经下线。 这时候我们的服务还没有停止，还在向eureka server发送心跳，这时候服务的状态又被改回了UP状态。 所以一个状态不够。
 
 
