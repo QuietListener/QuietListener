@@ -91,17 +91,18 @@ while [ $j -le 30 ]
 do
     `curl -X "POST" "http://localhost:6082/actuator/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`
     ret="`curl -X "GET" "http://localhost:6082/actuator/service-registry"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`"
-    #echo  "$j ret: ${ret}"
+    echo  "$j ret: ${ret}"
 
     match=`echo $ret | grep "OUT_OF_SERVICE"`
-    #echo "$match ${#match}"
-    if [ ${#a} -gt 5 ]; then #如果match字符串不为空 跳出循环
+    echo "match: $match ${#match}"
+    if [ ${#match} -gt 5 ]; then #如果match字符串不为空 跳出循环
         break;
     fi
 
     let j++;
-    sleep 0.1
+    sleep 0.2
 done
+
 
 
 #下面检测log是否还在更新，最多等30秒
