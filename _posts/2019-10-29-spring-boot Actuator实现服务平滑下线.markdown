@@ -54,8 +54,8 @@ shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -
 {"overriddenStatus":"UNKNOWN","status":"UP"}
 
 ```
-我们看到有两个状态overriddenStatus和status。overriddenStatus是覆盖状态。  
-服务的最终状态由overriddenStatus和status共同决定，他的工作逻辑如下:
+我们看到有两个状态overriddenStatus和status。overriddenStatus是覆盖状态。   
+服务的最终状态由overriddenStatus和status共同决定，他的工作逻辑如下:    
 **如果overriddenStatus不为UNKONWN，最终状态就用overriddenStatus，**   
 **如果overriddenStatus为UNKONWN, 就用status的状态。** 
 
@@ -68,7 +68,7 @@ shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -
 
 
 ## 2.下线,上线服务过程
-"POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE" 下线服务 将overriddenStatus和status设置为OUT_OF_SERVICE
+"POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE" 下线服务 将overriddenStatus和status设置为OUT_OF_SERVICE   
 "POST" "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE" 将overriddenStatus和status设置为unkonw
 
 下线:
