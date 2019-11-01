@@ -73,10 +73,87 @@ shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -
 2. shell脚本监控接口日志，等到日志没有更新，说明没有流量打到这个服务了。
 3. kill掉服务。这做到了平滑下线。
 
+stop.sh 脚本
+```shell
+#!/bin/bash
+
+pid="../pid"
+watch_log="../logs/biz1.log"
+last_line=""
+previous_line=""
+if [ -f $pid ]; then
+    `rm _previous.txt`
+fi
+
+#下线服务 可以多掉几次保险起见
+j=0
+while [ $j -le 30 ]
+do
+    `curl -X "POST" "http://localhost:6082/actuator/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`
+    ret="`curl -X "GET" "http://localhost:6082/actuator/service-registry"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`"
+    #echo  "$j ret: ${ret}"
+
+    match=`echo $ret | grep "OUT_OF_SERVICE"`
+    #echo "$match ${#match}"
+    if [ ${#a} -gt 5 ]; then #如果match字符串不为空 跳出循环
+        break;
+    fi
+
+    let j++;
+    sleep 0.1
+done
+
+
+#下面检测log是否还在更新，最多等30秒
+i=0
+match_count=0;
+while [ $i -le 30 ]
+do
+    last_line="`tail -n 1 $watch_log`"
+    previous_line="`tail -n 1 _previous.txt`"
+    #echo ${last_line}
+    #echo ${previous_line}
+
+    #如果没有更新说明没有流量到这个服务了
+    if [ "$last_line" = "$previous_line" ]; then
+        echo "${i} `date +%Y_%m_%d%t%H:%M:%S` eq"
+        let match_count++;
+        #echo "match_count: $match_count";
+
+         #如果有2次检查都没有变化才退出
+        if [ $match_count -gt 1 ]; then
+             break
+        fi
+    else
+        echo "${i} `date +%Y_%m_%d%t%H:%M:%S` not eq"
+    fi
+
+    sleep 1
+    let i++
+    `echo $last_line > _previous.txt`
+done
+
+
+#杀掉服务
+if [ -f $pid ]; then
+    if kill `cat $pid` ; then
+        echo 'kill process succeed'
+    else
+        echo 'kill process fail'
+        exit 1
+    fi
+else
+    echo 'pid file not exists'
+    exit 1
+fi
+
+```
+
 上线:
 1. 启动服务
 2. 调用 POST "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE" 下线服务 overriddenStatus和status设置为UNKNOW
 3. 调用 POST "http://localhost:6082/service-registry?status=UP" 下线服务 overriddenStatus和status设置为UP
+
 
 # 参考
 1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
