@@ -39,19 +39,44 @@ management:  #actuator
         include: "*"
 ```
 
-#### 3. register or un-register
+#### 3. register or un-register 接口
 ```shell
 xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=UP"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"  
-xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=DOWN"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
+xxx git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
 ```
 可以register或者un-register这台机器
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20191029-springboot-acurator.jpg)
 
-## 2.下线服务过程
+#### 4. overriddenStatus 和 status
+
+```shell
+shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
+{"overriddenStatus":"UNKNOWN","status":"UP"}
+
 ```
-air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
-air-wallpaper git:(master) ✗ curl -X "POST" "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"
-```
+
+服务的最终状态由overriddenStatus和status共同决定
+1. 当我们设置服务状态为OUT_OF_SERVICE时候, overriddenStatus和status都为OUT_OF_SERVICE。  
+2. 这时候服务再向eureka server发心跳，eureka server依然会认为服务是OUT_OF_SERVICE。(原本我以为会变成UP状态)    
+  他的逻辑是如果overriddenStatus不为UNKONWN，最终状态就用overriddenStatus，    
+  如果overriddenStatus为UNKONWN, 就用status的状态。 
+3. 为什么需要有  overriddenStatus  ?  
+  试想一下假如没有overriddenStatus，只有status一个状态。 我们调用 curl -X "POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"成功,此时status = OUT_OF_SERVICE。我们以为服务已经下线了。 但是这是后我们的服务还没有停止，还在想eureka server发送心跳，这时候服务的状态又被改回了UP状态。 所以这样做不到优雅下线。
+
+
+## 2.下线,上线服务过程
+"POST" "http://localhost:6082/service-registry?status=OUT_OF_SERVICE" 下线服务 将overriddenStatus和status设置为OUT_OF_SERVICE
+"POST" "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE" 将overriddenStatus和status设置为unkonw
+
+下线:
+1. 调用 POST "http://localhost:6082/service-registry?status=OUT_OF_SERVICE" 下线服务 overriddenStatus和status设置为OUT_OF_SERVICE。
+2. shell脚本监控接口日志，等到日志没有更新，说明没有流量打到这个服务了。
+3. kill掉服务。这做到了平滑下线。
+
+上线:
+1. 启动服务
+2. 调用 POST "http://localhost:6082/service-registry?status=CANCEL_OVERRIDE" 下线服务 overriddenStatus和status设置为UNKNOW
+3. 调用 POST "http://localhost:6082/service-registry?status=UP" 下线服务 overriddenStatus和status设置为UP
 
 # 参考
 1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
