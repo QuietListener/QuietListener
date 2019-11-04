@@ -34,7 +34,6 @@ permalink: /books/
 
 ### python
 
-### python
 
 ### 算法
 1. 《算法导论》
