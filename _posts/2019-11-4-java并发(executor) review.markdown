@@ -23,7 +23,7 @@ categories:  java review
 }
  ```
  ## 2. executor 的初衷
-
+ 
  >An object that executes submitted {@link Runnable} tasks. This
  > interface provides a way of decoupling task submission from the
  > mechanics of how each task will be run, including details of thread
@@ -147,7 +147,16 @@ public static ExecutorService newCachedThreadPool() {
 
 ### 执行周期性的任务 ScheduledThreadPoolExecutor
 ScheduledThreadPoolExecutor 继承自 ThreadPoolExecutor ，可以执行定期任务和周期性任务。
-可以参考[demo代码](https://github.com/QuietListener/andy.com/blob/master/src/main/java/andy/com/concurrent/executor/TestScheduledThreadPoolExecutorService.java)
+可以参考[demo代码](https://github.com/QuietListener/andy.com/blob/master/src/main/java/andy/com/concurrent/executor/TestScheduledThreadPoolExecutorService.java) 他使用的队列是延迟队列(DelayQueue) 。   
+
+```java
+public ScheduledThreadPoolExecutor(int corePoolSize,
+                                       RejectedExecutionHandler handler) {
+        super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,
+              new DelayedWorkQueue(), handler);
+    }
+```
+延迟队列可以参考[DelayQueue demo](https://github.com/QuietListener/andy.com/blob/master/src/main/java/andy/com/concurrent/containers/TestDelayQueue.java)
 
 
 
@@ -209,4 +218,5 @@ java线程的stop已经Deprecated了，推荐使用interrupt来结束线程,这�
  
 
 # 参考
-
+1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
+1. [SpringCloud服务的平滑上下线](https://juejin.im/post/5cf63899f265da1b9253c7f4)
