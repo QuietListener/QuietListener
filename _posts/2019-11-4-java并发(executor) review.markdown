@@ -6,7 +6,7 @@ categories:  java review
 ---
 
 # 线程池
- ## 1. Executor 
+## 1. Executor 
  ```java
  /**
  * An object that executes submitted {@link Runnable} tasks. This
@@ -23,6 +23,7 @@ categories:  java review
 }
  ```
  ## 2. executor 的初衷
+ 
  >An object that executes submitted {@link Runnable} tasks. This
  > interface provides a way of decoupling task submission from the
  > mechanics of how each task will be run, including details of thread
