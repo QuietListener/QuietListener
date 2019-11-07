@@ -67,23 +67,22 @@ public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration
 下面是下线的log,注意注释
 
 ```shell
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7af707e0: startup date [Thu Nov 07 16:04:00 CST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@2f48b3d2
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.c.n.e.s.EurekaServiceRegistry] -  
 
 ### 注意这一段  DiscoveryClient 向 Eureka Server发送 DOWN，Eureka Server 会将服务状态修改为DOWN。
-[WARN][2019-11-07 16:05:21][Thread-49][c.n.d.DiscoveryClient] - Saw local status change event StatusChangeEvent [timestamp=1573113921028, current=DOWN, previous=UP]
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7c8f047a: startup date [Thu Nov 07 16:04:11 CST 2019]; parent: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7af707e0
-[INFO][2019-11-07 16:05:21][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281: registering service...
-[INFO][2019-11-07 16:05:21][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281 - registration status: 204
+[INFO][2019-11-07 17:06:25][Thread-43][o.s.c.n.e.s.EurekaServiceRegistry] - Unregistering application service-user with eureka with status DOWN
+[WARN][2019-11-07 17:06:25][Thread-43][c.n.d.DiscoveryClient] - Saw local status change event StatusChangeEvent [timestamp=1573117585169, current=DOWN, previous=UP]
+[INFO][2019-11-07 17:06:25][Thread-43][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@5c79c5ec: startup date [Thu Nov 07 16:20:10 CST 2019]; parent: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@6a84bc2a
+[INFO][2019-11-07 17:06:25][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281: registering service...
+[INFO][2019-11-07 17:06:25][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281 - registration status: 204
 
 
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.c.s.DefaultLifecycleProcessor] - Stopping beans in phase 0
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans on shutdown
-[INFO][2019-11-07 16:05:21][Thread-49][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans
-[INFO][2019-11-07 16:05:21][Thread-49][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown initiated...
-[INFO][2019-11-07 16:05:21][Thread-49][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown completed.
-[INFO][2019-11-07 16:05:21][Thread-49][c.n.d.DiscoveryClient] - Shutting down DiscoveryClient ...
-[WARN][2019-11-07 16:05:21][Thread-49][o.s.c.a.CommonAnnotationBeanPostProcessor] - Invocation of destroy method failed on bean with name 'scopedTarget.eurekaClient': org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'eurekaInstanceConfigBean': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+[INFO][2019-11-07 17:06:26][Thread-43][o.s.c.s.DefaultLifecycleProcessor] - Stopping beans in phase 0
+[INFO][2019-11-07 17:06:26][Thread-43][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans on shutdown
+[INFO][2019-11-07 17:06:26][Thread-43][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans
+[INFO][2019-11-07 17:06:26][Thread-43][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown initiated...
+[INFO][2019-11-07 17:06:26][Thread-43][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown completed.
+[INFO][2019-11-07 17:06:26][Thread-43][c.n.d.DiscoveryClient] - Shutting down DiscoveryClient ...
+
 
 ```
 
