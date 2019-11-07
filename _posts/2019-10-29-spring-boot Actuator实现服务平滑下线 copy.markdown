@@ -13,7 +13,7 @@ categories:  java spring-boot
 # 2.目标
 当B下线后，通知注册中心(我们用的eureka)快速感知B下线，当没有请求到B的时候再杀掉B。这样平滑下线。
 
-$\color{#FF0000}{如果只想知道How不想知道why,可以直接跳到:4.总结}$
+**如果只想知道How不想知道why,可以直接跳到:4.总结**
 # 3. 实现: 
 ## spring-boot 的 Actuator
 Spring boot actuator 提供了很多的 函数可以查看机器，服务状态，和一些接口来控制服务。
@@ -216,7 +216,7 @@ eureka:
 ribbon:
   ServerListRefreshInterval: 5000
 ```
-$\color{#FF0000}{所以叫加快服务感知到到其他服务下线的时间 需要减小上面这两个参数。我这里修改为5秒}$
+**所以叫加快服务感知到到其他服务下线的时间 需要减小上面这两个参数。我这里修改为5秒**
 
 
 # 4.总结
