@@ -200,7 +200,7 @@ fi
 
 echo "### 1. get the service offline  ###"
 j=0
-while [ $j -le 30 ]
+while [ $j -le 3 ]
 do
     `curl -X "POST" "http://localhost:12345/actuator/service-registry?status=OUT_OF_SERVICE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`
     ret="`curl -X "GET" "http://localhost:12345/actuator/service-registry"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`"
@@ -224,7 +224,7 @@ echo "### 2. monitor log: ${watch_log}  ###"
 #下面检测log是否还在更新，最多等30秒
 i=0
 match_count=0;
-while [ $i -le 60 ]
+while [ $i -le 50 ]
 do
     last_line="`tail -n 1 $watch_log`"
     previous_line="`tail -n 1 _previous.txt`"
@@ -255,7 +255,7 @@ echo "";
 echo "### 3. reset the override status ###"
 
 k=0;
-while [ $k -le 30 ]
+while [ $k -le 3 ]
 do
     `curl -X "POST" "http://localhost:12345/actuator/service-registry?status=CANCEL_OVERRIDE"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`
     ret="`curl -X "GET" "http://localhost:12345/actuator/service-registry"  -H "Content-Type: application/vnd.spring-boot.actuator.v2+json;charset=UTF-8"`"
@@ -268,7 +268,7 @@ do
     fi
 
     let k++;
-    sleep 0.2
+    sleep 1
 done
 
 echo "### finished reset the override status  ###"
@@ -296,7 +296,6 @@ fi
 if [ -f "_previous.txt" ]; then
     `rm _previous.txt`
 fi
-
 ```
 
 ## 3.减小感知到服务下线的时间
