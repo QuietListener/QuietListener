@@ -30,7 +30,7 @@ Spring boot actuator 提供了很多的 函数可以查看机器，服务状态�
 ```
 
 #### 2. 在application-xxx.yml中添加
-```xml
+```yml
 management:  #actuator
   server:
     port: 12345
