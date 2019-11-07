@@ -17,7 +17,7 @@ categories:  java spring-boot
 # 3. 实现: 
 
 ## 1. 了解一下SpringBoot 服务上线下线过程。
-### 2. 上线
+### 2. 上线，向Eureka Server发送UP状态
 下面是下线的log,注意注释
 ```shell
 
@@ -63,7 +63,7 @@ public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration
 	
 ```
 
-### 2. 下线
+### 2. 下线 ，向Eureka Server发送DOWN状态
 下面是下线的log,注意注释
 
 ```shell
