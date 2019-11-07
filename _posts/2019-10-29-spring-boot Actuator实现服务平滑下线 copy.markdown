@@ -230,16 +230,15 @@ ribbon:
             </dependency>
 ```
 
+
 2. 修改 application-xxx.xml 
-
 ```xml
-
-## 修改从Eureka Service 拉取服务状态信息的频率为5秒，默认为30秒
+##修改从Eureka Service 拉取服务状态信息的频率为5秒，默认为30秒
 eureka:
   client:
     registry-fetch-interval-seconds: 5 #拉取其他服务注册信息频率 
 
-## robbin 缓存刷新时间改为5秒 默认为30秒
+##robbin 缓存刷新时间改为5秒 默认为30秒
 ribbon:
   ServerListRefreshInterval: 5000
 
