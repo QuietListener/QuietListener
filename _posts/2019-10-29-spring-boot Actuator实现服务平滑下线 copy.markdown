@@ -15,9 +15,111 @@ categories:  java spring-boot
 
 **如果只想知道How不想知道why,可以直接跳到:4.总结**
 # 3. 实现: 
-## spring-boot 的 Actuator
-Spring boot actuator 提供了很多的 函数可以查看机器，服务状态，和一些接口来控制服务。
-其中有一个service-register接口，可以控制当前服务在“服务中心”(eureka) 注册或者注销的操作。
+
+## 1. 了解一下SpringBoot 服务上线下线过程。
+### 2. 上线
+下面是下线的log,注意注释
+```log
+
+### 注意 “renew interval is: 30” 表示每隔30秒 Eureka Client会发送一个心跳给Eureka Server
+[INFO][2019-11-07 16:06:51][main][c.n.d.DiscoveryClient] - Starting heartbeat executor: renew interval is: 30
+
+[INFO][2019-11-07 16:06:51][main][c.n.d.InstanceInfoReplicator] - InstanceInfoReplicator onDemand update allowed rate per min is 4
+[INFO][2019-11-07 16:06:51][main][c.n.d.DiscoveryClient] - Discovery Client initialized at timestamp 1573114011652 with initial instances count: 2
+
+### DiscoveryClient 向 Eureka Server发送 UP，Eureka Server 会将服务状态修改为UP。
+[INFO][2019-11-07 16:06:51][main][o.s.c.n.e.s.EurekaServiceRegistry] - Registering application service-user with eureka with status UP
+[INFO][2019-11-07 16:06:51][main][c.n.d.DiscoveryClient] - Saw local status change event StatusChangeEvent [timestamp=1573114011679, current=UP, previous=STARTING]
+[INFO][2019-11-07 16:06:51][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281: registering service...
+[INFO][2019-11-07 16:06:51][main][o.s.c.s.DefaultLifecycleProcessor] - Starting beans in phase 0
+[INFO][2019-11-07 16:06:51][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281 - registration status: 204
+```
+
+**执行的是下面代码**
+```java
+public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration> {
+
+	private static final Log log = LogFactory.getLog(EurekaServiceRegistry.class);
+
+	@Override
+	public void register(EurekaRegistration reg) {
+		maybeInitializeClient(reg);
+
+		if (log.isInfoEnabled()) {
+			log.info("Registering application " + reg.getInstanceConfig().getAppname()
+					+ " with eureka with status "
+					+ reg.getInstanceConfig().getInitialStatus());
+		}
+
+		reg.getApplicationInfoManager()
+				.setInstanceStatus(reg.getInstanceConfig().getInitialStatus());
+
+		reg.getHealthCheckHandler().ifAvailable(healthCheckHandler ->
+				reg.getEurekaClient().registerHealthCheck(healthCheckHandler));
+	}
+
+    ....
+}
+	
+```
+
+### 2. 下线
+下面是下线的log,注意注释
+
+```log
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7af707e0: startup date [Thu Nov 07 16:04:00 CST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@2f48b3d2
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.c.n.e.s.EurekaServiceRegistry] -  
+
+### 注意这一段  DiscoveryClient 向 Eureka Server发送 DOWN，Eureka Server 会将服务状态修改为DOWN。
+[WARN][2019-11-07 16:05:21][Thread-49][c.n.d.DiscoveryClient] - Saw local status change event StatusChangeEvent [timestamp=1573113921028, current=DOWN, previous=UP]
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7c8f047a: startup date [Thu Nov 07 16:04:11 CST 2019]; parent: org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7af707e0
+[INFO][2019-11-07 16:05:21][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281: registering service...
+[INFO][2019-11-07 16:05:21][DiscoveryClient-InstanceInfoReplicator-0][c.n.d.DiscoveryClient] - DiscoveryClient_SERVICE-USER/172.16.45.187:service-user:8281 - registration status: 204
+
+
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.c.s.DefaultLifecycleProcessor] - Stopping beans in phase 0
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans on shutdown
+[INFO][2019-11-07 16:05:21][Thread-49][o.s.j.e.a.AnnotationMBeanExporter] - Unregistering JMX-exposed beans
+[INFO][2019-11-07 16:05:21][Thread-49][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown initiated...
+[INFO][2019-11-07 16:05:21][Thread-49][c.z.h.HikariDataSource] - HikariPool-1 - Shutdown completed.
+[INFO][2019-11-07 16:05:21][Thread-49][c.n.d.DiscoveryClient] - Shutting down DiscoveryClient ...
+[WARN][2019-11-07 16:05:21][Thread-49][o.s.c.a.CommonAnnotationBeanPostProcessor] - Invocation of destroy method failed on bean with name 'scopedTarget.eurekaClient': org.springframework.beans.factory.BeanCreationNotAllowedException: Error creating bean with name 'eurekaInstanceConfigBean': Singleton bean creation not allowed while singletons of this factory are in destruction (Do not request a bean from a BeanFactory in a destroy method implementation!)
+
+```
+
+**执行的是下面代码**
+
+```java
+public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration> {
+
+	private static final Log log = LogFactory.getLog(EurekaServiceRegistry.class);
+
+    ...
+
+	@Override
+	public void deregister(EurekaRegistration reg) {
+		if (reg.getApplicationInfoManager().getInfo() != null) {
+
+			if (log.isInfoEnabled()) {
+				log.info("Unregistering application " + reg.getInstanceConfig().getAppname()
+						+ " with eureka with status DOWN");
+			}
+
+			reg.getApplicationInfoManager().setInstanceStatus(InstanceInfo.InstanceStatus.DOWN);
+
+			//shutdown of eureka client should happen with EurekaRegistration.close()
+			//auto registration will create a bean which will be properly disposed
+			//manual registrations will need to call close()
+		}
+	}
+
+    ....
+}
+```
+
+## 了解一下 spring-boot 的 Actuator
+Spring boot actuator 提供了很多的接口，一些接口可以查看或者修改机器服务状态。
+其中有一个service-register接口，可以控制当前服务在“服务中心”(eureka)的状态，比如DOWN，UP。
 如下：
 ## 1.开启 service-register接口
 #### 1. pom中加入
