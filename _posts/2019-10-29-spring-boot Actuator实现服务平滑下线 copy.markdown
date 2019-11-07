@@ -205,14 +205,14 @@ fi
 4. Eureka Client 从 Eureka Service 拉取各个服务信息(ip,端口,状态等)。
 
 **Eureka Client 会定期从Eureka Service 拉取服务信息,这个时间间隔由下面这个参数控制（默认为30秒）**
-```xml
+```yml
 eureka:
   client:
     registry-fetch-interval-seconds: 5 #拉取其他服务注册信息频率 
 ```    
 
 **Robbin 会定期从 Eureka Client 拉取服务信息并缓存。这个时间由下面这个参数决定（默认为30秒）**
-```xml
+```yml
 ribbon:
   ServerListRefreshInterval: 5000
 ```
