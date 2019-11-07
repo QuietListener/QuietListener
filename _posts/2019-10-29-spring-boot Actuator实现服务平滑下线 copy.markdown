@@ -82,7 +82,7 @@ shell git:(master) ✗ curl -X "GET" "http://localhost:6081/service-registry"  -
 3. 调用 POST "http://localhost:12345/service-registry?status=CANCEL_OVERRIDE" 下线服务 overriddenStatus和status设置为UNKNOWN。
 4. kill掉服务。这做到了平滑下线。
 
-上面的逻辑写到了 stop.sh 脚本了，如下:
+上面的逻辑写到了 stop.sh 脚本了，如下(其中watch_log需要修改为具体服务的log地址):
 ```shell
 #!/bin/bash
 
