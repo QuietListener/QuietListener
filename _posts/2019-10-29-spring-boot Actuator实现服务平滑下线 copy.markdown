@@ -233,7 +233,7 @@ ribbon:
 
 2. 修改 application-xxx.xml 
 
-```java
+```yml
 ##修改从Eureka Service 拉取服务状态信息的频率为5秒，默认为30秒
 eureka:
   client:
