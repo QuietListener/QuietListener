@@ -19,7 +19,7 @@ categories:  java spring-boot
 ## 1. 了解一下SpringBoot 服务上线下线过程。
 ### 2. 上线
 下面是下线的log,注意注释
-```log
+```shell
 
 ### 注意 “renew interval is: 30” 表示每隔30秒 Eureka Client会发送一个心跳给Eureka Server
 [INFO][2019-11-07 16:06:51][main][c.n.d.DiscoveryClient] - Starting heartbeat executor: renew interval is: 30
@@ -66,7 +66,7 @@ public class EurekaServiceRegistry implements ServiceRegistry<EurekaRegistration
 ### 2. 下线
 下面是下线的log,注意注释
 
-```log
+```shell
 [INFO][2019-11-07 16:05:21][Thread-49][o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext] - Closing org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext@7af707e0: startup date [Thu Nov 07 16:04:00 CST 2019]; parent: org.springframework.context.annotation.AnnotationConfigApplicationContext@2f48b3d2
 [INFO][2019-11-07 16:05:21][Thread-49][o.s.c.n.e.s.EurekaServiceRegistry] -  
 
