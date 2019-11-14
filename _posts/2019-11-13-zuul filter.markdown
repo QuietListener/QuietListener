@@ -12,7 +12,10 @@ ZuulFilter 主要有3类
 3. POST Filter  获得请求结果之后调用
 4. ERROR Filter 如果上面任何一个阶段发生错误，会调用ERROR Filter
 
-系统默认实现了很多filter在org.springframework.cloud.netflix.zuul.filters里面，需要了解的可以看源码。如果自己需要，可以定制自己的Filter。每个自定义的Filter需要实现 Zuul的 filterType,filterOrder,shouldFilter,run 这方法。各个Filter可以通过一个RequestContext(ThreadLocal实现)来交换数据。
+系统默认实现了很多filter在org.springframework.cloud.netflix.zuul.filters里面，需要了解的可以看源码。如果自己需要，可以定制自己的ZuulFilter。每个自定义的Filter需要实现 ZuulFilter的 **filterType,filterOrder,shouldFilter,run** 这方法。各个Filter可以通过一个**RequestContext**(ThreadLocal实现)来交换数据。
+
+
+下面是需要实现的方法:
 ``` java
 
     /**
