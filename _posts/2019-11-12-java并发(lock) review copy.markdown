@@ -24,7 +24,7 @@ ReentrantLock的wait notify或者notifyAll可以实现一个隐含条件，
 
 
 ## 读写锁 ReentrantReadWriteLock
-  如果只是用lock来保护资源，在写-写,读-写是适用的，但是只是在读-读模式下，加锁是没必要的，特别是读元大于多谢的情况下。所以使用读写锁会得到更好的并发性能。
+  如果只是用lock来保护资源，在**写-写**,**读-写**是适用的，但是只是在**读-读**模式下，加锁是没必要的，特别是读远大于写的情况下。所以使用读写锁会得到更好的并发性能。
   下面的代码模拟读多写少的场景，使用读写锁时候的吞吐量是普通lock的3倍左右~(macPro i5 8G内存)
 ```java
 package andy.com.concurrent.synchronizers;
