@@ -22,6 +22,165 @@ Reentranlock提供了一些高级的功能。
 ReentrantLock的wait notify或者notifyAll可以实现一个隐含条件，
 
 
+# ReentrantLock 实现读写锁。 
+  如果只是用lock来保护资源，在写-写,读-写是适用的，但是只是在读-读模式下，加锁是没必要的，特别是读元大于多谢的情况下。所以使用读写锁会得到更好的并发性能。
+  下面的代码模拟读多写少的场景，使用读写锁时候的吞吐量是普通lock的3倍左右~(macPro i5 8G内存)
+```java
+package andy.com.concurrent.synchronizers;
+
+import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+public class TestReadWriteLock {
+
+    static volatile boolean flag = true;
+    static volatile int count = 1;
+    static volatile int readActionCount = 1;
+
+    public void sleepMillis(int timeMs) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(timeMs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 使用普通锁 模拟读多写少的场景
+     * 10个读线程线程，读操作耗时20ms
+     * 1个写线程，写操作耗时80ms 每隔100毫秒一个写操作
+     * 30秒可以并发读2000+次
+     *
+     * @throws Exception
+     */
+    @Test
+    public void test1() throws Exception {
+
+        final ReentrantLock lock = new ReentrantLock();
+
+        //10个读线程
+        for (int i = 0; i < 10; i++) {
+            Thread readThread1 = new Thread() {
+                public void run() {
+                    while (flag == true) {
+                        lock.lock();
+                        try {
+                            readActionCount += 1;
+                            System.out.println(this.getName() + " read:" + count + " readActionCount:" + readActionCount);
+                            sleepMillis(20);
+                        } finally {
+                            lock.unlock();
+                        }
+                    }
+                }
+            };
+
+            readThread1.setName("read-" + i);
+            readThread1.start();
+        }
+
+        //1个写线程
+        for (int i = 0; i < 1; i++) {
+            Thread writeThread1 = new Thread() {
+                public void run() {
+                    while (flag == true) {
+                        lock.lock();
+                        try {
+                            count += 1;
+                            System.out.println(this.getName() + "write:" + count);
+                            sleepMillis(80);
+                        } finally {
+                            lock.unlock();
+                        }
+
+                        sleepMillis(100);
+                    }
+                }
+            };
+
+            writeThread1.setName("write-" + i);
+            writeThread1.start();
+        }
+
+
+        TimeUnit.SECONDS.sleep(30);
+        flag = false;
+    }
+
+
+    /**
+     * 使用读写说 模拟读多写少的场景
+     * 10个读线程线程，读操作耗时20ms
+     * 1个写线程，写操作耗时80ms 每隔100毫秒一个写操作
+     * 30秒可以并发读7000+次
+     *
+     * @throws Exception
+     */
+    @Test
+    public void test2() throws Exception {
+
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+        final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+        final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+
+        //10个读线程
+        for (int i = 0; i < 10; i++) {
+            Thread readThread1 = new Thread() {
+                public void run() {
+                    while (flag == true) {
+                        readLock.lock();
+                        try {
+                            readActionCount += 1;
+                            System.out.println(this.getName() + " read:" + count + " readActionCount:" + readActionCount);
+                            sleepMillis(20);
+
+                        } finally {
+                            readLock.unlock();
+                        }
+
+
+                    }
+                }
+            };
+
+            readThread1.setName("read-" + i);
+            readThread1.start();
+        }
+
+        //1个写线程
+        for (int i = 0; i < 1; i++) {
+            Thread writeThread1 = new Thread() {
+                public void run() {
+                    while (flag == true) {
+                        writeLock.lock();
+                        try {
+                            count += 1;
+                            System.out.println(this.getName() + " write:" + count);
+                            sleepMillis(80);
+                        } finally {
+                            writeLock.unlock();
+                        }
+
+                        sleepMillis(100);
+                    }
+                }
+            };
+
+            writeThread1.setName("write-" + i);
+            writeThread1.start();
+        }
+
+
+        TimeUnit.SECONDS.sleep(30);
+        flag = false;
+    }
+}
+
+```  
+
 
 
 # 参考
