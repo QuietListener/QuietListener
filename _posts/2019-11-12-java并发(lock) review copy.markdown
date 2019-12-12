@@ -31,6 +31,7 @@ package andy.com.concurrent.synchronizers;
 
 import org.junit.Test;
 
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -40,6 +41,9 @@ public class TestReadWriteLock {
     static volatile boolean flag = true;
     static volatile int count = 1;
     static volatile int readActionCount = 1;
+    static int countReader = 10;
+    static int countWriter = 1;
+    static final private CyclicBarrier barrier = new CyclicBarrier(countReader + countWriter);
 
     public void sleepMillis(int timeMs) {
         try {
@@ -63,9 +67,16 @@ public class TestReadWriteLock {
         final ReentrantLock lock = new ReentrantLock();
 
         //10个读线程
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < countReader; i++) {
             Thread readThread1 = new Thread() {
                 public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(this.getName() + " started");
                     while (flag == true) {
                         lock.lock();
                         try {
@@ -84,9 +95,16 @@ public class TestReadWriteLock {
         }
 
         //1个写线程
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < countWriter; i++) {
             Thread writeThread1 = new Thread() {
                 public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println(this.getName() + " started");
                     while (flag == true) {
                         lock.lock();
                         try {
@@ -107,6 +125,7 @@ public class TestReadWriteLock {
         }
 
 
+        System.out.println("main started");
         TimeUnit.SECONDS.sleep(30);
         flag = false;
     }
@@ -128,9 +147,15 @@ public class TestReadWriteLock {
         final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 
         //10个读线程
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < countReader; i++) {
             Thread readThread1 = new Thread() {
                 public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     while (flag == true) {
                         readLock.lock();
                         try {
@@ -141,6 +166,8 @@ public class TestReadWriteLock {
                         } finally {
                             readLock.unlock();
                         }
+
+
                     }
                 }
             };
@@ -150,9 +177,14 @@ public class TestReadWriteLock {
         }
 
         //1个写线程
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < countWriter; i++) {
             Thread writeThread1 = new Thread() {
                 public void run() {
+                    try {
+                        barrier.await();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     while (flag == true) {
                         writeLock.lock();
                         try {
@@ -177,6 +209,7 @@ public class TestReadWriteLock {
         flag = false;
     }
 }
+
 
 ```  
 
