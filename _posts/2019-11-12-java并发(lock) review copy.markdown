@@ -6,6 +6,7 @@ categories:  java review
 ---
 
 # 锁
+## synchronized vs Lock
 1.锁是解决线程安全问题的一个办法，(还可以使用 ThreadLocal,不变对象等方法)
 java中锁的实现:synchronized和Lock
 
@@ -22,7 +23,7 @@ Reentranlock提供了一些高级的功能。
 ReentrantLock的wait notify或者notifyAll可以实现一个隐含条件，
 
 
-# ReentrantLock 实现读写锁。 
+## 读写锁 ReentrantReadWriteLock
   如果只是用lock来保护资源，在写-写,读-写是适用的，但是只是在读-读模式下，加锁是没必要的，特别是读元大于多谢的情况下。所以使用读写锁会得到更好的并发性能。
   下面的代码模拟读多写少的场景，使用读写锁时候的吞吐量是普通lock的3倍左右~(macPro i5 8G内存)
 ```java
@@ -140,8 +141,6 @@ public class TestReadWriteLock {
                         } finally {
                             readLock.unlock();
                         }
-
-
                     }
                 }
             };
