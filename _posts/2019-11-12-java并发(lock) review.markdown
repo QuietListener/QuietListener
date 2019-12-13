@@ -573,10 +573,10 @@ AQS有一个整数的状态信息state,状态信息可以通过protected的getSt
 ```
 
 
-##### AQS实现一个Synchronizer只需要我们实现四个方法
+#### AQS实现同步器只需实现四个方法
 tryAcquire，tryAcquireShared,tryRelease,tryReleaseShared
 
-##### 例子 OnShotLatch
+#### 例子 OnShotLatch
 
 只需要实现 tryAcquireShared 和 tryReleaseShared 十几行代码，就能实现一个简单的Synchronizer。
 
@@ -669,6 +669,6 @@ class OnShotLatch {
 ```
 
 
-##### AQS 总结
+#### AQS 总结
 AQS = acquire+release+state ，两类方法+一个状态
 用AQS实现Synchronizer只需要实现tryAcquire，tryAcquireShared,tryRelease,tryReleaseShared四个方法并操作state变量。
