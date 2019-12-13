@@ -215,7 +215,7 @@ public class TestReadWriteLock {
 
 
 ## 自建同步器
-   ### 要解决的问题，状态管理
+### 要解决的问题，状态管理
    在单线程中如果程序依赖一个先验条件，无法被满足了，那么它永远都不会变为真了。但是在**多线程环境下**就不一样了，这个先验条件有可能在其他线程中被改变。例如BlockQueue 当queue为空的时候，去读取会阻塞，当队列满时候去写入也会阻塞。
    解决这个问题有几种方式，比较差的方式有**轮询等待** **轮询+随眠**。轮询等待就是在一个循环不断去检测是否条件为真，这样很消耗cpu； **轮询+随眠**在一个循环不断去检测是否条件为真，当伪假时候睡眠一段时间再检查，这样cpu消耗变少了，但是也睡过了头。
 
@@ -278,3 +278,167 @@ public class TheadGage {
 
 
  ```    
+
+
+### 显示锁，Lock和Condition 
+#### 为什么需要Condition?
+Condition是广义的条件队列，内部条件队列，一个锁只能对应一个条件队列，这样就很低效了。比如生产者-消费者模型。 
+如果只有一条件队列，生产者和消费者线程都在这个队列中，当数据队列不为空的时候，应该唤醒消费者线程，但是由于只有一个条件队列，所以当执行notifyAll的时候会唤醒条件队列中所有线程，其实把生产这线程也唤醒了。 这样会带来不必要的上下文切换，浪费cpu资源。   
+所以如果有两个条件队列:消费者队列，生产者队列。当数据队列不为空的时候只唤醒消费者队列中的线程，当数据不满的时候唤醒生产者队列中的线程就会减少不必要的上下文切换。
+#### 例子:
+```java
+/**
+ * 一个锁和多个Condition(条件队列)可以更精细的控制并发
+ */
+
+package andy.com.concurrent.sync.cp;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class TestConsumerProducer_Lock {
+
+    private static final Lock lock = new ReentrantLock();
+    //用于放producer线程的条件队列
+    private static final Condition producerCondition = lock.newCondition();
+    //用于放consumer线程的条件队列
+    private static final Condition consumerCondition = lock.newCondition();
+
+
+    /**
+     * @param args
+     * @throws InterruptedException
+     */
+    public static void main(String[] args) throws InterruptedException {
+
+        List<String> pool = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            new ConsumerL(pool, "consumer-" + i).start();
+        }
+
+        TimeUnit.SECONDS.sleep(5);
+
+        for (int i = 0; i < 2; i++) {
+            new ProducerL(pool, "producer-" + i).start();
+        }
+
+        TimeUnit.SECONDS.sleep(60 * 5);
+    }
+
+
+    /**
+     * 生产者 往pool里面添加数据
+     *
+     * @author Admin
+     */
+    static class ConsumerL extends Thread {
+        private List<String> pool = null;
+
+        public ConsumerL(List<String> pool, String name) {
+            this.pool = pool;
+            this.setName(name);
+
+            if (this.pool == null)
+                throw new AssertionError("pool is null");
+        }
+
+        @Override
+        public void run()  {
+            while (true) {
+                String i = null;
+                lock.lock();
+                try {
+                    while (pool.size() == 0) {
+                        System.out.println(this.getName() + " pool is empty waitting ");
+                        //只在consumer 条件队列中等待
+                        consumerCondition.await(); //
+                    }
+
+                    i = pool.remove(0);
+
+                    //只唤醒Producer中的线程
+                    producerCondition.signalAll();
+                }
+                catch (Exception e){ e.printStackTrace();}
+                finally { lock.unlock(); }
+
+                System.out.println(this.getName() + " consume " + i);
+
+                //随机睡几秒
+                sleepMs();
+            }
+
+        }
+
+        private static void sleepMs() {
+            try {
+                TimeUnit.SECONDS.sleep(2 + new Random().nextInt(5));
+            } catch (InterruptedException e) { e.printStackTrace(); }
+        }
+    }
+
+
+    /**
+     * 生产者 往pool里面添加数据
+     *
+     * @author Admin
+     */
+    static class ProducerL extends Thread {
+        //max size of pool
+        private static final int MAX_SIZE = 3;
+
+        //shared pool
+        private List<String> pool = null;
+
+        public ProducerL(List<String> pool, String name) {
+            this.pool = pool;
+            this.setName(name);
+
+            if (this.pool == null)
+                throw new AssertionError("pool is null");
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                lock.lock();
+                try {
+                    while (pool.size() == MAX_SIZE) {
+                        System.out.println(this.getName() + " pool is full(" + pool.size() + ") waitting ");
+                        //只在producer 条件队列中等待
+                        producerCondition.await();
+                    }
+
+                    String i = new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(new Date());
+                    pool.add(i);
+
+                    //只唤醒生产者线程
+                    consumerCondition.signalAll();
+                    System.out.println(this.getName() + " produce(" + pool.size() + ") " + i);
+                }
+                catch (Exception e){ e.printStackTrace();}
+                finally { lock.unlock(); }
+                sleepMs();
+            }
+        }
+
+
+        private static void sleepMs() {
+            try {
+                TimeUnit.SECONDS.sleep(2 + new Random().nextInt(5));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+}
+
+```
