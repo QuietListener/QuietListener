@@ -579,6 +579,8 @@ tryAcquire，tryAcquireShared,tryRelease,tryReleaseShared
 
 #### 例子 OnShotLatch
 
+只需要实现 tryAcquireShared 和 tryReleaseShared 十几行代码，就能实现一个简单的Synchronizer。
+
 ```java
 package andy.com.concurrent.synchronizers.aqs;
 
@@ -587,7 +589,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
- * 实现一个Latch，所有线程调用 sync.await 会阻塞，直到某个线程调用sync.signal
+ * 实现一个Latch，所有线程调用 sync.await 会阻塞，直到某个线程调用sync.signal打开闭锁
  */
 class OnShotLatch {
     private final Sync sync = new Sync();
