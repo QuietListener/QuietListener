@@ -214,7 +214,67 @@ public class TestReadWriteLock {
 ```  
 
 
+## 自建同步器
+   ### 要解决的问题，状态管理
+   在单线程中如果程序依赖一个先验条件，无法被满足了，那么它永远都不会变为真了。但是在**多线程环境下**就不一样了，这个先验条件有可能在其他线程中被改变。例如BlockQueue 当queue为空的时候，去读取会阻塞，当队列满时候去写入也会阻塞。
+   解决这个问题有几种方式，比较差的方式有**轮询等待** **轮询+随眠**。轮询等待就是在一个循环不断去检测是否条件为真，这样很消耗cpu； **轮询+随眠**在一个循环不断去检测是否条件为真，当伪假时候睡眠一段时间再检查，这样cpu消耗变少了，但是也睡过了头。
 
-# 参考
-1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
-1. [SpringCloud服务的平滑上下线](https://juejin.im/post/5cf63899f265da1b9253c7f4)
+### 比较好的解决办法 条件队列
+条件队列可以让一组线程---等待集---以某种方式等待相关条件变真。条件队列里面存放的不是数据，是线程。
+**java中任意对象都可以是锁，也可以是一个条件队列。**
+
+**锁,条件谓词,条件队列**
+条件谓词就是依赖的变量的某种状态 比如:queue为空
+使用条件队列关键在与识别对象可以等待的**条件谓词**  
+下面是一个条件队列实现的可关闭的锁的例子。
+
+ ```java
+ package andy.com.concurrent.synchronizers.conditionQueue;
+
+/**
+ * 条件队列例子:可以关闭的闸门。
+ *
+ * 三元关系:条件队列 条件谓词 锁
+ *
+ * 为什么要加一个 generation？
+ * 试想如果不加 generation，当砸门打开再快速关闭，await只检查isOpen,某些线程可能永远都只会在
+ *  while (isOpen == false)
+ *     await()
+ * 中，不会被唤醒了
+ */
+public class TheadGage {
+
+    //条件谓词就是: (isopen || generation > n)
+    private boolean isOpen = false;
+    private int generation;
+
+
+    public synchronized void close() {
+        isOpen = false;
+    }
+
+    public synchronized void open() {
+        ++generation;
+        isOpen = true;
+        notifyAll();
+    }
+
+    /**
+     * 放开闸门的条件 : isOpen == true || arrivalGeneration != generation
+     * @throws InterruptedException
+     */
+    public synchronized void await() throws InterruptedException {
+        int arrivalGeneration = generation;
+        while (isOpen == false && arrivalGeneration == generation) {
+            wait();
+        }
+    }
+
+
+    public static void main(String [] args) throws InterruptedException{
+
+    }
+}
+
+
+ ```    
