@@ -442,3 +442,228 @@ public class TestConsumerProducer_Lock {
 }
 
 ```
+
+
+
+### AQS: Abstract Queued Synchronizer
+AQS 是一个框架：用来构建锁和Synchronizer的框架，Semaphore，ReentrantLock,FutureTask ,CountDownLatch等都是构建在 AQS之上的。  
+AQS实现了一个Synchronizer的大量细节，比如等待线程的FIFO队列。
+#### 两种操作:
+AQS的所有操作都是不同形式的**获取(aquire)**和**释放(release)**，   
+**获取操作**是**状态依赖的操作**，总能阻塞， **释放操作**不是一个可以阻塞的操作，但是可以运行在请求钱阻塞。  
+获取操作可以是独占的，比如Rentrantlock；也可以是非独占的，比如Semaphore和CountdownLatch一样。
+#### 一个状态
+AQS有一个整数的状态信息state,状态信息可以通过protected的getState,setState,compareAndSetState来进行操作。比如 Semaphore用来state来表示剩余的许可数，FutureTask用state来表示人物状态(还未开始，运行，完成，取消)。
+
+#### 我们看源代码 
+##### 阻塞acquire的逻辑
+不管是acquire还是acquireInterruptibly还是tryAcquireNanos都会调用 一个未被实现的 protected的 **tryAcquire**方法。
+```java
+  public final void acquire(int arg) {
+        if (!tryAcquire(arg) &&
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            selfInterrupt();
+    }
+
+    public final void acquireInterruptibly(int arg)
+            throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
+        if (!tryAcquire(arg))
+            doAcquireInterruptibly(arg);
+    }
+
+    public final boolean tryAcquireNanos(int arg, long nanosTimeout)
+            throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
+        return tryAcquire(arg) ||
+            doAcquireNanos(arg, nanosTimeout);
+    }
+
+
+     /**
+     * 最终都调用这个方法
+     */
+    protected boolean tryAcquire(int arg) {
+        throw new UnsupportedOperationException();
+    }
+```
+
+
+##### 非阻塞acquire的逻辑
+不管是acquire还是acquireInterruptibly还是tryAcquireNanos都会调用 一个未被实现的 protected的 **tryAcquireShared**
+```java
+
+    /**
+     * 最终都调用这个方法
+     * 返回值:负数表示获取失败；0表示获取成功，但是后面线程获取将失败；正数表示获取成功，但是后面线程也将成功
+     */
+   protected int tryAcquireShared(int arg) {
+        throw new UnsupportedOperationException();
+    }
+
+    public final void acquireShared(int arg) {
+        if (tryAcquireShared(arg) < 0)
+            doAcquireShared(arg);
+    }
+
+
+    public final void acquireSharedInterruptibly(int arg)
+            throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
+        if (tryAcquireShared(arg) < 0)
+            doAcquireSharedInterruptibly(arg);
+    }
+
+   
+    public final boolean tryAcquireSharedNanos(int arg, long nanosTimeout)
+            throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
+        return tryAcquireShared(arg) >= 0 ||
+            doAcquireSharedNanos(arg, nanosTimeout);
+    }
+
+   
+```
+
+
+### 释放
+
+```java
+
+   
+    public final boolean release(int arg) {
+        if (tryRelease(arg)) {
+            Node h = head;
+            if (h != null && h.waitStatus != 0)
+                unparkSuccessor(h);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Releases in shared mode.  Implemented by unblocking one or more
+     * threads if {@link #tryReleaseShared} returns true.
+     *
+     * @param arg the release argument.  This value is conveyed to
+     *        {@link #tryReleaseShared} but is otherwise uninterpreted
+     *        and can represent anything you like.
+     * @return the value returned from {@link #tryReleaseShared}
+     */
+    public final boolean releaseShared(int arg) {
+        if (tryReleaseShared(arg)) {
+            doReleaseShared();
+            return true;
+        }
+        return false;
+    }
+
+     protected boolean tryReleaseShared(int arg) {
+        throw new UnsupportedOperationException();
+    }
+
+     protected boolean tryRelease(int arg) {
+        throw new UnsupportedOperationException();
+    }
+   
+
+```
+
+
+#### 所以要实现一个Synchronizer只需要我们实现四个方法
+tryAcquire，tryAcquireShared,tryRelease,tryReleaseShared
+
+#### 例子 OnShotLatch
+
+```java
+package andy.com.concurrent.synchronizers.aqs;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+
+/**
+ * 实现一个Latch，所有线程调用 sync.await 会阻塞，直到某个线程调用sync.signal
+ */
+class OnShotLatch {
+    private final Sync sync = new Sync();
+    
+    public void await() throws InterruptedException {
+        sync.acquireShared(0);
+    }
+
+    public void signal() {
+        sync.releaseShared(0);
+    }
+
+    private class Sync extends AbstractQueuedSynchronizer {
+
+        /**
+         * 被 acquireShared 调用
+         *
+         * @param ignored
+         * @return 小于0表示获取失败阻塞；0表示成功，后续获取操作会失败；大于0表示成功，后续获取操作也会成功
+         */
+        protected int tryAcquireShared(int ignored) {
+            //-1活阻塞，1会成功
+            return (getState() == 1) ? 1 : -1;
+        }
+
+        /**
+         * 被releaseShared调用
+         *
+         * @param ignored
+         * @return
+         */
+        protected boolean tryReleaseShared(int ignored) {
+            setState(1); //闭锁打开
+            return true; //现在其他线程可以取得闭锁
+        }
+    }
+
+    public static void main(String[] args) {
+
+        final OnShotLatch latch = new OnShotLatch();
+
+        for (int i = 0; i < 5; i++) {
+
+            Thread t = new Thread() {
+
+                @Override
+                public void run() {
+
+                    try {
+                        System.out.println(getName() + ":" + new Date().getTime() + ": wait for job");
+                        latch.await();
+
+                        System.out.println(getName() + ":" + new Date().getTime() + ": doing a job");
+                        TimeUnit.SECONDS.sleep(3);
+
+                        System.out.println(getName() + ":" + new Date().getTime() + ": finished a job");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            t.setName("t-" + i);
+            t.start();
+        }
+
+        try {
+            TimeUnit.SECONDS.sleep(2);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("打开闭锁开始工作");
+        latch.signal();
+    }
+}
+
+```
+
