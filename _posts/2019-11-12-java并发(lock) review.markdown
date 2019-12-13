@@ -5,7 +5,6 @@ date: 2019-10-29 14:32:00
 categories:  java review
 ---
 
-# 锁
 ## synchronized vs Lock
 1.锁是解决线程安全问题的一个办法，(还可以使用 ThreadLocal,不变对象等方法)
 java中锁的实现:synchronized和Lock
