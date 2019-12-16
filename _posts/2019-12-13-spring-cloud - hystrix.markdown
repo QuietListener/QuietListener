@@ -538,3 +538,6 @@ public class CommandCollapserGetValueForKey extends HystrixCollapser<List<String
 }
 
 ```
+
+# 参考
+1. [wiki](https://github.com/Netflix/Hystrix/wiki)
