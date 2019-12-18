@@ -5,6 +5,33 @@ date: 2019-11-16 14:32:00
 categories:  search java
 ---
 
+vi /etc/yum.repos.d/mongodb-org-4.0.repo
+
+[mongodb-org-4.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.2/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-4.2.asc
+
+yum install -y mongodb-org
+
+// 1、开启MongoDB
+sudo service mongod start  或者 systemctl start mongod.service  # 开启MongoDB
+sudo chkconfig mongod on  # 加入开机启动
+sudo service mongod restart # 重启MongoDB
+
+// 2、关闭MongoDB
+sudo service mongod stop  # 关闭防火墙
+
+// 3、卸载MongoDB
+sudo yum erase $(rpm -qa | grep mongodb-org)    # 卸载MongoDB
+sudo rm -r /var/log/mongodb  # 删除日志文件
+sudo rm -r /var/lib/mongo    # 删除数据文件
+
+1. 修改配置文件mongodb.conf
+sudo service mongod restart 
+
 导出表
 mongoexport -h IP --port 端口 -u 用户名 -p 密码 -d 数据库 -c 表名 -f 字段
 -q 条件导出 --csv -o 文件名 上面的参数好理解，重点说一下：

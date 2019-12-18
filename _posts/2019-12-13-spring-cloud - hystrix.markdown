@@ -539,5 +539,15 @@ public class CommandCollapserGetValueForKey extends HystrixCollapser<List<String
 
 ```
 
+
+# 配置
+## 1. 执行 Execution
+### 两种隔离策略 THREAD VS SEMAPHORE
+1. 线程池(THREAD) 
+HystrixCommand.run() 跑在一个另外的线程，通过控制线程池的大小来限制并发量。
+2. 信号量(SEMAPHORE) 
+HystrixCommand.run() 跑在调用者线程，通过SEMAPHORE 的count大小俩限制并发量。
+
+
 # 参考
 1. [wiki](https://github.com/Netflix/Hystrix/wiki)
