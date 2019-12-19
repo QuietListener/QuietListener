@@ -1,7 +1,7 @@
 ---
 layout: post
 title: spring-cloud - hystrix
-date: 2019-10-29 14:32:00
+date: 2019-12-13 14:32:00
 categories:  java spring springcloud hystrix
 ---
 # Hystrix概览 
@@ -541,12 +541,99 @@ public class CommandCollapserGetValueForKey extends HystrixCollapser<List<String
 
 
 # 配置
-## 1. 执行 Execution
+```java
+Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("ExampleGroup"))
+                .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+
+                        /**execution*/
+                        .withExecutionIsolationStrategy(isolationStrategy == IsolationStrategyThread ? HystrixCommandProperties.ExecutionIsolationStrategy.THREAD : HystrixCommandProperties.ExecutionIsolationStrategy.SEMAPHORE) //线程池还是信号量隔离
+                        .withExecutionTimeoutInMilliseconds(timeoutMs) //run方法timeout时间
+                        .withExecutionTimeoutEnabled(true)//hystrix.command.default.execution.timeout.enabled 是否开启timeout
+                        .withExecutionIsolationThreadInterruptOnTimeout(true)// hystrix.command.HystrixCommandKey.execution.isolation.thread.interruptOnTimeout 当timeout时候是否应该中断HystrixCommand.run()
+                        .withExecutionIsolationThreadInterruptOnFutureCancel(true)
+                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(semaphoreMaxConcurrentRequests)  //信号量的上线。
+
+                        /**fallback*/
+                        .withFallbackIsolationSemaphoreMaxConcurrentRequests(allbackIsolationSemaphoreMaxConcurrentRequests) //isolation为Semaphore时,Caller执行返回Fallback的上限
+
+
+                        /**Circuit Breaker*/
+                        .withCircuitBreakerEnabled(true)
+                        //在一个窗口期内,激活断路器的最小请求量，比如设置为30，但是只有29个请求，就算这19个请求全部挂了，都不会断路.默认20个
+                        .withCircuitBreakerRequestVolumeThreshold(29)
+                        //当断路发生时候，会拒绝请求，睡眠一段时间再去请求看服务 是否恢复。这个参数就是这个时间间隔。 默认5000毫秒
+                        .withCircuitBreakerSleepWindowInMilliseconds(2000)
+                        //当错误率高于这个数，就会断路执行fallback中的逻辑
+                        .withCircuitBreakerErrorThresholdPercentage(60)
+
+                        /**Merix*/
+                        //控制统计滑动窗口的大小 如果在这个时间内,并且请求个数大于 ircuitBreakerRequestVolumeThreshold,并且大于CircuitBreakerErrorThresholdPercentage就会熔断
+                        .withMetricsRollingStatisticalWindowInMilliseconds(200000)
+                        //每个窗口划分的bucket个数
+                        .withMetricsRollingStatisticalWindowBuckets(10)
+
+                        //下面的知识统计需要不影响实际使用
+                        .withMetricsRollingPercentileEnabled(true)
+                        .withMetricsRollingPercentileWindowInMilliseconds(60000)
+                        .withMetricsRollingPercentileWindowBuckets(6)
+                        .withMetricsRollingPercentileBucketSize(100)
+
+                        //多久计算一次
+                        .withMetricsHealthSnapshotIntervalInMilliseconds(1000)
+
+
+                ).andThreadPoolPropertiesDefaults( //线程池配置
+                        HystrixThreadPoolProperties.Setter().withCoreSize(1).withMaxQueueSize(1)
+                )
+```
+## Execution 执行配置
+### 1. 执行 Execution
+> execution.isolation.strategy
 ### 两种隔离策略 THREAD VS SEMAPHORE
 1. 线程池(THREAD) 
 HystrixCommand.run() 跑在一个另外的线程，通过控制线程池的大小来限制并发量。
 2. 信号量(SEMAPHORE) 
 HystrixCommand.run() 跑在调用者线程，通过SEMAPHORE 的count大小俩限制并发量。
+
+### 2. run方法timeout时间
+> execution.isolation.thread.timeoutInMilliseconds
+> Timeouts will fire on HystrixCommand.queue(), even if the caller never calls get() on the resulting Future
+开始时间是从 HystrixCommand.queue()开始算的
+### 3. run方法timeout 开关
+> execution.timeout.enabled
+### 4. 使用信号量策略时候，信号量的值
+> execution.isolation.semaphore.maxConcurrentRequests
+
+## Fallback 降级配置
+### 1.可以并发调用Fallback的次数限制（我现在也没有搞得太清楚）
+> fallback.isolation.semaphore.maxConcurrentRequests
+This property sets the maximum number of requests a HystrixCommand.getFallback() method is allowed to make from the calling thread.
+
+### 2.降级开关
+> fallback.enabled
+
+## 3.Circuit Breaker 断路器配置
+### 1.断路器开关
+> circuitBreaker.enabled
+
+### 2.断路开关请求数阀值 
+> circuitBreaker.requestVolumeThreshold
+在一个窗口期内,激活断路器的最小请求量，比如设置为30，但是只有29个请求，就算这19个请求全部挂了，都不会断路.默认20个
+
+### 3. 拉闸的错误率阈值
+> circuitBreaker.errorThresholdPercentage
+当错误率高于这个数，就会断路执行fallback中的逻辑
+
+### 4. 断路器退避时间
+> circuitBreaker.sleepWindowInMilliseconds
+当断路发生时候，会拒绝请求，退避一下，睡眠一段时间再去请求看服务 是否恢复。这个参数就是这个时间间隔。 默认5000毫秒
+
+## 3.Metrics 指标配置
+### 1. 滑动窗口时间 和 滑动窗口个数
+> metrics.rollingStats.timeInMilliseconds
+> metrics.rollingStats.numBuckets
+![rolling stat](https://github.com/Netflix/Hystrix/wiki/images/rolling-stats-640.png)
+**这两个参数 控制 hystrix的断路数据的统统计**  **metrics.rollingStats.timeInMilliseconds**控制统计是时间跨度，**metrics.rollingStats.numBuckets**将这个时间跨度分隔为n个Bucket。hystrix的统计过程就是,每次滑动一个bucket，然后统计 metrics.rollingStats.timeInMilliseconds 范围内的成功，失败，timeout，reject的请求个数，为hystrix 熔断提供依据。
 
 
 # 参考
