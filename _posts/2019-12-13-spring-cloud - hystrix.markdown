@@ -589,7 +589,9 @@ Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("ExampleGroup"))
 ## Execution 执行配置
 ### 1. 执行 Execution
 > execution.isolation.strategy
+
 ### 两种隔离策略 THREAD VS SEMAPHORE
+
 1. 线程池(THREAD) 
 HystrixCommand.run() 跑在一个另外的线程，通过控制线程池的大小来限制并发量。
 2. 信号量(SEMAPHORE) 
@@ -642,6 +644,8 @@ This property sets the maximum number of requests a HystrixCommand.getFallback()
 > metrics.rollingStats.numBuckets
 
 ![rolling stat](https://github.com/Netflix/Hystrix/wiki/images/rolling-stats-640.png)
+
+
 **这两个参数 控制 hystrix的断路数据的统统计**  **metrics.rollingStats.timeInMilliseconds**控制统计是时间跨度，**metrics.rollingStats.numBuckets**将这个时间跨度分隔为n个Bucket。hystrix的统计过程就是,每次滑动一个bucket，然后统计 metrics.rollingStats.timeInMilliseconds 范围内的成功，失败，timeout，reject的请求个数，为hystrix 熔断提供依据。
 
 
