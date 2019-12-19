@@ -9,9 +9,14 @@ categories:  java javascript
 java作为静态语言，有的问题处理起来非常痛苦，例如一个非常复杂的并且异构的json字符串中去提取需要的数据就很痛苦。但是javascript天生就是处理json数据能手。这个时候使用java调用js脚本来处理这类数据，js处理完再将数据返回给java，就能发挥他们各自的优势。
 
 # how
-下面的例子使用**java调用js的方法**,使用js实现**javascirpt的接口**
+下面的例子使用
 
-1. java 代码
+1. **java调用js的方法**  
+2. **使用js实现javascirpt的接口**  
+
+
+## 1. java 代码
+
 ```java
 package andy.com.jsengine;
 
@@ -71,7 +76,7 @@ public class Example5CallJsFunc {
 
 
 
-2. javascript代码
+## 2. javascript代码
 
 ```javascript
 //example4_calljsfunc.js
@@ -98,4 +103,4 @@ function add (n1, n2)
 
 
 # 参考
-1. [Scripting_in_Java/](http://www.java2s.com/Tutorials/Java/Scripting_in_Java/index.htm)
+1. [Scripting_in_Java](http://www.java2s.com/Tutorials/Java/Scripting_in_Java/index.htm)
