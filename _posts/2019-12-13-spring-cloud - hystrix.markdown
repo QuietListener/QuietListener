@@ -598,15 +598,20 @@ HystrixCommand.run() 跑在调用者线程，通过SEMAPHORE 的count大小俩�
 ### 2. run方法timeout时间
 > execution.isolation.thread.timeoutInMilliseconds
 > Timeouts will fire on HystrixCommand.queue(), even if the caller never calls get() on the resulting Future
+
 开始时间是从 HystrixCommand.queue()开始算的
+
 ### 3. run方法timeout 开关
 > execution.timeout.enabled
+
 ### 4. 使用信号量策略时候，信号量的值
 > execution.isolation.semaphore.maxConcurrentRequests
+
 
 ## Fallback 降级配置
 ### 1.可以并发调用Fallback的次数限制（我现在也没有搞得太清楚）
 > fallback.isolation.semaphore.maxConcurrentRequests
+
 This property sets the maximum number of requests a HystrixCommand.getFallback() method is allowed to make from the calling thread.
 
 ### 2.降级开关
@@ -618,20 +623,24 @@ This property sets the maximum number of requests a HystrixCommand.getFallback()
 
 ### 2.断路开关请求数阀值 
 > circuitBreaker.requestVolumeThreshold
+
 在一个窗口期内,激活断路器的最小请求量，比如设置为30，但是只有29个请求，就算这19个请求全部挂了，都不会断路.默认20个
 
 ### 3. 拉闸的错误率阈值
 > circuitBreaker.errorThresholdPercentage
+
 当错误率高于这个数，就会断路执行fallback中的逻辑
 
 ### 4. 断路器退避时间
 > circuitBreaker.sleepWindowInMilliseconds
+
 当断路发生时候，会拒绝请求，退避一下，睡眠一段时间再去请求看服务 是否恢复。这个参数就是这个时间间隔。 默认5000毫秒
 
 ## 3.Metrics 指标配置
 ### 1. 滑动窗口时间 和 滑动窗口个数
 > metrics.rollingStats.timeInMilliseconds
 > metrics.rollingStats.numBuckets
+
 ![rolling stat](https://github.com/Netflix/Hystrix/wiki/images/rolling-stats-640.png)
 **这两个参数 控制 hystrix的断路数据的统统计**  **metrics.rollingStats.timeInMilliseconds**控制统计是时间跨度，**metrics.rollingStats.numBuckets**将这个时间跨度分隔为n个Bucket。hystrix的统计过程就是,每次滑动一个bucket，然后统计 metrics.rollingStats.timeInMilliseconds 范围内的成功，失败，timeout，reject的请求个数，为hystrix 熔断提供依据。
 
