@@ -50,6 +50,9 @@ permalink: /books/
 
 ### 1.小说
 
-1. 《围城》
+#### 1. 《围城》 todo
+#### 2. 《了不起的盖茨比》ing
+1. whenever you feel like criticizing any one, just remember that all the people in this world haven't had the advantages that you've had.
+
 
 ### 2.产品
