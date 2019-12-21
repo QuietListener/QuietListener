@@ -20,7 +20,7 @@ Ribbon是一个远程调用库，他提供了负载均衡的功能。
 
 
 ## 3 demo
-### 1. 配置文件
+### 1. 配置文件 p1.properties
 ```java
 sample-client.robbin.ClientClassName=com.netflix.niws.client.http.RestClient
 
