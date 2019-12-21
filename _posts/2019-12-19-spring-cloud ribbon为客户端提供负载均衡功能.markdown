@@ -21,19 +21,23 @@ Ribbon是一个远程调用库，他提供了负载均衡的功能。
 
 ## 3 demo
 ### 1. 配置文件 p1.properties
-```java
+```shell
+#Client的className,可以指定自定义的Client
 sample-client.robbin.ClientClassName=com.netflix.niws.client.http.RestClient
 
 # Max number of retries on the same server (excluding the first try)
+#在选择的机器上最多尝试次数
 sample-client.ribbon.MaxAutoRetries=0
 
 # Max number of next servers to retry (excluding the first server)
-sample-client.ribbon.MaxAutoRetriesNextServer=0
+# 如果在选择的机器上挂了，还可以选几台机器试一试
+sample-client.ribbon.MaxAutoRetriesNextServer=2
 
 # Whether all operations can be retried for this client
 sample-client.ribbon.OkToRetryOnAllOperations=true
 
 # Interval to refresh the server list from the source
+#刷新server列表的时间间隔
 sample-client.ribbon.ServerListRefreshInterval=2000
 
 # Connect timeout used by Apache HttpClient
@@ -43,6 +47,7 @@ sample-client.ribbon.ConnectTimeout=3000
 sample-client.ribbon.ReadTimeout=3000
 
 # Initial list of servers, can be changed via Archaius dynamic property at runtime
+# server 列表
 sample-client.ribbon.listOfServers=www.microsoft.com:80,www.yahoo.com:80
 
 #sample-client.ribbon.EnablePrimeConnections=true
