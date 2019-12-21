@@ -1,106 +1,151 @@
 ---
 layout: post
-title: java调用javascript解决一些java难以处理的问题~
-date: 2019-12-18 14:32:00
+title: spring-cloud ribbon为客户端提供负载均衡功能
+date: 2019-12-19 14:32:00
 categories:  java javascript
 ---
+# 1. 写在前面
+公司项目 使用spring-cloud 微服务架构， 使用ribbon来做client端的负载均衡。在spring-cloud里面基本只需要一个配置就可以了，但是还是看看ribbon是个什么东西.
 
-# why
-java作为静态语言，有的问题处理起来非常痛苦，例如一个非常复杂的并且异构的json字符串中去提取需要的数据就很痛苦。但是javascript天生就是处理json数据能手。这个时候使用java调用js脚本来处理这类数据，js处理完再将数据返回给java，就能发挥他们各自的优势。
+# 2. what 
+## 1. ribbon是什么？
+Ribbon是一个远程调用库，他提供了负载均衡的功能。
+> Ribbon is a Inter Process Communication (remote procedure calls) library with built in software load balancers.
 
-# how
-下面的例子使用
+## 2. ribbon 提供了哪些feature?
+>Load balancing  负载均衡
+>Fault tolerance 容错
+>Multiple protocol (HTTP, TCP, UDP) support in an asynchronous and reactive model 以异步和响应式的方式支持http，udp ,udp
+>Caching and batching 缓存和批处理
 
-1. **java调用js的方法**  
-2. **使用js实现javascirpt的接口**  
 
-
-## 1. java 代码
-
+## 3 demo
+### 1. 配置文件
 ```java
-package andy.com.jsengine;
+sample-client.robbin.ClientClassName=com.netflix.niws.client.http.RestClient
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import java.io.File;
-import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+# Max number of retries on the same server (excluding the first try)
+sample-client.ribbon.MaxAutoRetries=0
+
+# Max number of next servers to retry (excluding the first server)
+sample-client.ribbon.MaxAutoRetriesNextServer=0
+
+# Whether all operations can be retried for this client
+sample-client.ribbon.OkToRetryOnAllOperations=true
+
+# Interval to refresh the server list from the source
+sample-client.ribbon.ServerListRefreshInterval=2000
+
+# Connect timeout used by Apache HttpClient
+sample-client.ribbon.ConnectTimeout=3000
+
+# Read timeout used by Apache HttpClient
+sample-client.ribbon.ReadTimeout=3000
+
+# Initial list of servers, can be changed via Archaius dynamic property at runtime
+sample-client.ribbon.listOfServers=www.microsoft.com:80,www.yahoo.com:80
+
+#sample-client.ribbon.EnablePrimeConnections=true
+```
+### 2. java代码
+```java
+import com.netflix.client.ClientFactory;
+import com.netflix.client.http.HttpRequest;
+import com.netflix.client.http.HttpResponse;
+import com.netflix.config.ConfigurationManager;
+import com.netflix.loadbalancer.ZoneAwareLoadBalancer;
+import com.netflix.niws.client.http.RestClient;
+import org.junit.Test;
+
+import java.net.URI;
+
+public class RibboTest1 {
+
+    @Test
+    public void test1() throws Exception {
+
+        //初始化
+        String keyServers = "sample-client.ribbon.listOfServers";
+        ConfigurationManager.loadPropertiesFromResources("p1.properties");  // 1
 
 
-//get output of script
-@SuppressWarnings("restriction")
-public class Example5CallJsFunc {
+        System.out.println("server list:"+ConfigurationManager.getConfigInstance().getProperty(keyServers));
+        RestClient client = (RestClient) ClientFactory.getNamedClient("sample-client"); // 2
+        HttpRequest request = HttpRequest.newBuilder().uri(new URI("/")).build(); // 3
+        for (int i = 0; i < 6; i++) {
+            HttpResponse response = client.executeWithLoadBalancer(request); // 4
+            System.out.println(i + ": Status code for " + response.getRequestedURI() + "  :" + response.getStatus());
+        }
+
+        /**
+         * 打印loadbalancer的信息
+         */
+        System.out.println("loadbalancer 信息:");
+        ZoneAwareLoadBalancer lb = (ZoneAwareLoadBalancer) client.getLoadBalancer();
+        System.out.println(lb.getLoadBalancerStats());
 
 
-    public static void main(String[] args) throws Exception {
-        testCallJsFunc();
-        testImplInterface();
+        /**
+         * 刷新server列表
+         */
+        ConfigurationManager.getConfigInstance().setProperty(
+                keyServers, "www.linkedin.com:80,www.microsoft.com:80"); // 5
+        System.out.println("server list:"+ConfigurationManager.getConfigInstance().getProperty(keyServers));
+        System.out.println("changing servers ...");
+
+        Thread.sleep(3000); // 6
+        for (int i = 0; i < 6; i++) {
+            HttpResponse response = null;
+            try {
+                response = client.executeWithLoadBalancer(request);
+                System.out.println(i + ": Status code for " + response.getRequestedURI() + "  :" + response.getStatus());
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
+            }
+        }
+
+        /**
+         * 打印loadbalancer的信息
+         */
+        System.out.println("loadbalancer 信息:");
+        System.out.println(lb.getLoadBalancerStats()); // 7
     }
-
-    //java调用js方法
-    public static void testCallJsFunc() throws Exception {
-        ScriptEngine engine = JSEngineUtils.getJsEngineInstance();
-
-        File jsFile = JSEngineUtils.getFiles("example4_calljsfunc.js");
-        Reader reader = Files.newBufferedReader(Paths.get(jsFile.getAbsolutePath()), Charset.forName("UTF8"));
-        engine.eval(reader);
-        Invocable inv = (Invocable) engine;
-        Object caculator = engine.get("caculator");
-
-        int x = 1;
-        int y = 2;
-        Object result = inv.invokeMethod(caculator, "add", x, y);
-        System.out.println(result);
-    }
-
-    //js实现java的interface
-    public static void testImplInterface() throws Exception {
-        ScriptEngine engine = JSEngineUtils.getJsEngineInstance();
-
-        File jsFile = JSEngineUtils.getFiles("example4_impl_interface.js");
-        Reader reader = Files.newBufferedReader(Paths.get(jsFile.getAbsolutePath()), Charset.forName("UTF8"));
-        engine.eval(reader);
-        Invocable inv = (Invocable) engine;
-        Math math = inv.getInterface(Math.class);
-
-        int x = 3;
-        int y = 2;
-        double result = math.add(x, y);
-        System.out.println(result);
-    }
-
 }
+
 ```
 
-
-
-## 2. javascript代码
-
-```javascript
-//example4_calljsfunc.js
-base = 10;
-
-var caculator = new Object();
-
-caculator.add = function (n1, n2) 
-{
-	return base + n1 + n2;
-}
-
+### 3.运行结果
+```java
+server list:[www.microsoft.com:80, www.yahoo.com:80]
+0: Status code for http://www.yahoo.com:80/  :301
+1: Status code for http://www.microsoft.com:80/  :302
+2: Status code for http://www.yahoo.com:80/  :301
+3: Status code for http://www.microsoft.com:80/  :302
+4: Status code for http://www.yahoo.com:80/  :301
+5: Status code for http://www.microsoft.com:80/  :302
+loadbalancer 信息:
+Zone stats: {unknown=[Zone:unknown;	Instance count:2;	Active connections count: 0;	Circuit breaker tripped count: 0;	Active connections per server: 0.0;]
+},Server stats: [[Server:www.microsoft.com:80;	Zone:UNKNOWN;	Total Requests:3;	Successive connection failure:0;	Total blackout seconds:0;	Last connection made:Sat Dec 21 16:20:37 CST 2019;	First connection made: Sat Dec 21 16:20:33 CST 2019;	Active Connections:0;	total failure count in last (1000) msecs:0;	average resp time:33.666666666666664;	90 percentile resp time:0.0;	95 percentile resp time:0.0;	min resp time:27.0;	max resp time:47.0;	stddev resp time:9.428090415820636]
+, [Server:www.yahoo.com:80;	Zone:UNKNOWN;	Total Requests:3;	Successive connection failure:0;	Total blackout seconds:0;	Last connection made:Sat Dec 21 16:20:34 CST 2019;	First connection made: Sat Dec 21 16:20:32 CST 2019;	Active Connections:0;	total failure count in last (1000) msecs:0;	average resp time:1519.6666666666667;	90 percentile resp time:0.0;	95 percentile resp time:0.0;	min resp time:428.0;	max resp time:3454.0;	stddev resp time:1371.55248613468]
+]
+server list:[www.linkedin.com:80, www.microsoft.com:80]
+changing servers ...
+0: Status code for http://www.microsoft.com:80/  :302
+1: Status code for http://www.linkedin.com:80/  :404
+2: Status code for http://www.microsoft.com:80/  :302
+3: Status code for http://www.linkedin.com:80/  :404
+4: Status code for http://www.microsoft.com:80/  :302
+5: Status code for http://www.linkedin.com:80/  :404
+loadbalancer 信息:
+Zone stats: {unknown=[Zone:unknown;	Instance count:2;	Active connections count: 0;	Circuit breaker tripped count: 0;	Active connections per server: 0.0;]
+},Server stats: [[Server:www.microsoft.com:80;	Zone:UNKNOWN;	Total Requests:6;	Successive connection failure:0;	Total blackout seconds:0;	Last connection made:Sat Dec 21 16:20:41 CST 2019;	First connection made: Sat Dec 21 16:20:33 CST 2019;	Active Connections:0;	total failure count in last (1000) msecs:0;	average resp time:30.833333333333332;	90 percentile resp time:28.0;	95 percentile resp time:28.0;	min resp time:27.0;	max resp time:47.0;	stddev resp time:7.266743118863888]
+, [Server:www.yahoo.com:80;	Zone:UNKNOWN;	Total Requests:3;	Successive connection failure:0;	Total blackout seconds:0;	Last connection made:Sat Dec 21 16:20:34 CST 2019;	First connection made: Sat Dec 21 16:20:32 CST 2019;	Active Connections:0;	total failure count in last (1000) msecs:0;	average resp time:1519.6666666666667;	90 percentile resp time:0.0;	95 percentile resp time:0.0;	min resp time:428.0;	max resp time:3454.0;	stddev resp time:1371.55248613468]
+, [Server:www.linkedin.com:80;	Zone:UNKNOWN;	Total Requests:3;	Successive connection failure:0;	Total blackout seconds:0;	Last connection made:Sat Dec 21 16:20:41 CST 2019;	First connection made: Sat Dec 21 16:20:40 CST 2019;	Active Connections:0;	total failure count in last (1000) msecs:0;	average resp time:150.0;	90 percentile resp time:0.0;	95 percentile resp time:0.0;	min resp time:126.0;	max resp time:195.0;	stddev resp time:31.843366656181317]
+]
+Disconnected from the target VM, address: '127.0.0.1:57450', transport: 'socket'
 ```
 
-
-```javascript
-//example4_impl_interface.js
-function add (n1, n2) 
-{
-	return n1 + n2;
-}
-```
-
-
-
-# 参考
-1. [Scripting_in_Java](http://www.java2s.com/Tutorials/Java/Scripting_in_Java/index.htm)
+### 4.项目地址
+[robbin httpclient demo ](https://github.com/QuietListener/ribbon/blob/master/src/main/java/ribbon/RibboTest1.java)
