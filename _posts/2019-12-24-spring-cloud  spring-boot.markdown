@@ -1,10 +1,10 @@
 ---
 layout: post
-title: spring-cloud springboot
+title: spring-cloud spring-boot
 date: 2019-12-24 14:32:00
 categories:  java javascript
 ---
-spring-boot的好东西
+spring-boot也用过这么久了，总结一下~
 # 1. 一个趋势
 以前java Web服务很多都是将程序代码打包为jar，然后将部署到web容器，tomcat ，jetty等。现在spring-boot刚好反过来，将web容器(tomcat,jetty等) 打包进jar。 这样可以像执行一个普通jar包一样来发布web应用，也省去了以前那种每台机器都去配置一个tomcat的麻烦。
 
