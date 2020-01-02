@@ -1,6 +1,6 @@
 ---
 layout: post
-title: spring-cloud - hystrix
+title: spring-cloud hystrix为服务调用提供降级功能
 date: 2019-12-13 14:32:00
 categories:  java spring springcloud hystrix
 ---

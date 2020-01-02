@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 蓦然回首javascript
+title: javascript review
 date: 2019-12-19 14:32:00
 categories:  javascript
 ---
