@@ -85,7 +85,7 @@ root      9024  6265  0 14:51 pts/3    00:00:00 grep svs
 
 ```
 
-可以看到 /command/svscanboot的pid为8871，**svscan /service**pid为8873他的父pid是8871,
+可以看到 /command/svscanboot的pid为8871，**svscan** 的pid为8873他的父pid是8871,
 svscan作为svscanboot的子进程在运行。
 
 
