@@ -54,10 +54,10 @@ lrwxrwxrwx 1 root root 55 Jan  2 14:36 svscanboot -> /home/www/programs/admin/da
 lrwxrwxrwx 1 root root 51 Jan  2 14:36 svstat -> /home/www/programs/admin/daemontools/command/svstat
 lrwxrwxrwx 1 root root 51 Jan  2 14:36 tai64n -> /home/www/programs/admin/daemontools/command/tai64n
 lrwxrwxrwx 1 root root 56 Jan  2 14:36 tai64nlocal -> /home/www/programs/admin/daemontools/command/tai64nlocal
-```
+```   
 
- ##  5.配置开机自启动
- 1. 修改/etc/rc.local
+##  5.配置开机自启动
+1. 修改/etc/rc.local
  在 rc.local 中加入一行 **nohup bash /command/svscanboot &** 可以开机自启动。
 
 ```shell
