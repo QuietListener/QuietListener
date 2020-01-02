@@ -57,7 +57,7 @@ lrwxrwxrwx 1 root root 56 Jan  2 14:36 tai64nlocal -> /home/www/programs/admin/d
 ```   
 
 ##  5.配置开机自启动
-1. 修改/etc/rc.local
+1. 修改/etc/rc.local   
  在 rc.local 中加入一行 **nohup bash /command/svscanboot &** 可以开机自启动。
 
 ```shell
@@ -71,7 +71,8 @@ touch /var/lock/subsys/local
 nohup bash /command/svscanboot &
 ```
 
-2. 启动svscanboot
+2. 启动svscanboot   
+
 ```shell
 [root@iZb daemontools]# bash -x /etc/rc.local 
 + touch /var/lock/subsys/local
@@ -86,7 +87,6 @@ root      9024  6265  0 14:51 pts/3    00:00:00 grep svs
 
 可以看到 /command/svscanboot的pid为8871，**svscan /service**pid为8873他的父pid是8871,
 svscan作为svscanboot的子进程在运行。
-
 
 
 # how(怎么工作)
