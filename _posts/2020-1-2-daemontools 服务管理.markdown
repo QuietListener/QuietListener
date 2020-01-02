@@ -101,7 +101,7 @@ supervise会去执行/service目录下的服务的run脚本，如果服务down�
 
 ## 怎么将服务交给supervise监控
 ### hello项目
-加入我们有一个项目叫hello放在目录/home/www/projects/test/hello
+假如我们有一个项目叫hello放在目录/home/www/projects/test/hello
 我们将启动的代码放在了 run里面
 ```shell
 [root@iZbp15pf7sr2cgwbyqi1inZ hello]# pwd
