@@ -1,0 +1,30 @@
+---
+layout: post
+title: 防止被ssh爆破了
+date: 2020-1-2 14:32:00
+categories:  linux 服务管理
+---
+## q.起因
+1. 今天 查了一下 一台机器被装上了 挖矿软件，阿里云提示是 ssh爆破。
+由于机器允许root登录，黑客可以使用ssh爆破的方式来破解密码
+
+## 2. 防治
+方法: 禁止使用root登录机器
+### 1. 修改 sshd_config 将
+
+```
+PermitRootLogin yes
+```
+
+改为
+
+```
+PermitRootLogin no
+```
+### 2. 重启sshd服务
+
+```shell
+[root@iZbp15pf7sr2cgwbyqi1inZ www]# service sshd restart
+Stopping sshd:                                             [  OK  ]
+Starting sshd:                                             [  OK  ]
+```
