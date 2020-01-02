@@ -122,5 +122,7 @@ crontab -l 发现定时任务
 
 ## 参考
 [Linux Redis自动化挖矿感染蠕虫分析及安全建议](https://paper.seebug.org/605/)
+[处理处理kdevtmpfsi挖矿病毒以及他的守护进程kinsing](https://blog.csdn.net/Owen_goodman/article/details/103731981)
+
 
 
