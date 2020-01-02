@@ -113,7 +113,7 @@ total 144K
 ```
 
 **run的内容**
-run就是打印一句hello 就推出。
+run就是打印一句hello 就退出。
 ```shell
 #!/bin/bash
 echo "hello `date +%Y_%m_%d%t%H:%M:%S` " >> h.log
@@ -124,7 +124,8 @@ echo "hello `date +%Y_%m_%d%t%H:%M:%S` " >> h.log
 #### 1. 怎么做?
 
 我们只需将 /home/www/projects/test/hello/ 软连接到 /service/hello
-> ln -sv /home/www/projects/test/hello/ /service/hello
+> ln -sv /home/www/projects/test/hello/ /service/hello     
+
 svscan会扫描/service/目录，当发现目录有变化，svscan会启动给一个supervise来执行 run脚本
 
 #### 2. 结果
