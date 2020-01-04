@@ -211,7 +211,13 @@ exec su - www -c "exec ${base}/bin/mysqld  --defaults-file=${base}/support-files
 ```
 当mysql服务停止后重启mysqld服务。
 
+## 4.  svc -t  重启服务
+```shell
+[root@iZbp15pf7sr2cgwbyqi1inZ mysqld]# svc -t /service/mysqld/
 
-## 4.彻底删除某个服务
+```
+
+## 5.彻底删除某个服务
 将/service目录下对应的软连接删除即可
+svc -dx /services/somerandomservice
 
