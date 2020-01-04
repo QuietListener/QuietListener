@@ -221,3 +221,8 @@ exec su - www -c "exec ${base}/bin/mysqld  --defaults-file=${base}/support-files
 将/service目录下对应的软连接删除即可
 svc -dx /services/somerandomservice
 
+# 参考资料
+1. [manage your services with daemontools](https://isotope11.com/blog/manage-your-services-with-daemontools)
+2. [CentOS6.9安装daemontools工具管理服务进程](https://blog.51cto.com/wujianwei/2137389)
+
+
