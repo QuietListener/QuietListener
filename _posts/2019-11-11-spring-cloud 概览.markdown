@@ -14,6 +14,5 @@ rpc: feign(基于http)
 负载均衡: robbin(客户端实现)
 链路追踪: sleuth
 
-
 消息队列: kafka
 缓存： redis
