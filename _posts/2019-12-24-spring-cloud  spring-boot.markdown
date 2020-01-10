@@ -71,7 +71,7 @@ public @interface SpringBootApplication {
         </dependency>
 ```
 
-# 2. 自动配置
+# 3. 自动配置
   springboot自动配置在启动时候,才决定使用哪些配置，不是用哪些配置。
   比如: 
   1. JdbcTemplate是不是在ClassPath里？ 如果是，并且有DataSource的Bean，则自动配置一个JdbcTemplate   
@@ -241,3 +241,8 @@ public class MySpringSecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
+
+# 3. acuator
+   了解spring运行的情况。
+
+   
