@@ -50,6 +50,7 @@ Attention. This key does not work for your master data. Do not use it, otherwise
 [root@host www]iptables -A INPUT -p tcp --dport 10001 -j ACCEPT;
 [root@host www]iptables -A INPUT -p tcp --dport 80 -j ACCEPT;
 [root@host www]iptables -A INPUT -p tcp --dport 8080 -j ACCEPT;
+[root@host www]iptables -A INPUT -p tcp --dport 3306 -s 172.16.0.0/16 -j ACCEPT #打开3306端口 但是只接受内网 172.16.0.0的请求
 [root@host www]iptables -P INPUT DROP; # 关闭所有input端口
 [root@host www]service iptables  save;
 iptables: Saving firewall rules to /etc/sysconfig/iptables:[  OK  ]
