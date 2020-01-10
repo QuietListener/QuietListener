@@ -197,3 +197,47 @@ springboot还提供了很多Condition的注解
 ...
 ...
 ```
+
+## 2. 下面以SpringSecurity 来讲解修改默认的自动配置
+SpringSecurity 默认配置是**SpringBootWebSecurityConfiguration**类,这个类只有在WebSecurityConfigurerAdapter类在classpath中(@ConditionalOnClass(WebSecurityConfigurerAdapter.class))，并且WebSecurityConfigurerAdapter还没有实例化的Bean的时候才会初始化。
+
+```java
+@ConditionalOnClass(WebSecurityConfigurerAdapter.class)
+@ConditionalOnMissingBean(WebSecurityConfigurerAdapter.class)
+@ConditionalOnWebApplication(type = Type.SERVLET)
+public class SpringBootWebSecurityConfiguration {
+
+	@Configuration
+	@Order(SecurityProperties.BASIC_AUTH_ORDER)
+	static class DefaultConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+	}
+
+}
+```
+
+当我们自定义SpringSecurity时候 继承 **WebSecurityConfigurerAdapter** 并实现configure方法。
+我们加上了@EnableWebSecurity注解,我们实际上已经创建了一个WebSecurityConfigurerAdapter的bean所以Spring就不会自动创建默认的配置了，以我们的为准。
+
+```java
+
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+
+@EnableWebSecurity
+public class MySpringSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .antMatchers("/web/**").hasAnyAuthority()
+                .antMatchers("/service/api/**").permitAll();
+//                .and()
+//                .formLogin()
+//                .loginPage("/login")
+//                .failureUrl("/login?error=true");
+    }
+}
+```
+
