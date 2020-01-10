@@ -82,4 +82,118 @@ public @interface SpringBootApplication {
 
 
 ## 1. 原理 Condition接口+Conditional注解
-Spring 4.0引入了  Condition接口和Conditional注解  可以实现根据某些条件来自实例化Bean
+spring4.0 提供了**Condition接口**和 **@Conditional注解**
+@Conditional需要一个实现了Condition的类就能实现条件装配。
+
+比如下面 hello1 是否能实例化，取决于 Hello1Condition.matches方法，这个方法是根据能否load java.util.Date类。
+这在SpringBoot中用来实现自动装配。
+
+
+```java
+package andy.com.springFramework.core.annotation;
+
+import org.springframework.context.annotation.*;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+
+/**
+ * 条件实例化 Bean
+ */
+@Configuration
+public class TestCondition {
+
+    public static void main(String[] args) {
+
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestCondition.class);
+
+        /**
+         * 可以load java.util.Date hello1被实例化
+         */
+        String hello1 = context.getBean("hello1", String.class);
+        System.out.println(hello1);
+
+
+        /**
+         *  hello2不被实例化
+         */
+        String hello2 = context.getBean("hello2", String.class);
+        System.out.println(hello2);
+    }
+
+
+    @Bean("hello1")
+    @Conditional(Hello1Condition.class) //可以load java.util.Date hello1被实例化
+    public String hello() {
+        return "hello world1";
+    }
+
+    @Bean("hello2")
+    @Conditional(Hello2Condition.class) //Hello2Condition.matches 返回 false 不会被实例化
+    public String hello2() {
+        return "hello world2";
+    }
+
+    public static class Hello1Condition implements Condition {
+
+        /**
+         * 如果环境中有 java.util.Date 类就返回true
+         *
+         * @param context
+         * @param metadata
+         * @return
+         */
+        @Override
+        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            try {
+                context.getClassLoader().loadClass("java.util.Date");
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+    }
+
+    /**
+     * 返回 false
+     */
+    public static class Hello2Condition implements Condition {
+
+        @Override
+        public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+            return false;
+        }
+    }
+}
+
+```
+
+springboot 自动配置也就是上面的原理
+比如 classpath中有 "org.springframework.jdbc.core.JdbcTemplate" 类才会去初始化一个 JdbcTemplate
+
+```java
+public class JdbcTemplateCondition implements Condition {
+      @Override
+      public boolean matches(ConditionContext context,
+                             AnnotatedTypeMetadata metadata) {
+        try {
+          context.getClassLoader().loadClass(
+                 "org.springframework.jdbc.core.JdbcTemplate");
+          return true;
+        } catch (Exception e) {
+          return false;
+        } 
+    }
+}
+
+```
+
+
+springboot还提供了很多Condition的注解
+```java
+@ConditionalOnBean           配置了某个特定的bean
+@ConditionalOnMissingBean    没有某个特定的bean
+@ConditionalOnClass          classpath有某个指定的类
+@ConditionalOnMissingClass   classpath没有某个自定的类
+@ConditionalOnExpression     给定的Spring Expression Language 表达式为true
+...
+...
+```
