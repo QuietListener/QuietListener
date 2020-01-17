@@ -1,14 +1,33 @@
 ---
 layout: post
-title: spring-cloud 配置中心config
-date: 2020-1-8 14:32:00
-categories:  java spring spring-cloud
+title: docker记录
+date: 2020-1-17 14:32:00
+categories:  docker
 ---
 
-## 参考
-[taobao 一篇好TM长的关于配置中心的文章](http://jm.taobao.org/2016/09/28/an-article-about-config-center/)   
-[Spring Cloud Config - 统一配置中心](https://blog.51cto.com/zero01/2171735)
-[三种主流的微服务配置中心深度对比！你怎么看](https://mp.weixin.qq.com/s/3JIzG7HhIgL1dGzYMS37pw)
 
 
+拉取一个image
+docker pull swaggerapi/swagger-editor
 
+运营一个image
+docker run -d -p 80:8080 swaggerapi/swagger-editor
+
+#查看有哪些容器在运行
+docker container ls
+
+当前image
+docker image ls
+
+```shell
+➜ software docker container stop  29e20f4a2dbc  
+29e20f4a2dbc
+➜  software docker container ls -a 
+CONTAINER ID        IMAGE                       COMMAND                  CREATED             STATUS                      PORTS               NAMES
+29e20f4a2dbc        swaggerapi/swagger-editor   "sh /usr/share/nginx…"   2 hours ago         Exited (0) 14 seconds ago                       upbeat_sanderson
+➜  software docker container rm   29e20f4a2dbc  
+29e20f4a2dbc
+➜  software docker container ls -a              
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+➜  software 
+```
