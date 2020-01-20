@@ -31,3 +31,34 @@ CONTAINER ID        IMAGE                       COMMAND                  CREATED
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ➜  software 
 ```
+
+
+
+docker image pull<repository>:<tag>
+docker image pull ubuntu:latest
+这两条命令从alpine和ubuntu仓库拉取了标有“latest”标签的镜像。
+
+docker container run -it ubuntu:latest /bin/bash 
+-it 是交互式的意思 可以将当前终端连接到容器的Shell终端之上。
+
+#搜索dockerhub
+docker search nigelpoulton
+
+#镜像分层
+ docker image inspect ubuntu:latest
+
+ 举一个简单的例子，假如基于UbuntuLinux16.04创建一个新的镜像，这就是新镜像的第一层；如果在该镜像中添加Python包，就会在基础镜像层之上创建第二个镜像层；如果继续添加一个安全补丁，就会创建第三个镜像层。该镜像当前已经包含3个镜像层，如图6.5所示（这只是一个用于演示的很简单的例子）。
+
+
+
+# 容器是什么？
+服务器启动之后，所选择的操作系统会启动。在Docker世界中可以选择Linux，或者内核支持内核中的容器原语的新版本Windows。与虚拟机模型相同，OS也占用了全部硬件资源。在OS层之上，需要安装容器引擎（如Docker）。容器引擎可以获取系统资源，比如进程树、文件系统以及网络栈，接着将资源分割为安全的互相隔离的资源结构，称之为容器。每个容器看起来就像一个真实的操作系统，在其内部可以运行应用。按照前面的假设，需要在物理机上运行4个应用。因此，需要划分出4个容器并在每个容器中运行一个应用，如图7.3所示。
+从更高层面上来讲，**Hypervisor是硬件虚拟化（HardwareVirtualization）——Hypervisor将硬件物理资源划分为虚拟资源；** 另外，**容器是操作系统虚拟化（OSVirtualization）——容器将系统资源划分为虚拟资源。**
+
+
+
+# 启动stop的容器
+docker container start d01e42d5d77d
+
+重新连接docker
+docker container exec -it  d01e42d5d77d bash
