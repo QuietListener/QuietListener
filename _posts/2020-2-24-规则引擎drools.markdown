@@ -1,0 +1,21 @@
+---
+layout: post
+title: spring-cloud 配置中心config
+date: 2020-2-24 14:32:00
+categories:  java spring spring-cloud
+---
+
+
+# 1. 为什么要用规则？
+老话:**解耦**
+
+Rule执行链条？
+如果一个rule太复杂，不容易维护。使用链的方式更容易维护。
+
+Atomicity of rules
+> we should try to make our rules as simple as possible to the point that they cannot be divided into anything smaller, which could still be considered a rule. This principle is called Rule Atomicity.
+
+Ordering of rules
+order由Engine决定的，order对rule不重要，rule只关心数据。
+
+
