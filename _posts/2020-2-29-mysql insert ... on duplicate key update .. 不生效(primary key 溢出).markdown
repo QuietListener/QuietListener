@@ -1,7 +1,7 @@
 ---
 layout: post
 title: mysql insert ... on duplicate key update .. 不生效(primary key 溢出)
-date: 2020-2-25 14:32:00
+date: 2020-2-29 14:32:00
 categories:  java  logback
 ---
 
@@ -11,7 +11,7 @@ categories:  java  logback
 ### 1. 怀疑是 事务的原因
 开启手动 commit，数据还是有问题。 但是**mysql不报错**
 
-### 2. 尝试直接用insert 插入新数据报primary key 冲突。
+### 2. 尝试直接用insert 插入新数据,报primary key 冲突。
 ```sql
 MySQL [xxx]> select  * from `ceshi`  where `customer_id` = 14595639 order by updated_at desc;
 +------------+-------------+---------------+--------------+---------------------+---------------------+
