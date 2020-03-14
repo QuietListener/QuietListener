@@ -15,5 +15,5 @@ categories:  机器学习
 2. 学习算法是 梯度下降
 3. 得到的hypothesis是 h = a+bx;
 
-![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-hypothesis.jpg){:width="300px"}
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-hypothesis.jpg" width="400"> 
 
