@@ -4,3 +4,16 @@ title: 吴恩达机器学习记录2 单变量线性回归
 date: 2020-3-14 14:32:00
 categories:  机器学习
 ---
+
+# 1. 机器学习的过程
+1. 提供训练数据集(traning set)
+2. 使用 学习算法(learning algorithm) 找到 hypothesis（一个函数）
+3. 使用 hypothesis 对新数据进行预测。
+
+例如预测房价  
+1. 训练集为(面积，房价)， (100,100),(120,118) 等
+2. 学习算法是 梯度下降
+3. 得到的hypothesis是 h = a+bx;
+
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-hypothesis.jpg)
+
