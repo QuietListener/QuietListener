@@ -19,11 +19,24 @@ Arthur Samuel:
 
 Tom Mitchell(卡耐基梅隆)：
 >A computer program is said to learn from experience E with respect to some task T and some performance measure P, if it's performance on T, as measured by P, imporves with experience E.
-注意 T E P.
-比如训练一个垃圾邮件ai，
+
+
+注意 T E P.比如训练一个垃圾邮件ai，
 1. T ai给email进行分类 ，
 2. P 正确分类一个邮件是否是垃圾邮件概率，
 3. E，经验：watching you label email as spam or not spam；
+
+
+
+# 机器学习分类
+## 1.分类1
+1. 监督学习：提供一组正确的数据，
+2. 无监督学习: 机器自己学习
+
+## 分类2
+1. 回归问题：比如根据房子的楼龄和房子大小 估计 卖出价格
+3. 分类问题：比如根据肿瘤大小，患者年龄 对肿瘤进行分类(良性肿瘤还是恶性肿瘤)
+
 
 
 
