@@ -30,14 +30,16 @@ Tom Mitchell(卡耐基梅隆)：
 
 # 3.机器学习分类
 
-## 1. 监督学习(supervised learning)：提供一组正确的数据，让机器学习，并做预测。
+## 1. 监督学习(supervised learning)：提供一组正确的数据(标注过的)，让机器学习，并做预测。
 ### 1. 回归问题(regression)：输出值是连续的。比如根据房子的楼龄和房子大小 估计 卖出价格
 ### 3. 分类问题(classification)：输出值是离散的。 比如根据肿瘤大小，患者年龄 对肿瘤进行分类(良性肿瘤还是恶性肿瘤)
 
-## 2. 无监督学习(unsupervised learning): 机器自己学习
+## 2. 无监督学习(unsupervised learning): 提供的数据是没有标注的，机器自己学习。
+### 1. 聚类算法(clustring) 比如 ：新闻分类(google news),鸡尾酒聚类算法提取人声和背景声
 
 
-
+# 4.Andrew Ng的建议:
+  如果解决一个问题不要依赖就使用java，c++等语言来实现。应该 1. 先使用matlab或者Octave 来建立模型，2. 验证原型是正确可以使用，3.迁移到其他语言(c++,java等)。
 
 
 
