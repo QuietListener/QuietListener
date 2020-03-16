@@ -78,8 +78,10 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
     
     不断更新  \( (θ_0,θ_1) \) 知道找到局部最小值，如下图所示，
 
-   <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression4.jpg" width="400"> 
+   <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression5.jpg" width="400"> 
    
+
+   其中 α 代表 梯度下降的速率，也就是每一步走多长。
 
 
 
