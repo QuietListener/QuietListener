@@ -1,0 +1,7 @@
+---
+layout: post
+title: 吴恩达机器学习记录3 一些线代知识
+date: 2020-3-14 14:32:00
+categories:  机器学习
+---
+
