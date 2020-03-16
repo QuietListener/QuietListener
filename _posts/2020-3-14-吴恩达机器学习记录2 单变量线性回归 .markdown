@@ -5,6 +5,9 @@ date: 2020-3-14 14:32:00
 categories:  机器学习
 ---
 
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+
 # 1. 机器学习的过程
 1. 提供训练数据集(traning set)
 2. 使用 学习算法(learning algorithm) 找到 hypothesis（一个函数）
@@ -16,4 +19,43 @@ categories:  机器学习
 3. 得到的hypothesis是 h = a+bx;
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-hypothesis.jpg" width="400"> 
+
+
+# 房价预测模型
+
+## 1. 训练数据 (面积，房价)
+
+面积 | 价格
+-|-
+2104 | 600
+1416 | 232
+1534 | 315
+
+## 2. hypothesis
+h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
+
+任务是找到  合适的 θ<sub>0</sub> 和 θ<sub>1</sub>  来预测新的数据。
+
+## 3. 怎么得到合适的 θ<sub>0</sub> 和 θ<sub>1</sub>
+1. 代价函数
+  训练数据是： (x<sup>(i)</sup>,y<sup>(i)</sup>)    有n个。
+  
+    预测函数式： \( h_θ(x^{(i)}) \)  
+
+    参数有：\( θ_0 ,θ_1 \)   
+
+    代价函数：\( J(θ_0,θ_1) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)} - y^{(i)} )^2 \) 
+
+    上线这个叫平方误差代价函数
+
+    目的： 最小化:\( J(θ_0,θ_1) \)
+
+    
+
+
+
+
+
+  
+
 
