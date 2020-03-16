@@ -84,8 +84,9 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
    其中 α 代表 梯度下降的速率，也就是每一步走多长。
 
 
-
+  <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression6.jpg" width="400"> 
 
   
+
 
 
