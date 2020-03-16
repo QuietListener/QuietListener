@@ -81,9 +81,9 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression5.jpg" width="400"> 
    
 
-   其中 α 代表 梯度下降的速率，也就是每一步走多长。
-
-
+   其中 α 代表 梯度下降的速率，也就是每一步走多长。**α 太小 收敛速度慢 α 太大，可能不收敛甚至 发散。** 
+   如下图
+  
   <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression6.jpg" width="400"> 
 
   
