@@ -56,9 +56,13 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 
 
 ### 2. 使用等高线 理解 找最小化\( J(θ_0,θ_1) \) 时 \( θ_0,θ_1 \) 的过程
-
+1. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="400"> 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression2.jpg" width="400"> 
+
+2. 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression2.jpg" width="400">
+ 
+3. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression3.jpg" width="400"> 
 
 
