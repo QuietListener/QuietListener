@@ -55,15 +55,23 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 
 
 
-### 2. 使用等高线 理解 找最小化\( J(θ_0,θ_1) \) 时 \( θ_0,θ_1 \) 的过程
+### 2. 使用等高线 理解 最小化 \( J(θ_0,θ_1) \) 的过程
 1. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="400"> 
 
 2. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression2.jpg" width="400">
- 
+
 3. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression3.jpg" width="400"> 
+
+### 3. 使用梯度下降(Gradient descent)来找 \( J(θ_0,θ_1) \) 最小值
+
+#### 1.  基本思想
+1. 目标： 找到 \( J(θ_0,θ_1) \) 最小值
+2. 过程: 
+   1. 从某个  \( (θ_0,θ_1) \) 开始
+   2. 不断改变  \( (θ_0,θ_1) \) 的值，直到最后达到一个最小值。
 
 
 
