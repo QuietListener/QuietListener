@@ -27,3 +27,10 @@ categories:  机器学习
 具体一点就是:
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr5.jpg" width="400"> 
+
+
+# 3. 特征缩放，使得梯度下降收敛速度。
+比如 0<x1<100, -2<x2<0.5
+这样可能使得梯度下降很缓慢，因为有的变量范围很广。如果进行缩放将 特性的范围控制在  -3<xi<3 之内，会加快收敛速度。
+
+比如 
