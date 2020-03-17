@@ -12,3 +12,7 @@ categories:  机器学习
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr1.jpg" width="400"> 
 
 
+## 假设空间
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr2.jpg" width="400"> 
+
+假设空间可以写成两个向量的乘积
