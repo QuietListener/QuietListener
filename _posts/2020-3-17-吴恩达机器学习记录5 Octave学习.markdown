@@ -291,6 +291,19 @@ ans =
    9   1
 
 >>
+>> clear A % delete variable A
+>> A
+error: 'A' undefined near line 1 column 1
 
+>> v = pricey(2:4) %获取子元素
+v =
 
+   3299
+   3690
+   2320
+
+>>
+>> save test1.mat v %将v的内容保存到test1.mat中
+>> ls
+featuresX.dat   priceY.dat      test1.mat
 ```
