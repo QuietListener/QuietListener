@@ -310,7 +310,7 @@ featuresX.dat   priceY.dat      test1.mat
 
 
 
-## 7. 矩阵数据操作
+## 8. 矩阵数据操作
 
 ```shell
 >> v = pricey(2:4)
