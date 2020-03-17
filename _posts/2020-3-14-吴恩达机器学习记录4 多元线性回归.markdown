@@ -29,8 +29,18 @@ categories:  机器学习
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr5.jpg" width="400"> 
 
 
-# 3. 特征缩放，使得梯度下降收敛速度。
-比如 0<x1<100, -2<x2<0.5
-这样可能使得梯度下降很缓慢，因为有的变量范围很广。如果进行缩放将 特性的范围控制在  -3<xi<3 之内，会加快收敛速度。
+# 3. 特征缩放(feature scaling)，使得梯度下降收敛速度。
+比如 \( 0<x_1<100 \),  \( -2 < x_2<0.5 \)
+这样可能使得梯度下降很缓慢，因为有的变量范围很广。如果进行缩放将 特性的范围控制在  \( -3<x_1< 3 \) 之内，会加快收敛速度。
 
-比如 
+比如 可以使用均值
+\(  x_1 = \frac{x_1 - 50}{100} \)  先在 \( -0.5 <x_1 < 0.5 \)
+
+# 4. 如何选择 学习率: α
+ 1. 学习率过大会不收敛，或者 震荡   
+ 2. 学习率太小 收敛速度会非常慢。
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr6.jpg" width="400"> 
+
+
+**比较好的做法是 尝试 多个α值: 0.001, 0.01, 0.1, 1**
