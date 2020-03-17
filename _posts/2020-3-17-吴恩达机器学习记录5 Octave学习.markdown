@@ -9,6 +9,7 @@ https://www.gnu.org/software/octave/download.html
 
 
 # 2. 基本操作
+
 1.  数值操作
 
 ```shell
@@ -28,6 +29,7 @@ ans = 1
 >>
 >>
 ```
+
 2. 变量 格式化打印
 
 ```shell
@@ -50,6 +52,8 @@ a =  3.1416
 >>
 
 ```
+
+
 3. 随机
 
 ```shell
@@ -64,7 +68,9 @@ ans =
 
 ```
 
+
 4. 高斯随机
+
 
 ```shell
 
