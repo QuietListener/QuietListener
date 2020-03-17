@@ -216,3 +216,64 @@ a =
 >> length(a)
 ans =  3
 ```
+
+
+## 7. 加载数据
+
+```shell
+
+>> pwd
+ans = /Users/junjun
+>> cd /Users/junjun/Documents/octave/
+>> ls
+featuresX.dat   priceY.dat
+>>
+>> load("featuresX.dat")
+>> load("pricey.dat")
+>> who
+Variables in the current scope:
+
+A          a          b          featuresX  v
+V          ans        c          pricey     w
+
+>> featuresX
+featuresX =
+
+   2014      3
+   1600      3
+   2400      3
+   1416      2
+   3000      4
+   1985      4
+   1534      3
+   1427      3
+   1380      3
+
+>> pricey
+pricey =
+
+   3999
+   3299
+   3690
+   2320
+   5399
+   2999
+   3149
+   1989
+   2120
+
+>>
+>> size(featuresX)
+ans =
+
+   9   2
+
+>> size(pricey)
+ans =
+
+   9   1
+
+>>
+
+
+```
