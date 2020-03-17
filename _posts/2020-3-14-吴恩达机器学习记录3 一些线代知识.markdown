@@ -23,7 +23,7 @@ categories:  机器学习
 
 ### 2. 矩阵在转置(Transpose)
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-matrix.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-matrix1.jpg" width="400"> 
 
 \( A_{ij} = B_{ji}\)
 
