@@ -46,3 +46,9 @@ categories:  机器学习
 **比较好的做法是 尝试 多个α值: 0.001, 0.003, 0.01,0.03 0.1, 0.3, 1 **
 
 ** 最终是达到一个 速度和精度 的平衡。
+
+# 4. 特征(feature)选择
+有时候自己定义一个新特征，会得到一个更好的模型。   
+
+比如下图，本来特征是 房屋的 长和宽，我们使用面积来作为特性。
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr7.jpg" width="400"> 
