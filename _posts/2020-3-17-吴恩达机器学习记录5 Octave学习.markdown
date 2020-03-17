@@ -10,7 +10,9 @@ https://www.gnu.org/software/octave/download.html
 
 # 2. 基本操作
 1.  数值操作
-```
+
+```shell
+
 >> 2+3
 ans =  5
 >> 2^10
@@ -27,7 +29,8 @@ ans = 1
 >>
 ```
 2. 变量 格式化打印
-```
+
+```shell
 
 >> %variable bellow
 >> a = 3
@@ -48,8 +51,9 @@ a =  3.1416
 
 ```
 3. 随机
-```
 
+```shell
+>> 
 >> rand(2,3)
 ans =
 
@@ -62,7 +66,7 @@ ans =
 
 4. 高斯随机
 
-```
+```shell
 
 >> randn(2,3)
 ans =
@@ -76,7 +80,8 @@ ans =
 ```
 
 5. 向量矩阵
-```
+```shell
+
 >> A = [1 2 ; 2 3; 3 4]
 A =
 
