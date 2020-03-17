@@ -236,6 +236,23 @@ Variables in the current scope:
 A          a          b          featuresX  v
 V          ans        c          pricey     w
 
+>> whos
+Variables in the current scope:
+
+   Attr Name           Size                     Bytes  Class
+   ==== ====           ====                     =====  =====
+        A              3x2                         48  double
+        V              3x1                         24  double
+        a              3x1                         24  double
+        ans            1x2                         16  double
+        b              1x2                         16  double
+        c              2x3                         48  double
+        featuresX      9x2                        144  double
+        pricey         9x1                         72  double
+        v              2x3                         48  double
+        w              1x1000                    8000  double
+
+Total is 1055 elements using 8440 bytes
 >> featuresX
 featuresX =
 
