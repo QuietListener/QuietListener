@@ -21,4 +21,4 @@ categories:  机器学习
 # 2. 多元变量的梯度下降
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr3.jpg" width="400"> 
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr3.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr4.jpg" width="400"> 
