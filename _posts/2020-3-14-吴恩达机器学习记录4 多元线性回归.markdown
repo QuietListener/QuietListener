@@ -60,7 +60,10 @@ categories:  机器学习
 
 例如下面假设 θ 是一个实数(不是向量)。当设导数为0，就能求出 θ的值。
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr7.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr8.jpg" width="400"> 
 
 
 **同样，对于多变量的\(J(θ)\)，每个变量的偏导数都为0，也可以直接求出 θ**，
+
+也有公式可直接应用如下所示。
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr9.jpg" width="400"> 
