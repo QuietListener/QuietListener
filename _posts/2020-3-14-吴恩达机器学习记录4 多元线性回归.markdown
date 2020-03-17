@@ -74,3 +74,5 @@ categories:  机器学习
 ## 1. 梯度下降和正规方程的区别
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr10.jpg" width="400"> 
+
+**Andrew Ng的建议:**一般当特性数量下雨10000 直接使用正规方程，如果n太大，还是使用梯度下降。
