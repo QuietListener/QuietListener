@@ -16,7 +16,7 @@ categories:  机器学习
 
 ## 4. 矩阵逆矩阵，转置(inverse and traspose)
 ### 1. 矩阵的逆(inverse of matrix)
-   满足 \(  A^{-1} A = A A^{-1} = I  \） I为单位矩阵。
+   满足 \(  A^{-1} A = A A^{-1} = I  \) I为单位矩阵。
    0矩阵没有逆矩阵,只有方阵(square matrix)有逆矩阵
 
 **不存在逆的矩阵 叫 奇异矩阵(sigular)**
@@ -25,7 +25,7 @@ categories:  机器学习
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-matrix.jpg" width="400"> 
 
-   
+\( A_{ij} = B_{ji}\)
 
 
 
