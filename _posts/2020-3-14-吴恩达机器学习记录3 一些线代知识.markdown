@@ -25,7 +25,7 @@ categories:  机器学习
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-matrix1.jpg" width="400"> 
 
-\( A_{ij} = B_{ji}\)
+满足: \( A_{ij} = B_{ji} \) 
 
 
 
