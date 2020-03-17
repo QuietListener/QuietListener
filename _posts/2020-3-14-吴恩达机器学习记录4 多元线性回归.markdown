@@ -71,8 +71,17 @@ categories:  机器学习
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr9.jpg" width="400"> 
 
 
-## 1. 梯度下降和正规方程的区别
+## 2. 梯度下降和正规方程的区别
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200317-lr10.jpg" width="400"> 
 
-**Andrew Ng的建议:**一般当特性数量下雨10000 直接使用正规方程，如果n太大，还是使用梯度下降。
+**Andrew Ng的建议:** 一般当特性数量下雨10000 直接使用正规方程，如果n太大，还是使用梯度下降。
+
+# 6. 正规方程时候遇到 矩阵 不可逆的情况
+\( θ = (X^TX)^{-1} \) 如果\( (X^TX)^{-1} \)不可逆。
+## 1. 原因:
+### 1. 有冗余的feature  
+比如有个参数是 面积的平方 单位是 平方米，还有一个也是面积的平方，是平方厘米。
+### 2. 训练数据比  参数个数还少
+比如有100个参数，但是只有10个训练数据。
+**解决办法：可以删除一些参数或者 使用正则化**
