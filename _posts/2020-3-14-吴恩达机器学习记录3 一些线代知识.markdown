@@ -1,7 +1,33 @@
 ---
 layout: post
 title: 吴恩达机器学习记录3 一些线代知识
-date: 2020-3-14 14:32:00
+date: 2020-3-16 14:32:00
 categories:  机器学习
 ---
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+
+## 1. 矩阵乘法不满足交换律(not commutative)
+
+## 2. 矩阵乘法满足结合律(associate property)
+
+## 3. 单位矩阵I( identity matrix) :
+ 对角线上都是1，其他地方都是0。 单位矩阵乘法满足交换律
+
+## 4. 矩阵逆矩阵，转置(inverse and traspose)
+### 1. 矩阵的逆(inverse of matrix)
+   满足 \(  A^{-1} A = A A^{-1} = I  \） I为单位矩阵。
+   0矩阵没有逆矩阵,只有方阵(square matrix)有逆矩阵
+
+**不存在逆的矩阵 叫 奇异矩阵(sigular)**
+
+### 2. 矩阵在转置(Transpose)
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-matrix.jpg" width="400"> 
+
+   
+
+
+
+
 
