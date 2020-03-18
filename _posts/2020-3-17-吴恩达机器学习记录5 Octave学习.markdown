@@ -840,3 +840,34 @@ end
 value is 1
 >>
 ```
+
+
+# 5. 函数
+octave函数可以返回多个结果。
+
+myFunc1.m
+```java
+function y = myFunc1(m,n)
+m = m+1;
+n = n+1;
+y = m+n;
+```
+
+myFunc2.m
+```java
+function [x,y] = myFunc2(m,n)
+x = n+1;
+y = m+1;
+```
+
+```java
+>> pwd
+ans = /Users/junjun/Documents/octave
+>> addpath("/Users/junjun/Documents/octave") %添加搜索路径，以便能找到自定义函数
+>> myFunc1(1,2) %函数1
+ans =  5
+>> [a,b] = myFunc2(1,2) %函数2 返回两个值
+a =  3
+b =  2
+
+```
