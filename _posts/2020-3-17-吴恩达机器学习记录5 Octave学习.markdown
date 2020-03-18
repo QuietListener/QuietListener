@@ -733,3 +733,33 @@ ans =
   -5.8564e-15   1.2434e-14   1.0000e+00
 
 ```
+
+
+# 3.矩阵绘图
+
+```
+>> t = [0:0.01:0.98];
+>> y1 = sin(2*pi*4*t);
+>> y2 = cos(2*pi*4*t);
+>> plot(t,y1) %绘制图像
+>> plot(t,y2) %清除第原来的图像，绘制第二个图像
+>> plot(t,y1)
+>> hold on  %不清除原来的图像
+>> plot(t,y2)
+>> plot(t,y2,"r") %使用红色做图 r表示颜色
+>> xlabel("time") %横坐标
+>> ylabel("value") %纵坐标
+>> legend('sin','cos') %标记一下每条函数曲线
+>> title('my plot') %加title
+>> print -dpng 'myplog.png'; %保存为png图像到当前路径
+>> ls
+featuresX.dat   myplog.png      priceY.dat      test1.mat
+>> close %清除所有图像
+
+>> subplot(1,2,1); %将图像分为1x2的两个区域，并在第1个区域绘图
+>> plot(t,y1) %绘制图像到第一个区域
+>> subplot(1,2,2);  %并在第2个区域绘图
+>> plot(t,y2)
+>> axis([0.5 1 0.2 1]) % 将第二个区域的图像，横轴显示范围为[0.5,1],纵轴显示范围为[0.2,1]
+
+```
