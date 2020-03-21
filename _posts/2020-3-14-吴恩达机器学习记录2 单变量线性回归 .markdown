@@ -4,9 +4,7 @@ title: 吴恩达机器学习记录2 单变量线性回归
 date: 2020-3-14 14:32:00
 categories:  机器学习
 ---
-
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
 
 # 1. 机器学习的过程
 1. 提供训练数据集(traning set)
