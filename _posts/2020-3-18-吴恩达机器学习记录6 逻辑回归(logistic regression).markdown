@@ -106,4 +106,13 @@ $z=h_θ(x)$ 越小，越满足预期，cost function 应该越小。
 -log(1-h_θ(x))   && if  &&y = 0 (递增函数)\\
 \end{array} \right. $$  
 
+所以cost function 最后写成:
+$$J(θ) = \frac{1}{n}\sum_{i=1}^n ( cost(h_θ(x), y )  ) $$
+
+简化一下的到逻辑回归的cost function：
+$$
+J(θ) = -\frac{1}{n}\sum_{i=1}^n ( y^{(i)}log(h_θ(x^{(i)}) + (1-y^{(i)})log(1-h_θ(x^{(i)})) )
+\ \ \ \ \ (y=1 \ \ or\ \  y=0)
+$$
+
 
