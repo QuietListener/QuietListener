@@ -39,7 +39,10 @@ $ -3 + x_1+x_2 =0$ 这条线，将样本分为两个区域，右上是y=1的样�
 当 $ -3 + x_1+x_2 =0$ 的时候$$ h_θ(θ^T x)$$ 等于0.5
 
 ### 2. 非线性决策边界
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression3.jpg" width="200"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression3.jpg" width="300"> 
 
 上面这个例子中 $-1 + x_1^2+x_2^2 =0$ (一个圆) 是决策边界。   
 当$-1 + x_1^2+x_2^2 >0$(在圆外面) 是**y=1**的样本，当$-1 + x_1^2+x_2^2 <0 (在圆里面)$是**y=0**的样本
+
+
+**逻辑回归从某种意义上来说 就是通过选择向量 $θ^T$ 来找到 决策边界**
