@@ -101,7 +101,7 @@ $z=h_θ(x)$ 越小，越满足预期，cost function 应该越小。
  
 
 所以 我们将代价函数写下面这样是满足上面分析的。 
-$$ cost(h_θ(x), y ) \left\{
+$$ cost(h_θ(x), y ) = \left\{
 \begin{array}{rcl}
  -log(h_θ(x))   && if  &&y = 1 (递减函数)\\
 -log(1-h_θ(x))   && if  &&y = 0 (递增函数)\\
@@ -126,3 +126,55 @@ $$
 梯度下降迭代方法如下：
 $$θ_j := θ_j - α\frac{\partial J(θ)}{\partial θ_j} $$ 
 不断迭代得到最向量θ。
+
+**下面推导一下:**
+
+
+$$ 
+ \frac{\partial J(θ)}{\partial θ}  =  - \frac{1}{n}\frac{\partial  \sum_{i=1}^n ( y^{(i)}log(h_θ(x^{(i)}) + (1-y^{(i)})log(1-h_θ(x^{(i)})) ) }{\partial θ}
+ $$
+ $$
+ =- \frac{1}{n}  \sum_{i=1}^n \frac{\partial   ( y^{(i)}log(h_θ(x^{(i)})) + (1-y^{(i)})log(1-h_θ(x^{(i)})) ) }{\partial θ} 
+$$
+
+ $$
+ =- \frac{1}{n}  \sum_{i=1}^n  [ \frac{y^{(i)}}{h_θ(x^{(i)})} \frac{\partial {h_θ(x^{(i)})} } {\partial θ}    +  \frac{1-y^{(i)}}{1-h_θ(x^{(i)})}   \frac{-\partial{h_θ(x^{(i)})} } {\partial θ}   ]
+$$
+
+
+ $$
+ =- \frac{1}{n}  \sum_{i=1}^n  [ \frac{\partial {h_θ(x^{(i)})} } {\partial θ} (\frac{y^{(i)}}{h_θ(x^{(i)})} -  \frac{1-y^{(i)}}{1-h_θ(x^{(i)})}) ]
+$$
+
+ $$
+ =- \frac{1}{n}  \sum_{i=1}^n  [ \frac{\partial {h_θ(x^{(i)})} } {\partial θ} ( \frac{y^{(i)} - h_θ(x^{(i)})}{ h_θ(x^{(i)}) (1-h_θ(x^{(i)}) }) ]
+$$
+
+
+**又因为:**  
+ $$ h_θ(x) =  g(θ^T x) = \frac1 { 1+e^{-θ^T x}}$$
+**对其求导**  
+$$\frac{\partial {h_θ(x^{(i)})} } {\partial θ}  = \frac{ e^{-θ^T x} }{( 1+e^{-θ^T x})^2} (-x^{(i)})$$
+ 
+ $$
+  = \frac{1 }{( 1+e^{-θ^T x})} * (1- \frac{ 1 }{( 1+e^{-θ^T x})}) (-x^{(i)})
+ $$
+
+  $$
+  =  {h_θ(x^{(i)})}  * (1- {h_θ(x^{(i)})} ) (-x^{(i)})
+ $$
+
+
+ 将上面带入：
+$$
+\frac{\partial J(θ)}{\partial θ}  = - \frac{1}{n}  \sum_{i=1}^n  (y^{(i)} - {h_θ(x^{(i)})})(-x^{(i)})
+ $$
+
+$$
+ =  \frac{1}{n}  \sum_{i=1}^n  (y^{(i)} - {h_θ(x^{(i)})})x^{(i)}
+ $$
+ 
+ **可以进行梯度下降求θ了**如下图:  
+
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression7.jpg" width="300"> 
