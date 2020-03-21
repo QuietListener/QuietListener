@@ -169,9 +169,9 @@ $$\frac{\partial {h_θ(x^{(i)})} } {\partial θ}  = \frac{ e^{-θ^T x} }{( 1+e^{
  $$
 
 
- 将上面带入：
+ **将上面带入：**
 
- 
+
 $$
 \frac{\partial J(θ)}{\partial θ}  = - \frac{1}{n}  \sum_{i=1}^n  (y^{(i)} - {h_θ(x^{(i)})})(-x^{(i)})
  $$
