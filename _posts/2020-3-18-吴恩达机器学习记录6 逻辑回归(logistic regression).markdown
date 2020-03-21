@@ -69,8 +69,41 @@ $ J(θ) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression4.jpg" width="200"> 
 
 #### 3. log(z)和-log(z)函数
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression6.jpg" width="200"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression6.jpg" width="300"> 
 
-在 logistic regresion 中 $z = h_θ(x)$  ， 0<z<=1 ，所以 下面的图所示：
+在 logistic regresion 中  0=<z<=1 ( $z = h_θ(x)$ ) ，所以只取[0,1]这一段 下面的图所示：
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression7.jpg" width="200"> 
+
+#### 4. 逻辑回归的cost function 
+
+
+$ z = h_θ(x) $ 是我们的预测函数，它的值表示一个概率y=1，分类正确的的概率。
+对照下图，将分析 y=1(表示是恶性肿瘤)和y=0(表示是良性肿瘤)的情况
+
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression1.jpg" width="300"> 
+
+1. 当 y=1的时候，
+$z=h_θ(x)$ 越大，越满足预期，cost function 应该越小。    
+例如**1表示是良性肿瘤，$h_θ(x)$ 越大，表明预测越准，cost funtion应该越小，因为预测越正确，代价要越小**    
+$z=h_θ(x)$ 越小，越不满足预期，cost function 应该越大。
+ 所以 $y = 1 的时候 cost(h_θ(x), y )  $ 应该是 关于  $h_θ(x)$的**递减函数**。 
+ **$ cost(h_θ(x), y )  =  -log(h_θ(x)) 是满足条件的$**
+
+
+2. 当 y=0 的时候 表示分为负类
+$z=h_θ(x)$ 越大，越不满足预期，cost function 应该越大。
+$z=h_θ(x)$ 越小，越满足预期，cost function 应该越小。
+
+所以 $y = 1 的时候 cost(h_θ(x), y )  $ 应该是 关于  $h_θ(x)$的**递增函数**。 
+ **$ cost(h_θ(x), y )  =  -log(1-h_θ(x)) 是满足条件的$**
+ 
+ 
+
+所以 我们将代价函数写下面这样是满足上面分析的。 $$ cost(h_θ(x), y ) \left\{
+\begin{array}{rcl}
+ -log(h_θ(x))   && if  &&y = 1 (递减函数)\\
+-log(1-h_θ(x))   && if  &&y = 0 (递增函数)\\
+\end{array} \right. $$  
+
 
