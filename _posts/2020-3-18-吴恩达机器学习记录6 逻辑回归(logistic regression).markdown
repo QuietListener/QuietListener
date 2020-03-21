@@ -70,3 +70,7 @@ $ J(θ) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $
 
 #### 3. log(z)和-log(z)函数
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression6.jpg" width="200"> 
+
+在 logistic regresion 中 $z = h_θ(x)$  ， 0<z<=1 ，所以 下面的图所示：
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression7.jpg" width="200"> 
+
