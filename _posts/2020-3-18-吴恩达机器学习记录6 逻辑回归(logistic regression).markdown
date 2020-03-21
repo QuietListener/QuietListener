@@ -51,12 +51,13 @@ $ -3 + x_1+x_2 =0$ 这条线，将样本分为两个区域，右上是y=1的样�
 ## 4. 逻辑回归的代价函数(cost function)
 ### 1. 问题描述
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression3.jpg" width="300"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression4.jpg" width="300"> 
 
 怎么 通过算法 从训练集找到合适的0?
 ### 4. 代价函数
 1. 线性回归(linear regression)代价函数
-使用的是 **平方误差代价函数**
-$J(θ) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2 $
+使用的是 **平方误差代价函数**   
+
+$ J(θ) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $
 
 如果在**逻辑回归**使用上面的**平方误差代价函数**, J(θ) 会是一个**非凸函数**, 会有很多的局部最小值，效果不好。
