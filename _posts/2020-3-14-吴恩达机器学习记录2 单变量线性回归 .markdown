@@ -68,7 +68,8 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 1. 目标： 找到 $$J(θ_0,θ_1) $$ 最小值
 2. 过程: 
    1. 从某个  $$(θ_0,θ_1) $$ 开始
-   2. 不断改变  $$(θ_0,θ_1) $$ 的值，直到最后达到一个最小值。
+   2. 不断改变  $$(θ_0,θ_1) $$ 的值，直到最后达到一个最小值。   
+   
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression4.jpg" width="400"> 
 
 #### 2. 算法
