@@ -62,17 +62,17 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 3. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression3.jpg" width="400"> 
 
-### 3. 梯度下降算法(Gradient descent)来找 $J(θ_0,θ_1) $ 最小值
+### 3. 梯度下降算法(Gradient descent)来找 $$J(θ_0,θ_1) $$ 最小值
 
 #### 1.  基本思想
-1. 目标： 找到 $J(θ_0,θ_1) $ 最小值
+1. 目标： 找到 $$J(θ_0,θ_1) $$ 最小值
 2. 过程: 
-   1. 从某个  $(θ_0,θ_1) $ 开始
-   2. 不断改变  $(θ_0,θ_1) $ 的值，直到最后达到一个最小值。
+   1. 从某个  $$(θ_0,θ_1) $$ 开始
+   2. 不断改变  $$(θ_0,θ_1) $$ 的值，直到最后达到一个最小值。
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression4.jpg" width="400"> 
 
 #### 2. 算法
-不断更新  $(θ_0,θ_1) $ 知道找到局部最小值，如下图所示，
+不断更新  $$(θ_0,θ_1) $$ 知道找到局部最小值，如下图所示，
 
 
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression5.jpg" width="400"> 
@@ -87,18 +87,18 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 
 ### 4. 线性回归 的 梯度下降 算法
 
-$\frac{\partial J(θ_0,θ_1) }{\partial θ_j} $ = $\frac{\partial }{\partial θ_j}  \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $  
+$$\frac{\partial J(θ_0,θ_1) }{\partial θ_j} $ = $\frac{\partial }{\partial θ_j}  \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $$ 
 
 
-$\frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} ) $ 
+$$\frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} ) $$ 
 
-$\frac{\partial J(θ_0,θ_1) }{\partial θ_1} =   \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)} $ 
+$$\frac{\partial J(θ_0,θ_1) }{\partial θ_1} =   \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)} $$ 
 
 
 **所以 $θ_0,θ_1$可以用下面的公式进行迭代**
-$θ_0 = θ_0 - α \frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   θ_0- α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} ) $ 
+$$θ_0 = θ_0 - α \frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   θ_0- α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} ) $$ 
 
-$θ_1 = θ_1 - α  \frac{\partial J(θ_0,θ_1) }{\partial θ_1} =  θ_1 - α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)}$ 
+$$θ_1 = θ_1 - α  \frac{\partial J(θ_0,θ_1) }{\partial θ_1} =  θ_1 - α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)}$$ 
 
-上面的方式叫 **批量梯度下降**（ **Batch Gradient Descent** ）每次迭代 都需要把所有训练数据集 算一遍 (因为有 $\sum_{i=1}^n$)， 效率低。
+上面的方式叫 **批量梯度下降**（ **Batch Gradient Descent** ）每次迭代 都需要把所有训练数据集 算一遍 (因为有 $$\sum_{i=1}^n$$)， 效率低。
 
