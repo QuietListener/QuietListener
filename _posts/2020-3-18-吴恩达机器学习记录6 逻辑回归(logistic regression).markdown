@@ -55,15 +55,18 @@ $ -3 + x_1+x_2 =0$ 这条线，将样本分为两个区域，右上是y=1的样�
 
 问题是:**怎么 通过算法 从训练集找到合适的 $θ^T$?**
 ### 4. 代价函数
-1. 线性回归(linear regression)代价函数
+#### 1. 线性回归(linear regression)代价函数
 使用的是 **平方误差代价函数**   
 
 $ J(θ) = \frac{1}{2n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )^2  $
 
 
 
-### 2. 为什么逻辑回归不能使用 线性回归 作为代价函数。   
+#### 2. 为什么逻辑回归不能使用 线性回归 作为代价函数。   
 因为 **sigmoid函数( $g(z) = \frac1 { 1+e^{-z}} $)** 是一个非线性的。 J(θ) 会是一个**非凸函数(non-convex function)**, 会有很多的局部最小值，不能保证收敛到全局最小值。
 如下图所示：
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression4.jpg" width="200"> 
+
+#### 3. log(z)和-log(z)函数
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression6.jpg" width="200"> 
