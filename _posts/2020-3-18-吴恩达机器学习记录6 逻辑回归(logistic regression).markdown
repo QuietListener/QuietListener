@@ -177,4 +177,4 @@ $$
  **可以进行梯度下降求θ了**如下图:  
 
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression7.jpg" width="300"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression8.jpg" width="300"> 
