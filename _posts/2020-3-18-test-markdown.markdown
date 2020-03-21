@@ -8,4 +8,4 @@ categories:  机器学习
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 ## 1. adfasf
-$ a^1 $
+$a^1$
