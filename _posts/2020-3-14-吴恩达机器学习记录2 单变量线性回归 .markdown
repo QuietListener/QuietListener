@@ -69,7 +69,7 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 2. 过程: 
    1. 从某个  $$(θ_0,θ_1) $$ 开始
    2. 不断改变  $$(θ_0,θ_1) $$ 的值，直到最后达到一个最小值。   
-   
+
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression4.jpg" width="400"> 
 
 #### 2. 算法
@@ -104,4 +104,3 @@ $$θ_0 = θ_0 - α \frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   θ_0- α \fr
 $$θ_1 = θ_1 - α  \frac{\partial J(θ_0,θ_1) }{\partial θ_1} =  θ_1 - α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)}$$ 
 
 上面的方式叫 **批量梯度下降**（ **Batch Gradient Descent** ）每次迭代 都需要把所有训练数据集 算一遍 (因为有 $$\sum_{i=1}^n$$)， 效率低。
-

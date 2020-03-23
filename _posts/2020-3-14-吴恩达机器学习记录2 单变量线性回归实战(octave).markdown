@@ -1,0 +1,23 @@
+---
+layout: post
+title: 吴恩达机器学习记录2 单变量线性回归实战(octave)
+date: 2020-3-23 14:32:00
+categories:  机器学习
+---
+
+1. 数据
+ex1data1.txt
+
+看看数据：
+```java
+>> data =load("ex1data1.txt");
+>> size(data)
+ans =
+
+   97    2
+
+>> plot(data(:,1),data(:,2),"rx")
+>>
+```
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave1.jpg" width="400"> 
