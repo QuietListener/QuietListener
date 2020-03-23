@@ -5,9 +5,8 @@ date: 2020-3-23 14:32:00
 categories:  机器学习
 ---
 
-### 1. 数据
+## 1. 数据
 ex1data1.txt
-
 看看数据：
 数据有97条，第一列为x,第二列为y
 
@@ -22,11 +21,12 @@ ans =
 >>
 ```
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave1.jpg" width="600"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave1.jpg" width="500"> 
 
 
-### 2. 使用 批量梯度下降(batch gradient descent) 拟合。
+## 2. 使用 批量梯度下降(batch gradient descent) 拟合。
 
+### 1. 地图下降算法
 ```java
 
 function [theta,history_theta] = gradientDescent1(X, y, theta, alpha, iterations)  
@@ -37,12 +37,48 @@ for i = 1:iterations %更新theta
   h = X * theta - y;
   theta(1) = theta(1) - alpha / m * sum(h);       
   theta(2) = theta(2) - alpha / m * sum(h.* X(:,2));
-  disp(sprintf('i= %d (%0.2f,%0.2f)',i,theta(1),theta(2)))
+  %disp(sprintf('i= %d (%0.2f,%0.2f)',i,theta(1),theta(2)))
 
   %记录当前theta 
   history_theta(i,1) = theta(1);
   history_theta(i,2) = theta(2);
 end
-
   
 ```
+
+
+### 2. 准备数据 拟合
+```
+iterations =  1500 %最多迭代次数
+>> theta = [1;1]
+
+theta =
+
+   1
+   1
+
+>> alpha = 0.01; %递归下降速率
+
+>> m = length(y)
+
+m =  97
+>> X = [ones(m,1),data(:,1)]; %训练数据X
+>> y = data(:,2); %训练数据y
+
+>> [theta,history_theta] = gradientDescent1(X, y, theta, alpha, iterations); %梯度下降拟合求参数 theta1 和 theta2
+
+m =  97
+>> theta %得到的曲线为 y = -3.5708x+1.1604
+theta =
+
+  -3.5708
+   1.1604
+
+>>
+>> plot(data(:,1),data(:,2),"rx") %画数据图
+>> hold on;
+>> plot(X(:,2),theta(1)+theta(2)*X(:,2),"-") %画拟合图
+```
+
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave2.jpg" width="500"> 
