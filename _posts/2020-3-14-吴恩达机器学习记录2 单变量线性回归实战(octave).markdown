@@ -5,10 +5,12 @@ date: 2020-3-23 14:32:00
 categories:  机器学习
 ---
 
-1. 数据
+### 1. 数据
 ex1data1.txt
 
 看看数据：
+数据有97条，第一列为x,第二列为y
+
 ```java
 >> data =load("ex1data1.txt");
 >> size(data)
@@ -20,4 +22,27 @@ ans =
 >>
 ```
 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave1.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave1.jpg" width="600"> 
+
+
+### 2. 使用 批量梯度下降(batch gradient descent) 拟合。
+
+```java
+
+function [theta,history_theta] = gradientDescent1(X, y, theta, alpha, iterations)  
+%X为训练数据的输入值，y为标记的值，alpha为梯度下降的速率，  iterations为迭代次数
+m = length(y) %训练数据个数
+history_theta = zeros(m,2); %记录theta的变化
+for i = 1:iterations %更新theta
+  h = X * theta - y;
+  theta(1) = theta(1) - alpha / m * sum(h);       
+  theta(2) = theta(2) - alpha / m * sum(h.* X(:,2));
+  disp(sprintf('i= %d (%0.2f,%0.2f)',i,theta(1),theta(2)))
+
+  %记录当前theta 
+  history_theta(i,1) = theta(1);
+  history_theta(i,2) = theta(2);
+end
+
+  
+```
