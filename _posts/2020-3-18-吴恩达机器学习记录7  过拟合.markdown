@@ -1,0 +1,16 @@
+---
+layout: post
+title: 吴恩达机器学习记录7 过拟合
+date: 2020-3-23 14:32:00
+categories:  机器学习
+---
+## 1. 欠拟合，过拟合
+1. 对训练数据，欠拟合会有很大的偏差(bias)
+1. 对训练数据，过拟合会有很小的偏差，但是对新数据预测能力不好
+
+下面就是一个例子，第1个是欠拟合，第3个是过拟合:
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation1.jpg.jpg" width="500"> 
+
+
+
