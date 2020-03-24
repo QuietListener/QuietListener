@@ -103,3 +103,10 @@ $$ θ = (X^TX)^{-1} $$
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation4.jpg" width="400"> 
 
+
+
+
+## 6. 逻辑回归的正则化
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation5.jpg" width="400"> 
+
