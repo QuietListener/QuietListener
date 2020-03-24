@@ -33,3 +33,11 @@ categories:  机器学习
 1. 使用正则化(regularization)
 这种方法保留所有的feature，如果某个feature对结果预测关系不大， 训练过程会**减小某个参数的系数$$θ_j$$**。这样减小这个feature对预测的影响。
 
+
+
+## 3. regularization 背后的原理
+  模型中feature的参数 为
+  $$θ_1,θ_2,θ_3,...,θ_n $$ 
+
+  1. **这些参数越小，表明模型越简单。**
+  2. **越简单的模型，更不容易overfitting**
