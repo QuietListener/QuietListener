@@ -26,7 +26,7 @@ ans =
 
 ## 2. 使用 批量梯度下降(batch gradient descent) 拟合。
 
-### 1. 地图下降算法
+### 1. 梯度下降算法代码
 ```java
 
 function [theta,history_theta] = gradientDescent1(X, y, theta, alpha, iterations)  
@@ -47,8 +47,8 @@ end
 ```
 
 
-### 2. 准备数据 拟合
-```
+### 2. 准备数据并拟合
+```java
 iterations =  1500 %最多迭代次数
 >> theta = [1;1]
 
@@ -82,3 +82,56 @@ theta =
 
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave2.jpg" width="500"> 
+
+
+### 3. 化代价函数的可视化
+
+1. 代价函数(cost function)
+**参数为theta时候的平局损失情况**
+
+```java
+function J = costFunctionJ(X,y,theta)
+  m = length(y);
+  J = sum((X*theta - y).^2) / (2*m);
+```
+
+2. 绘制参数为theta0 theta1的可是函数
+
+x轴为theta0，y轴为theta1,z轴为**cost(代价)**
+```
+>> theta0_vals = linspace(-10,10,100);
+>> theta1_vals = linspace(-1,5,100);
+>> J_vals = zeros(length(theta0_vals), length(theta1_vals));
+>>  for i = 1:length(theta0_vals)
+for j = 1:length(theta1_vals)
+theta_point = [theta0_vals(i);theta1_vals(j)];
+J_vals(i, j) = costFunctionJ(X,y,theta_point);
+end
+end
+>> surf(theta0_vals,theta1_vals,J_vals);
+>> surfc(theta0_vals,theta1_vals,J_vals);
+>> colorbar
+>> xlabel('\theta_0');
+>> ylabel('\theta_1');
+```
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave4.jpg" width="500"> 
+
+
+3. 绘制等高线
+
+```java
+
+>> contour(theta0_vals, theta1_vals, J_vals, logspace(-2, 3, 20));
+>>  xlabel('\theta_0');
+>>  ylabel('\theta_1');
+>> hold on;
+>> plot(theta(1),theta(2),"rx");
+>>
+```
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave3.jpg" width="500"> 
+
+
+
+
