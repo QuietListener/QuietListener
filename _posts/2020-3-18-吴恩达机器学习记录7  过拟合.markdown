@@ -13,5 +13,23 @@ categories:  机器学习
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation1.jpg" width="500"> 
 
 
-逻辑回归也是一样的
+逻辑回归也是一样的   
+
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation2.jpg" width="500"> 
+
+
+
+## 2. 什么时候会产生(过拟合)overfitting
+### 1. 有很多特性(feature),但是我们的训练数据很少。
+比如，放假预测时候，feature有面积，楼龄，是否靠近卢边，有没有贷款等很多feature.但是我们的训练样本又很少，就容易产生过拟合。
+### 2. 解决办法
+#### 1. 第一类
+1. 舍弃一部分feature   
+**缺点**:减少过拟合的概率的同事，**也舍弃一些有用的信息**
+2. 使用模型选择算法
+
+
+#### 2.第二类:
+1. 使用正则化(regularization)
+这种方法保留所有的feature，如果某个feature对结果预测关系不大， 训练过程会**减小某个参数的系数$$θ_j$$**。这样减小这个feature对预测的影响。
+
