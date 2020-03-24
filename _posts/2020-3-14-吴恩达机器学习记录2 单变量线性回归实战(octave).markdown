@@ -98,7 +98,7 @@ function J = costFunctionJ(X,y,theta)
 2. 绘制参数为theta0 theta1的可是函数
 
 x轴为theta0，y轴为theta1,z轴为**cost(代价)**
-```
+```java
 >> theta0_vals = linspace(-10,10,100);
 >> theta1_vals = linspace(-1,5,100);
 >> J_vals = zeros(length(theta0_vals), length(theta1_vals));
@@ -119,7 +119,7 @@ end
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200323-lr-octave4.jpg" width="500"> 
 
 
-3. 绘制等高线
+### 4. 绘制等高线
 
 ```java
 
