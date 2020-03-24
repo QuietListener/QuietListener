@@ -99,7 +99,7 @@ $$ θ_j := (1-\fracλm)θ_j - α \frac{1}{m} \sum_{i=1}^m (h_θ(x^{(i)}) - y^{{i
 $$ θ = (X^TX)^{-1} $$
 但是当feature比训练数据多时候，$$X^TX$$可能不可逆。  
 加入正则化后可以保证$$X^TX$$**是可逆的**。
-入下去
+如下图
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation4.jpg" width="400"> 
 
