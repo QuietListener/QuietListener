@@ -6,7 +6,7 @@ categories:  机器学习
 ---
 ## 1. 数据
 
-数据为两列，第一列为肿瘤大小，第二列为肿瘤类型：1表示是恶性肿瘤，0表示良性肿瘤
+数据[下载](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/files/lr_data_cancer.txt)  为两列，第一列为肿瘤大小，第二列为肿瘤类型：1表示是恶性肿瘤，0表示良性肿瘤
 
 ```java
 
