@@ -6,7 +6,7 @@ categories:  机器学习
 ---
 
 ## 1. 数据
-ex1data1.txt ![下载](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/files/ex1data1.txt) 
+ex1data1.txt [下载](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/files/ex1data1.txt) 
 看看数据：
 数据有97条，第一列为x,第二列为y
 
