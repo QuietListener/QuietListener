@@ -9,4 +9,6 @@ categories:  机器学习
 
 # 1. 使用神经网络来拟合 逻辑 AND
 
+下图中的g是**sigmoid函数**
+
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network.jpg" width="600"> 
