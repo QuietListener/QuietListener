@@ -12,14 +12,14 @@ categories:  机器学习
 3. 使用 hypothesis 对新数据进行预测。
 
 例如预测房价  
-1. 训练集为(面积，房价)， (100,100),(120,118) 等
+1. 训练集为(面积，房价)，例如 (100,100),(120,118) 等
 2. 学习算法是 梯度下降
 3. 得到的hypothesis是 h = a+bx;
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200314-hypothesis.jpg" width="400"> 
 
 
-# 房价预测模型
+# 2. 房价预测模型
 
 ## 1. 训练数据 (面积，房价)
 
@@ -28,17 +28,18 @@ categories:  机器学习
 2104 | 600
 1416 | 232
 1534 | 315
-$
-## 2. hypothesis
+
+
+## 2. (假设)hypothesis
 h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 
 任务是找到  合适的 θ<sub>0</sub> 和 θ<sub>1</sub>  来预测新的数据。
 
-## 3. 怎么得到合适的 θ<sub>0</sub> 和 θ<sub>1</sub>
+## 3. 通过算找到得到合适的 θ<sub>0</sub> 和 θ<sub>1</sub>
 ### 1. 代价函数
 1. 训练数据是： (x<sup>(i)</sup>,y<sup>(i)</sup>)    有n个。
   
-2. 预测函数式： $$h_θ(x^{(i)})$$  
+2. 预测函数式： $$ h_θ(x^{(i)} )$$  
 
 3.  参数有：$$ θ_0 ,θ_1 $$  
 
@@ -49,10 +50,10 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 5. 目的： 最小化:$$J(θ_0,θ_1)$$
 
 
-**注意  $$h_θ(x)$$是关于 x的函数 $J(θ_0,θ_1) $$ 是关于 $$θ_0,θ_1$$ 的函数.**
+**注意  $$ h_θ(x) $$ 是关于 x的函数 , $$J(θ_0,θ_1) $$ 是关于 $$θ_0,θ_1$$ 的函数.**
 
 
-### 2. 使用等高线 理解 最小化 $J(θ_0,θ_1) $ 的过程
+### 2. 使用等高线理解最小化 $$J(θ_0,θ_1) $$ 的过程
 1. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="400"> 
 
