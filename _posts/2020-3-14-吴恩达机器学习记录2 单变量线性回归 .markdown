@@ -50,10 +50,10 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 5. 目的： 最小化:$$J(θ_0,θ_1)$$
 
 
-**注意  $$ h_θ(x) $$ 是关于 x的函数 , $$J(θ_0,θ_1) $$ 是关于 $$θ_0,θ_1$$ 的函数.**
+**注意**  $$h_θ(x)$$ 是关于 x的函数 , $$J(θ_0,θ_1)$$ 是关于 $$θ_0,θ_1$$ 的函数.
 
 
-### 2. 使用等高线理解最小化 $$J(θ_0,θ_1) $$ 的过程
+### 2. 使用等高线理解最小化 $$J(θ_0,θ_1)$$ 的过程
 1. 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="400"> 
 
