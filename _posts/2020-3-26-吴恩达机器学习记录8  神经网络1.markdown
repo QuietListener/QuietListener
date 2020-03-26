@@ -1,0 +1,12 @@
+---
+layout: post
+title: 吴恩达机器学习记录8 神经网络1
+date: 2020-3-23 14:32:00
+categories:  机器学习
+---
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+
+# 1. 使用神经网络来拟合 逻辑 AND
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network.jpg" width="400"> 
