@@ -4,6 +4,9 @@ title: 吴恩达机器学习记录5 Octave学习
 date: 2020-3-16 14:32:00
 categories:  机器学习
 ---
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+
 # 1. 下载地址:
 https://www.gnu.org/software/octave/download.html
 
@@ -901,3 +904,54 @@ ans =
 ### 4.  contour(xx,yy,zz)
    **在二维图中，画出等高线**
     xx ,yy,zz 分别是x，y，z轴的值。
+
+
+
+# 8. octave自带的高级函数 求最小值
+
+### 1. octaveCostFunction 
+返回 1.jVal是costFunction计算的结果，2.gradient是每个参数(theta)对应的梯度值。    
+
+例如下面的例子中 是 $$J(θ_1,θ_2) = (θ_1 - 5)^2 + (θ_2 - 5)^2$$求最小值时候的$$θ_1,θ_2$$的值。
+
+```java
+function [jVal, gradient] = octaveCostFunction(theta)
+  jVal = (theta(1) - 5)^2 + (theta(2) - 5)^2; %costFunction
+  gradient = zeros(2,1); %存放梯度
+ 
+  gradient(1) = 2*(theta(1) - 5);
+  gradient(2) = 2*(theta(2) - 5);
+  
+endfunction
+
+```
+
+### 2. 测试
+
+1. **fminunc** 表示无约束最小化问题(function minimize unconstraint )   
+2. **"Gradobj","on"** 表示梯度目标参数为打开。表示你要为这个算法(fminunc)提供一个梯度。  
+3. **"MaxIter","1000"** 表示最多迭代1000次;  
+4.  initialTheta为theta的初始值。  
+
+**initialTheta会自动选择梯度下降速率 α**  
+
+
+```java
+>> initialTheta = [1;1];
+>> options = optimset("Gradobj","on","MaxIter","1000");
+>> [optTheta,functionVal,exitFlag] = fminunc(@octaveCostFunction,initialTheta,options);
+>> optTheta
+optTheta =
+
+   5.0000
+   5.0000
+
+>> functionVal
+functionVal =    7.8886e-31
+>> functionVal
+functionVal =    7.8886e-31
+
+```
+
+**得到最优optTheta为 5,5**
+**最优化是后的costFunction值为 functionVal=functionVal；**
