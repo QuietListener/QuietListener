@@ -55,13 +55,13 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
 
 ### 2. 使用等高线理解最小化 $$J(θ_0,θ_1)$$ 的过程
 1. 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression1.jpg" width="600"> 
 
 2. 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression2.jpg" width="400">
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression2.jpg" width="600">
 
 3. 
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression3.jpg" width="400"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression3.jpg" width="600"> 
 
 ### 3. 梯度下降算法(Gradient descent)来找 $$J(θ_0,θ_1) $$ 最小值
 
