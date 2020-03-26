@@ -13,7 +13,8 @@ categories:  机器学习
 
 ### 2. 矩阵乘法满足结合律(associate property)   
 
- $$(AB)C = A(BC)$$
+    $$(AB)C = A(BC)$$
+
 ### 3. 单位矩阵I( identity matrix) :
  对角线上都是1，其他地方都是0。 单位矩阵乘法满足交换律
 
