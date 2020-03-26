@@ -107,6 +107,7 @@ $$ θ = (X^TX)^{-1} $$
 
 
 ## 6. 逻辑回归的正则化
+跟线性回归一样。
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200324-regularation5.jpg" width="400"> 
 
