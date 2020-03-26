@@ -71,7 +71,7 @@ categories:  机器学习
 #### 3. log(z)和-log(z)函数的图像
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression6.jpg" width="300"> 
 
-在 logistic regresion 中  0=<z<=1 (  $$ z = h_θ(x) $$  ) ，所以只取[0,1]这一段 下面的图所示：  
+在 logistic regresion 中  0<z<1  (  $$ z = h_θ(x) $$  ) ，所以只取[0,1]这一段 下面的图所示：  
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression7.jpg" width="200"> 
 
