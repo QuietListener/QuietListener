@@ -933,8 +933,7 @@ endfunction
 3. **"MaxIter","1000"** 表示最多迭代1000次;  
 4.  initialTheta为theta的初始值。  
 
-**initialTheta会自动选择梯度下降速率 α**  
-
+**算法会自动选择梯度下降速率 α**  
 
 ```java
 >> initialTheta = [1;1];
@@ -953,5 +952,5 @@ functionVal =    7.8886e-31
 
 ```
 
-**得到最优optTheta为 5,5**
+**得到最优optTheta为 5,5**   
 **最优化是后的costFunction值为 functionVal=functionVal；**
