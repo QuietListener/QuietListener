@@ -80,7 +80,7 @@ h<sub>θ</sub>(x) = θ<sub>0</sub> + θ<sub>1</sub>x
    <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression5.jpg" width="400"> 
    
 
-   其中 α 代表 梯度下降的速率，也就是每一步走多长。**α 太小 收敛速度慢 α 太大，可能不收敛甚至 发散。** 
+   其中 α 代表 梯度下降的速率，也就是每一步走多长。**α 太小 收敛速度慢 α 太大，可能不收敛甚至 发散。**    
    如下图
   
   <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200316-regression6.jpg" width="400"> 
@@ -98,7 +98,7 @@ $$ \frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   \frac{1}{n}\sum_{i=1}^n(h_θ
 $$ \frac{\partial J(θ_0,θ_1) }{\partial θ_1} =   \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} )* x^{(i)} $$ 
 
 
-**所以 $θ_0,θ_1$可以用下面的公式进行迭代**    
+**所以 $$θ_0,θ_1$$ 可以用下面的公式进行迭代**    
 
 $$θ_0 = θ_0 - α \frac{\partial J(θ_0,θ_1) }{\partial θ_0} =   θ_0- α \frac{1}{n}\sum_{i=1}^n(h_θ(x^{(i)}) - y^{(i)} ) $$ 
 
