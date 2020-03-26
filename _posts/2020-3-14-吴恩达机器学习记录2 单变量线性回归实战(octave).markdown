@@ -86,7 +86,7 @@ theta =
 
 ### 3. 化代价函数的可视化
 
-1. 代价函数(cost function)
+#### 1. 代价函数(cost function)
 **参数为theta时候的平局损失情况**
 
 ```java
@@ -95,7 +95,7 @@ function J = costFunctionJ(X,y,theta)
   J = sum((X*theta - y).^2) / (2*m);
 ```
 
-2. 绘制参数为theta0 theta1的可是函数
+#### 2. 绘制参数为theta0 theta1的可视化函数
 
 x轴为theta0，y轴为theta1,z轴为**cost(代价)**
 ```java
