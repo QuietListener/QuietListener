@@ -85,15 +85,17 @@ categories:  机器学习
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200318-logistics-regression1.jpg" width="300"> 
 
-1. 当 y=1的时候，
+## 1. 当 y=1的时候   
+
  $$ z=h_θ(x) $$  越大，越满足预期，cost function 应该越小。    
 例如**1表示是良性肿瘤， $$ h_θ(x) $$  越大，表明预测越准，cost funtion应该越小，因为预测越正确，代价要越小**    
  $$ z=h_θ(x) $$  越小，越不满足预期，cost function 应该越大。
- 所以  $$ y = 1 的时候 cost(h_θ(x), y )   $$  应该是 关于   $$ h_θ(x) $$ 的**递减函数**。 
+ 所以  $$ y = 1 的时候 cost(h_θ(x), y )   $$  应该是 关于   $$ h_θ(x) $$ 的**递减函数**。    
  **$$  cost(h_θ(x), y )  =  -log(h_θ(x)) 是满足条件的 $$**
 
 
-2. 当 y=0 的时候 表示分为负类
+## 2. 当 y=0 的时候 表示分为负类   
+
  $$ z=h_θ(x) $$  越大，越不满足预期，cost function 应该越大。
  $$ z=h_θ(x) $$  越小，越满足预期，cost function 应该越小。
 
