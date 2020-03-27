@@ -12,3 +12,7 @@ categories:  机器学习
 下图中的g是**sigmoid函数**
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network.jpg" width="600"> 
+
+
+# 2.前项传播算法
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network1.jpg" width="600"> 
