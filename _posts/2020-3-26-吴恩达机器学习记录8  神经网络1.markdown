@@ -16,3 +16,5 @@ categories:  机器学习
 
 # 2.前项传播算法
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network1.jpg" width="600"> 
+
+如上图:
