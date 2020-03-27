@@ -76,7 +76,7 @@ $$
 
 **这样一层一层的计算下去，最终得到了 输出层的 值。**
 
-#. Cost Function
+# 3.Cost Function
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network2.jpg" width="600">
 
