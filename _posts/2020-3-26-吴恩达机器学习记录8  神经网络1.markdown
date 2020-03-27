@@ -79,3 +79,5 @@ $$
 #. Cost Function
 
 <img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network2.jpg" width="600">
+
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network3.jpg" width="600">
