@@ -15,6 +15,25 @@ categories:  机器学习
 
 
 # 2.前项传播算法
-<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network1.jpg" width="600"> 
+<img src="https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200326-neural-network1.jpg" width="600">
+
+**上图中每一层都有一个 值等于1的元素，如 $$ a^{(1)}_0$$, $$ a^{(2)}_0$$**
+
+**g(z)是sigmoid函数**
+ $$ g(z) = \frac1 { 1+e^{-z}}  $$ 
 
 如上图:
+1. $$a^{(j)}_i 代表 第j层的第i个元素 $$
+2. $$ θ^{(j)}_{mn}$$  表示 **第j层的第n个元素** 到 **j+1层的第m个元素的** 权值
+3. $$ θ^{(j)} $$ 表示 从第j层到第j+层的权重矩阵。$$s_j$$ 和$$s_{j+1}$$表示第j层和第j+1层的元素的个数(不包括那个值等于1的)，  $$ θ^{(j)} $$的维度为 $$ s_{j+1} \times (s_j +1) $$
+
+**例如**   
+
+$$ a^{(2)}_2   = g( θ^{(1)}_{20} x_0  + θ^{(1)}_{21} x_1 + θ^{(1)}_{22} x_2 + θ^{(1)}_{23} x_3 )   $$    
+
+
+$$θ^{(1)}_{21}x_2$$ 表示从**第1层的第1个元素**到**第2层的第2个元素** 的权值 .
+
+图中其实用向量可以表示为
+
+$
