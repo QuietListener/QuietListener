@@ -35,6 +35,11 @@ proxy_set_header Connection "" 必须设置，因为客户端可能会发送一�
 >   # keepalive – The number of idle keepalive connections to an upstream server that remain open for each worker process. There is no default value. 
 就是保持的最大空闲长链接数目
 
+3. proxy_read_timeout 2s
+proxy_read_timeout 参数， 该指令是指从上游服务器两次成功的读操作耗时的超时时间，也就意味着从上游服务器成功读操作后，过了2S,没有再从上游服务器成功读操作的话，就会关闭该连接。
+
+>Defines a timeout for reading a response from the proxied server. The timeout is set only between two successive read operations, not for the transmission of the whole response. If the proxied server does not transmit anything within this time, the connection is closed.
+
 ### 服务器失败
 >server 10.1.x.xx:1101 weight=2 fail_timeout=10s max_fails=100;   
 在10秒内连接失败大于或者等于100次，nginx就不再将请求分发到这个服务器了。
