@@ -29,7 +29,7 @@ HsHa = Half Sync/Half Async ，我自己理解为read，write，accept这些是�
 
 ### 3. TThreadedSelectorServer 
 使用非阻塞io, 一个selector在AcceptThread线程中处理accept事件，然后多个SelectorThread线程(每个线程一个selector,名字叫)处理read/write事件，业务逻辑放入到一个线程池处理(WorkerThread)。
-这样更好的利用了多核cpu的能力，获取更好的并发性,也是百词斩线上使用的Server。
+这样更好的利用了多核cpu的能力，获取更好的并发性,也是线上使用的Server。
 
 
 # 3. 这几个server的继承关系如下图
