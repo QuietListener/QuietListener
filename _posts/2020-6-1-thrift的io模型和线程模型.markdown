@@ -13,27 +13,26 @@ categories:  java maven
 这里总结一下thrift的io模型和线程模型，这里用io来划分，分为NIO和BIO两部分
 
 ## 1. BIO（阻塞io）
-1. TSimpleServer 
+### 1. TSimpleServer 
 读写使用阻塞io，accept/read/write和业务逻辑都在一个线程里完成。多用来测试
 
-2. TThreadPoolServer 
+### 2. TThreadPoolServer 
 读写使用阻塞io，accept在一个单独线程，每建立一个链接，将所有的read/write 和业务逻辑放到一个线程池处理。
 
 ## 2. NIO
-1. TNonblockingServer 
+### 1. TNonblockingServer 
 使用非阻塞io, 单个selector， select/accept/read/write和业务逻辑都在一个线程中处理。
 
-2. THsHaServer 
+### 2. THsHaServer 
 使用非阻塞io, 单个selector， select/accept/read/write在一个线程，业务逻辑放入到一个线程池处理。
 HsHa = Half Sync/Half Async ，我自己理解为read，write，accept这些是同步，业务处理是异步，所以是半同步半异步。
 
-3. TThreadedSelectorServer 
+### 3. TThreadedSelectorServer 
 使用非阻塞io, 一个selector在AcceptThread线程中处理accept事件，然后多个SelectorThread线程(每个线程一个selector,名字叫)处理read/write事件，业务逻辑放入到一个线程池处理(WorkerThread)。
 这样更好的利用了多核cpu的能力，获取更好的并发性,也是百词斩线上使用的Server。
 
 
 # 3. 这几个server的继承关系如下图
-
-![thrift]](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-06-01-thrift-io-thread.jpg)
+![thrift](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-06-01-thrift-io-thread.jpg)
 
 	
