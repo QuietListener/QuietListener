@@ -39,10 +39,10 @@ sql解析，分析，优化； 缓存；内置函数；存储过程，触发器�
 一个事务中所做的修改，即使还没有commit，对其他事务也是可见的。这叫脏读。
 
 #### 2. READ COMMITTED;
- 一个事务所做的修改(update)，只有commit，才对其他事务可见。但是对于”其他事务”，可能两次查询得到不一样的结果。 这叫“**不可重复读**”问题
+ 一个事务所做的修改(update)，只有commit，才对其他事务可见。但是对于”其他事务”，可能两次查询同一条记录得到不一样的结果。 这叫“**不可重复读**”问题
 
 #### 3. repeatable read 可重复读
-Repeatable read 解决了“不可重复读”问题，在一个事务中，但是可能导致幻读问题。幻读问题是，当某个事务在读取某个范围内的记录时候，另一个事务又在该范围内插入了新行，之前的事务再次读取这个范围内的记录时候，会产生**幻行**。但是InnoDB和XtraDB使用MVCC解决了这个问题。
+Repeatable read 解决了“不可重复读”问题，但是可能导致幻读问题。幻读问题是，当某个事务在读取**某个范围内**的记录时候，另一个事务又在该范围内插入了新行，之前的事务再次读取这个范围内的记录时候，得到不一样的行数，会产生**幻行**。但是InnoDB和XtraDB使用MVCC解决了这个问题。
 
 #### 4.serializable 串行化
 解决所有问题，但是并发非常不友好
@@ -65,11 +65,11 @@ b. 查找 **删除版本号** 要么没有定义，要么大于**当前事务版
 ##### 3. delete操作  
 为删除行的 **删除本号**设置为 **当前事务版本号**
 ##### 4. update操作   
-插入一个新行，将**创建版本号**设置为**当前事务版本号**，设置原来行的**删除版本号**为 **当前事务版本号**
+插入一个新行，将**创建版本号**设置为**当前事务版本号**，设置原来行的**删除版本号**为 **当前事务版本号**    
 
 ***innodb的MVCC实现大多数读都不用加锁，性能好。但是要牺牲存储空间,毕竟多了两个隐藏列。***
 
-
+注意**快照读**和**当前读** https://juejin.im/post/5c9040e95188252d92095a9e
 
 
 ## 2. 索引
@@ -358,3 +358,193 @@ InnoDB只有在访问行的时候才会对行加锁，所以多使用索引，�
 select * from XXX inner join (select id from XXX where sex="1" order by rating desc limit 10000，10) as x using(id)
 ```
  5. optimize table 消除碎片
+
+
+
+
+1. 配置文件
+mysql启动时候会去/etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf ~/.my.cnf  这些地方找配置文件，如果有多个文件存在以最后一个读到的文件参数为准
+```shell
+$ mysql --help | grep my.cnf   
+                      order of preference, my.cnf, $MYSQL_TCP_PORT,
+/etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf ~/.my.cnf 
+```
+2. datadir指定数据库所在路径
+```shell
+mysql> show variables like 'datadir';
++---------------+------------------------+
+| Variable_name | Value                  |
++---------------+------------------------+
+| datadir       | /usr/local/mysql/data/ |
++---------------+------------------------+
+1 row in set (0.02 sec)
+
+```
+
+
+
+mysql的体系结构:
+1. mysql的线程模型是**单进程多线程的**
+2. mysql是分层的
+3. mysql的存储引擎采用的是插件式的。
+
+![mysql-architect](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-06-03-mysql-archtec.jpg)
+
+
+**在 repeatable-read innodb使用 next-key locking的策略来避免幻读。**
+
+
+mysql 支持的存储引擎
+```shell
+mysql> show engines;
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+| Engine             | Support | Comment                                                        | Transactions | XA   | Savepoints |
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+| InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES        |
+| MRG_MYISAM         | YES     | Collection of identical MyISAM tables                          | NO           | NO   | NO         |
+| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables      | NO           | NO   | NO         |
+| BLACKHOLE          | YES     | /dev/null storage engine (anything you write to it disappears) | NO           | NO   | NO         |
+| MyISAM             | YES     | MyISAM storage engine                                          | NO           | NO   | NO         |
+| CSV                | YES     | CSV storage engine                                             | NO           | NO   | NO         |
+| ARCHIVE            | YES     | Archive storage engine                                         | NO           | NO   | NO         |
+| PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
+| FEDERATED          | NO      | Federated MySQL storage engine                                 | NULL         | NULL | NULL       |
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+
+```
+
+
+
+1. InnoDb的架构
+innodb有很多内存块，有很多后台线程来同步内存块与磁盘文件(将修改过的刷回磁盘)，保证缓冲池中的数据是最新数据。
+![innodb-architect](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-06-03-innodb-architec.jpg)
+
+2. innodb是采用多线程模式 
+可以看到下面io线程有四类: insert buffer thread, log thread ,read thread 和 write thead；
+```
+mysql> show engine innodb status \G;
+*************************** 1. row ***************************
+  Type: InnoDB
+  Name: 
+Status: 
+=====================================
+2020-06-03 11:06:54 0x70000ce64000 INNODB MONITOR OUTPUT
+=====================================
+Per second averages calculated from the last 3 seconds
+-----------------
+BACKGROUND THREAD
+-----------------
+srv_master_thread loops: 588 srv_active, 0 srv_shutdown, 909653 srv_idle
+srv_master_thread log flush and writes: 902000
+----------
+SEMAPHORES
+----------
+OS WAIT ARRAY INFO: reservation count 1535
+OS WAIT ARRAY INFO: signal count 1372
+RW-shared spins 0, rounds 1400, OS waits 555
+RW-excl spins 0, rounds 9244, OS waits 161
+RW-sx spins 112, rounds 2974, OS waits 57
+Spin rounds per wait: 1400.00 RW-shared, 9244.00 RW-excl, 26.55 RW-sx
+------------
+TRANSACTIONS
+------------
+Trx id counter 23009695
+Purge done for trx's n:o < 23009689 undo n:o < 0 state: running but idle
+History list length 56
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 281479524492624, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 281479524489912, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 281479524489008, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 281479524490816, not started
+0 lock struct(s), heap size 1136, 0 row lock(s)
+---TRANSACTION 23009692, ACTIVE 3917 sec
+2 lock struct(s), heap size 1136, 2 row lock(s)
+MySQL thread id 348, OS thread handle 123145519284224, query id 73589 localhost root
+Trx read view will not see trx with id >= 23009687, sees < 23009687
+--------
+FILE I/O
+--------
+I/O thread 0 state: waiting for i/o request (insert buffer thread)
+I/O thread 1 state: waiting for i/o request (log thread)
+I/O thread 2 state: waiting for i/o request (read thread)
+I/O thread 3 state: waiting for i/o request (read thread)
+I/O thread 4 state: waiting for i/o request (read thread)
+I/O thread 5 state: waiting for i/o request (read thread)
+I/O thread 6 state: waiting for i/o request (write thread)
+I/O thread 7 state: waiting for i/o request (write thread)
+I/O thread 8 state: waiting for i/o request (write thread)
+I/O thread 9 state: waiting for i/o request (write thread)
+Pending normal aio reads: [0, 0, 0, 0] , aio writes: [0, 0, 0, 0] ,
+ ibuf aio reads:, log i/o's:, sync i/o's:
+Pending flushes (fsync) log: 0; buffer pool: 0
+3143 OS file reads, 15089 OS file writes, 4379 OS fsyncs
+0.00 reads/s, 0 avg bytes/read, 0.00 writes/s, 0.00 fsyncs/s
+-------------------------------------
+INSERT BUFFER AND ADAPTIVE HASH INDEX
+-------------------------------------
+Ibuf: size 1, free list len 450, seg size 452, 9 merges
+merged operations:
+ insert 0, delete mark 0, delete 0
+discarded operations:
+ insert 0, delete mark 0, delete 0
+Hash table size 34673, node heap has 9 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 2 buffer(s)
+Hash table size 34673, node heap has 2 buffer(s)
+Hash table size 34673, node heap has 3 buffer(s)
+Hash table size 34673, node heap has 1 buffer(s)
+Hash table size 34673, node heap has 2 buffer(s)
+Hash table size 34673, node heap has 8 buffer(s)
+0.00 hash searches/s, 0.00 non-hash searches/s
+---
+LOG
+---
+Log sequence number 23525560123
+Log flushed up to   23525560123
+Pages flushed up to 23525560123
+Last checkpoint at  23525560114
+0 pending log flushes, 0 pending chkp writes
+2096 log i/o's done, 0.00 log i/o's/second
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total large memory allocated 137428992
+Dictionary memory allocated 7905957
+Buffer pool size   8191
+Free buffers       1589
+Database pages     6574
+Old database pages 2428
+Modified db pages  0
+Pending reads      0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages made young 480, not young 1034
+0.00 youngs/s, 0.00 non-youngs/s
+Pages read 2279, created 4827, written 11466
+0.00 reads/s, 0.00 creates/s, 0.00 writes/s
+No buffer pool page gets since the last printout
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
+LRU len: 6574, unzip_LRU len: 0
+I/O sum[0]:cur[0], unzip sum[0]:cur[0]
+--------------
+ROW OPERATIONS
+--------------
+0 queries inside InnoDB, 0 queries in queue
+1 read views open inside InnoDB
+Process ID=8078, Main thread ID=123145511948288, state: sleeping
+Number of rows inserted 513493, updated 141, deleted 28, read 4294173
+0.00 inserts/s, 0.00 updates/s, 0.00 deletes/s, 0.00 reads/s
+----------------------------
+END OF INNODB MONITOR OUTPUT
+============================
+
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+```
