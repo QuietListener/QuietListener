@@ -631,11 +631,106 @@ I/O sum[0]:cur[0], unzip sum[0]:cur[0]
 1. 朴素的LRU算法。
 最频繁使用的页在LRU列表的最前端，最少使用的页在LRU列表的最尾端。当缓冲池不能存放新页的时候，淘汰最尾端的页。
 2. innodb改进的LRU算法。
-innodb读到的一个新页并不是放到LRU队列的最前端，而是放到LRU长度的5/8处，这个位置叫midpoint。
+innodb读到的一个新页并不是放到LRU队列的最前端，而是放到LRU长度的37%处，这个位置叫midpoint。
 innodb把midpoint之后的列表成为old列表(最不活跃，老了吧)，把midpont之前的列表称为new列表(最活跃，新生事物)，new表里是最热的数据。
 
 ![innodb-architect](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-6-4-innodb-lru.jpg)
 
+可以使用innodb_old_blocks_pct来重新设置这个参数。
+```sql
+mysql> show variables like "innodb_old_blocks_pct";
++-----------------------+-------+
+| Variable_name         | Value |
++-----------------------+-------+
+| innodb_old_blocks_pct | 37    |
++-----------------------+-------+
+1 row in set (0.01 sec)
+
+```
 
 3. 为什么要使用这种midpont改进过LRU算法呢?
  如果直接将读取到的页放入LRU列表首部，那一些Sql操作可能是缓冲池的页被淘汰，比如一个慢查询扫描了100万行数据，这些数据所在的页只在这个偶尔出现的慢查询中需要，并不是热点数据。放在首部的话，可能将真正的热点数据淘汰，下一次又要去磁盘读取，降低了效率。
+
+ 为了减少上面的情况发生，innodb还加入了一个参数 innodb_old_blocks_time 来控制一个页读取到midpoint位置后还需要等多久才能够放到LRU列表的热端。
+ ```sql
+ mysql> show variables like "innodb_old_blocks_time";
++------------------------+-------+
+| Variable_name          | Value |
++------------------------+-------+
+| innodb_old_blocks_time | 1000  |
++------------------------+-------+
+1 row in set (0.02 sec)
+ ```
+
+ 4. Free List和LRU List
+ mysql刚启动的时候LRU list是空的，页都存放在Free List中，当需要从缓冲池中分配新的页的时候，Innodb先看看Free List中找，如果有，将页从Free List中删除，添加到LRU List中，如果Free List中也没有空闲页，就会淘汰LRU list尾端的页。当页从old部分移动到new部分时候,此时的发生的操作叫做，page make young,因为innodb_old_blocks_time使得页没有从old部分移动到new部分操作叫做page not made young。   
+
+使用 show engine innodb status 查看：
+```sql
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total memory allocated 6609174528; in additional pool allocated 0
+Dictionary memory allocated 1400366
+Buffer pool size   393216  # 缓存词中，总共有393216多个页
+Free buffers       8191   #Free List的数据
+Database pages     384820  # 表示LRU List中的数量
+Old database pages 141889
+Modified db pages  80
+Pending reads 0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages made young 243955242, not young 0    # page make young 表示 LRU列表中将页移动到前端的数量
+14.92 youngs/s, 0.00 non-youngs/s   # page made young 和 not young的每秒次数
+Pages read 195807626, created 1410314, written 3981183279
+15.24 reads/s, 0.00 creates/s, 260.15 writes/s
+Buffer pool hit rate 998 / 1000, young-making rate 2 / 1000 not 0 / 1000 # 缓存命中率，重要指标
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
+LRU len: 384820, unzip_LRU len: 0
+I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
+```
+**一个重要的指标: Buffer pool hit rate 998 / 1000** 表示缓冲池的命中率，一般要高于95%，当前值是99.8%。当小于95%的时候就要查一下是不是有全表烧苗污染了LRU列表了。
+
+Innodb1.2之后也可以直接从information_schema中查出来：
+```sql
+mysql> select * from information_schema.INNODB_BUFFER_POOL_STATS \G;
+*************************** 1. row ***************************
+                         POOL_ID: 0
+                       POOL_SIZE: 8191
+                    FREE_BUFFERS: 1534
+                  DATABASE_PAGES: 6629
+              OLD_DATABASE_PAGES: 2427
+         MODIFIED_DATABASE_PAGES: 0
+              PENDING_DECOMPRESS: 0
+                   PENDING_READS: 0
+               PENDING_FLUSH_LRU: 0
+              PENDING_FLUSH_LIST: 0
+                PAGES_MADE_YOUNG: 483
+            PAGES_NOT_MADE_YOUNG: 1034
+           PAGES_MADE_YOUNG_RATE: 0
+       PAGES_MADE_NOT_YOUNG_RATE: 0
+               NUMBER_PAGES_READ: 2279
+            NUMBER_PAGES_CREATED: 4882
+            NUMBER_PAGES_WRITTEN: 11545
+                 PAGES_READ_RATE: 0
+               PAGES_CREATE_RATE: 0
+              PAGES_WRITTEN_RATE: 0
+                NUMBER_PAGES_GET: 5896353
+                        HIT_RATE: 0
+    YOUNG_MAKE_PER_THOUSAND_GETS: 0
+NOT_YOUNG_MAKE_PER_THOUSAND_GETS: 0
+         NUMBER_PAGES_READ_AHEAD: 319
+       NUMBER_READ_AHEAD_EVICTED: 0
+                 READ_AHEAD_RATE: 0
+         READ_AHEAD_EVICTED_RATE: 0
+                    LRU_IO_TOTAL: 0
+                  LRU_IO_CURRENT: 0
+                UNCOMPRESS_TOTAL: 0
+              UNCOMPRESS_CURRENT: 0
+1 row in set (0.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+```
