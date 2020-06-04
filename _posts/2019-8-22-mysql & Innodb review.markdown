@@ -362,14 +362,31 @@ select * from XXX inner join (select id from XXX where sex="1" order by rating d
 
 
 
-1. 配置文件
+
+
+
+# Innodb概述:
+## 1. innodb特点:
+1. 完整支持ACID事务
+2. 实现了四种隔离级别
+3. 行锁设计，通过mvcc来获得高并发(一致性的非锁定读，读的时候不用加锁)。
+4. 在隔离级别为Repeatable Read，使用next-key locking的策略来避免幻读。
+5. 存储引擎使用 插入缓冲(inser buffer),二次写(double write),自适应哈希索引(adaptive hash index),预读(read ahead)等高性能高可用功能。
+6. 使用聚集(clustered)的方式，来存放每张表的数据，所以每张表的数据都是按主键顺序存放，没有主键的表也会默认为生成一个6字节的rowId作为主键。
+
+
+
+
+## 2.mysql一些信息
+
+### 1. 配置文件
 mysql启动时候会去/etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf ~/.my.cnf  这些地方找配置文件，如果有多个文件存在以最后一个读到的文件参数为准
 ```shell
 $ mysql --help | grep my.cnf   
                       order of preference, my.cnf, $MYSQL_TCP_PORT,
 /etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf ~/.my.cnf 
 ```
-2. datadir指定数据库所在路径
+### 2. datadir指定数据库所在路径
 ```shell
 mysql> show variables like 'datadir';
 +---------------+------------------------+
@@ -383,7 +400,7 @@ mysql> show variables like 'datadir';
 
 
 
-mysql的体系结构:
+### 3.  mysql的体系结构:
 1. mysql的线程模型是**单进程多线程的**
 2. mysql是分层的
 3. mysql的存储引擎采用的是插件式的。
@@ -413,14 +430,62 @@ mysql> show engines;
 
 ```
 
+### 4. 使用套接字链接mysql
+```shell
+mysql> show variables like 'socket';
++---------------+-----------------+
+| Variable_name | Value           |
++---------------+-----------------+
+| socket        | /tmp/mysql.sock |
++---------------+-----------------+
+1 row in set (0.14 sec)
+
+mysql> 
+
+```
+
+可以直接使用套接字链接mysql
+```shell
+➜  Documents mysql -uroot -p -S /tmp/mysql.sock  
+Enter password: 
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 352
+Server version: 5.7.17 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2016, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> 
+
+```
 
 
-1. InnoDb的架构
-innodb有很多内存块，有很多后台线程来同步内存块与磁盘文件(将修改过的刷回磁盘)，保证缓冲池中的数据是最新数据。
+## 3 . InnoDb的架构
+innodb是采用单进程多线程模式 ，innodb有很多内存块，这些内存块组成了和一个内存池。InnoDb负责以下工作:
+1.维护进程/线程需要访问的多个内部数据结构
+2.缓存磁盘上的数据，方便快速读取，并对在磁盘文件的数据进行修改之前，先在这里修改。
+3.重做日志(redo log)的缓冲
+
+可以把InnoDb分为2部分，一部分是后台线程一部分是内存池
+架构如下:
 ![innodb-architect](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-06-03-innodb-architec.jpg)
 
-2. innodb是采用多线程模式 
-可以看到下面io线程有四类: insert buffer thread, log thread ,read thread 和 write thead；
+### 1. 后台线程
+
+#### 1. **master thread**:
+ 最核心的线程，主要负责缓冲词的数据异步刷新到磁盘，保证数据的一致性，包括脏页的刷新，合并插入缓冲(insert buffer),undo也的回收等。
+####  2. **io线程:** 
+  使用aio来处理写IO请求，IO线程主要处理这些io请求的回调。
+ Io线程包括：insert buffer , log  ,read  和 write 线程,可以使用innodb_read_io_theads 和 innodb_write_io_theads设置read和write线程的数量。
+ 
+
+使用下面命令可以看到各个线程的情况：
+可以看到有4个read和4个write线程。
 ```
 mysql> show engine innodb status \G;
 *************************** 1. row ***************************
@@ -437,33 +502,7 @@ BACKGROUND THREAD
 srv_master_thread loops: 588 srv_active, 0 srv_shutdown, 909653 srv_idle
 srv_master_thread log flush and writes: 902000
 ----------
-SEMAPHORES
-----------
-OS WAIT ARRAY INFO: reservation count 1535
-OS WAIT ARRAY INFO: signal count 1372
-RW-shared spins 0, rounds 1400, OS waits 555
-RW-excl spins 0, rounds 9244, OS waits 161
-RW-sx spins 112, rounds 2974, OS waits 57
-Spin rounds per wait: 1400.00 RW-shared, 9244.00 RW-excl, 26.55 RW-sx
-------------
-TRANSACTIONS
-------------
-Trx id counter 23009695
-Purge done for trx's n:o < 23009689 undo n:o < 0 state: running but idle
-History list length 56
-LIST OF TRANSACTIONS FOR EACH SESSION:
----TRANSACTION 281479524492624, not started
-0 lock struct(s), heap size 1136, 0 row lock(s)
----TRANSACTION 281479524489912, not started
-0 lock struct(s), heap size 1136, 0 row lock(s)
----TRANSACTION 281479524489008, not started
-0 lock struct(s), heap size 1136, 0 row lock(s)
----TRANSACTION 281479524490816, not started
-0 lock struct(s), heap size 1136, 0 row lock(s)
----TRANSACTION 23009692, ACTIVE 3917 sec
-2 lock struct(s), heap size 1136, 2 row lock(s)
-MySQL thread id 348, OS thread handle 123145519284224, query id 73589 localhost root
-Trx read view will not see trx with id >= 23009687, sees < 23009687
+....
 --------
 FILE I/O
 --------
@@ -482,68 +521,62 @@ Pending normal aio reads: [0, 0, 0, 0] , aio writes: [0, 0, 0, 0] ,
 Pending flushes (fsync) log: 0; buffer pool: 0
 3143 OS file reads, 15089 OS file writes, 4379 OS fsyncs
 0.00 reads/s, 0 avg bytes/read, 0.00 writes/s, 0.00 fsyncs/s
--------------------------------------
-INSERT BUFFER AND ADAPTIVE HASH INDEX
--------------------------------------
-Ibuf: size 1, free list len 450, seg size 452, 9 merges
-merged operations:
- insert 0, delete mark 0, delete 0
-discarded operations:
- insert 0, delete mark 0, delete 0
-Hash table size 34673, node heap has 9 buffer(s)
-Hash table size 34673, node heap has 1 buffer(s)
-Hash table size 34673, node heap has 2 buffer(s)
-Hash table size 34673, node heap has 2 buffer(s)
-Hash table size 34673, node heap has 3 buffer(s)
-Hash table size 34673, node heap has 1 buffer(s)
-Hash table size 34673, node heap has 2 buffer(s)
-Hash table size 34673, node heap has 8 buffer(s)
-0.00 hash searches/s, 0.00 non-hash searches/s
----
-LOG
----
-Log sequence number 23525560123
-Log flushed up to   23525560123
-Pages flushed up to 23525560123
-Last checkpoint at  23525560114
-0 pending log flushes, 0 pending chkp writes
-2096 log i/o's done, 0.00 log i/o's/second
-----------------------
-BUFFER POOL AND MEMORY
-----------------------
-Total large memory allocated 137428992
-Dictionary memory allocated 7905957
-Buffer pool size   8191
-Free buffers       1589
-Database pages     6574
-Old database pages 2428
-Modified db pages  0
-Pending reads      0
-Pending writes: LRU 0, flush list 0, single page 0
-Pages made young 480, not young 1034
-0.00 youngs/s, 0.00 non-youngs/s
-Pages read 2279, created 4827, written 11466
-0.00 reads/s, 0.00 creates/s, 0.00 writes/s
-No buffer pool page gets since the last printout
-Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
-LRU len: 6574, unzip_LRU len: 0
-I/O sum[0]:cur[0], unzip sum[0]:cur[0]
---------------
-ROW OPERATIONS
---------------
-0 queries inside InnoDB, 0 queries in queue
-1 read views open inside InnoDB
-Process ID=8078, Main thread ID=123145511948288, state: sleeping
-Number of rows inserted 513493, updated 141, deleted 28, read 4294173
-0.00 inserts/s, 0.00 updates/s, 0.00 deletes/s, 0.00 reads/s
+....
 ----------------------------
 END OF INNODB MONITOR OUTPUT
 ============================
 
+```
+
+#### 3. purege 线程 
+>purge：[pɜːdʒ] v.清除  
+
+事务提交后，使用的undo log可能不在需要，需要purge 线程来回收已经使用并分配的undo页。 purge操作在老版本的innodb中是在master线程中执行的。
+  
+  下面的例子我们可以看到有**4个**purge线程。
+ ```
+ mysql> select version() \G;
+*************************** 1. row ***************************
+version(): 5.7.17
 1 row in set (0.00 sec)
 
 ERROR: 
 No query specified
+
+mysql> show variables like "%purge_thread%";
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| innodb_purge_threads | 4     |
++----------------------+-------+
+1 row in set (0.01 sec)
+ ``` 
+
+#### 4. page cleaner 线程
+将老版本的胀页刷新也放到一个线程来做。
+mysql> show variables like "%page_clean%";
++----------------------+-------+
+| Variable_name        | Value |
++----------------------+-------+
+| innodb_page_cleaners | 1     |
++----------------------+-------+
+1 row in set (0.01 sec)
+
+
+## 2.内存
+### 1. 缓冲池
+1. 为什么要有缓冲池?
+innodb是基于磁盘的存储引擎(有基于内存的引擎)。磁盘的io速度与cpu速度天生就是一个鸿沟。 需要缓冲池来提升读写性能。
+innodb在磁盘上的数据是按照**页**来组织的。 在数据库中读取某个也的时候，先将读到的页放入缓冲池中，下一次在读到相同页的时候，直接读取缓冲池的页。 对数据页的修改时候，先修改缓冲池中的页，在以一定的频率刷新到磁盘上。
+**缓冲池的大小直接决定了数据库的整体性能**
+```shell
+mysql> show variables like "%buffer_pool_size%";
++-------------------------+-----------+
+| Variable_name           | Value     |
++-------------------------+-----------+
+| innodb_buffer_pool_size | 134217728 |
++-------------------------+-----------+
+1 row in set (0.01 sec)
 
 mysql> 
 
