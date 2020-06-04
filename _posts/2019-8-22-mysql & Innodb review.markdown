@@ -748,7 +748,8 @@ I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
 
 ......
 ```
-Innodb使用**伙伴算法**来分配压缩页:
+Innodb使用**伙伴算法**来分配压缩页: 
+伙伴算法可以参考: https://blog.csdn.net/csdn_kou/article/details/82355452
 例如要申请4KB的页,过程如下
 1: 检查unzip_LRU 列表是有有可用的空闲页
 2: 如果有直接使用
