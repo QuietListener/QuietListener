@@ -564,8 +564,8 @@ mysql> show variables like "%page_clean%";
 
 
 ## 2.内存
-### 1. 缓冲池
-1. 为什么要有缓冲池?
+### 1. 缓冲池(buffer pool)
+#### 1. 为什么要有缓冲池?
 innodb是基于磁盘的存储引擎(有基于内存的引擎)。磁盘的io速度与cpu速度天生就是一个鸿沟。 需要缓冲池来提升读写性能。
 innodb在磁盘上的数据是按照**页**来组织的。 在数据库中读取某个也的时候，先将读到的页放入缓冲池中，下一次在读到相同页的时候，直接读取缓冲池的页。 对数据页的修改时候，先修改缓冲池中的页，在以一定的频率刷新到磁盘上。
 **缓冲池的大小直接决定了数据库的整体性能**
@@ -581,3 +581,61 @@ mysql> show variables like "%buffer_pool_size%";
 mysql> 
 
 ```
+
+#### 2. 内存池中用存了什么东动？
+1. 数据页(date page) , 索引页(index page) 这两个占了缓冲池绝大部分空间。
+2. 插入缓冲(insert buffer),自适应哈希索引(adaptive hash index),锁信息(lock info),数据字典信息(data dictionary).
+**可以有多个内存池来减少资源竞争，增加并发。**
+mysql> show variables like "%buffer_pool_instances%";
++------------------------------+-------+
+| Variable_name                | Value |
++------------------------------+-------+
+| innodb_buffer_pool_instances | 1     |
++------------------------------+-------+
+1 row in set (0.07 sec)
+
+
+**查看缓冲池的状态**
+```shell
+
+mysql> show engine innodb status \G;
+*************************** 1. row ***************************
+  Type: InnoDB
+  Name: 
+Status: 
+....
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total large memory allocated 137428992
+Dictionary memory allocated 7905957
+Buffer pool size   8191
+Free buffers       1589
+Database pages     6574
+Old database pages 2428
+Modified db pages  0
+Pending reads      0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages made young 480, not young 1034
+0.00 youngs/s, 0.00 non-youngs/s
+Pages read 2279, created 4827, written 11466
+0.00 reads/s, 0.00 creates/s, 0.00 writes/s
+No buffer pool page gets since the last printout
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
+LRU len: 6574, unzip_LRU len: 0
+I/O sum[0]:cur[0], unzip sum[0]:cur[0]
+
+```
+
+#### 3. 使用LRU算法管理缓冲池
+1. 朴素的LRU算法。
+最频繁使用的页在LRU列表的最前端，最少使用的页在LRU列表的最尾端。当缓冲池不能存放新页的时候，淘汰最尾端的页。
+2. innodb改进的LRU算法。
+innodb读到的一个新页并不是放到LRU队列的最前端，而是放到LRU长度的5/8处，这个位置叫midpoint。
+innodb把midpoint之后的列表成为old列表(最不活跃，老了吧)，把midpont之前的列表称为new列表(最活跃，新生事物)，new表里是最热的数据。
+
+![innodb-architect](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-6-4-innodb-lru.jpg)
+
+
+3. 为什么要使用这种midpont改进过LRU算法呢?
+ 如果直接将读取到的页放入LRU列表首部，那一些Sql操作可能是缓冲池的页被淘汰，比如一个慢查询扫描了100万行数据，这些数据所在的页只在这个偶尔出现的慢查询中需要，并不是热点数据。放在首部的话，可能将真正的热点数据淘汰，下一次又要去磁盘读取，降低了效率。
