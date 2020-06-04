@@ -734,3 +734,35 @@ No query specified
 mysql> 
 
 ```
+
+
+4. 压缩页
+1.0.x之后支持压缩也，页的大小可以为1KB，2KB，4KB,8KB. 非16KB的页由unzip_LRU 列表来单独管理,比如有8KB，4KB，2KB的unzip_LRU 列表。
+例如 show engine innodb status ; 可以看到
+```sql
+......
+
+Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
+LRU len: 384820, unzip_LRU len: 0
+I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
+
+......
+```
+Innodb使用**伙伴算法**来分配压缩页:
+例如要申请4KB的页,过程如下
+1: 检查unzip_LRU 列表是有有可用的空闲页
+2: 如果有直接使用
+3: 否则检查8KB的unzip_LRU列表
+4: 如果有空闲页，将该页分为2个4KB的页，放到4KB的unzip_LRU列表
+5: 如果没有,从LRU列表中申请一个15KB的页，将它分为1个8KB的页，和2个4KB的页，分别放到对应的unzip_LRU列表中。
+
+
+5. Flush List  脏页列表
+当LRU列表中的页被修改后，该页就”脏“了，需要将数据写会磁盘。这时可以通过 Innodb的 checkpoint机制将脏页刷新会磁盘。 **Flush List**就是脏页列表。 注意:脏页即存在于LRU list也存在 Flush list中。
+
+可以使用show engine innodb status 查看脏页数量。
+```sql
+Old database pages 141889
+Modified db pages  80 # Flush List中脏页数量
+Pending reads 0
+```
