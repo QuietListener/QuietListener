@@ -838,3 +838,33 @@ mysql> show variables like "%dirty_pages_pct";
 
 
      
+### 3. Innodb关键特性
+#### 1. 插入缓冲(Insert Buffer)
+##### 1. Innodb索引是什么样的?
+ 1. innodb使用B+树来实现索引。 
+ 2. 索引分为**聚集索引(Primary Key)**和**辅助索引(Secondary index)**
+ 3. 聚集索引是按照id递增顺序存放在一起放在数据页(挨着放的，像是差不多大的primary key聚集在一起),所以聚集索引的顺序插入和顺序读取都是非常快的(磁盘的随机写入/读取都很慢)。
+ 4. 辅助索引的值并不是数据本身，而是聚集索引(primary key)。所以如果按照辅助索引查找数据，分为两步，1. 通过辅助索引找primay key，2. 通过primary key找到数据。
+
+ ##### 2. 为什么需要Insert Buffer。
+ 当插入一条数据时候，插入聚集索引非常快(顺序插入到一个数据页，有可能数据页还是在Buffer Pool,还是热的)，但是辅助索引不是离散的，很有可能辅助索引所在的页没有在内存，需要从磁盘读入。如果要同时插入会大大影响性能。
+ 比如表
+
+ ```sql
+ create table t (
+   a int auto_increment,
+   b varchar(10),
+   primary key(a),
+   key(b)
+ );
+```   
+
+当插入 insert into t values(NULL, "abc");  主键自增，插入到一个页A中，辅助索引插入到页B中。
+当我们再插入一条 insert into t values(NULL, "12$"); 主键自增，我们有非常大的可能 primary key也会插入到一个页A中,因为是顺序插入，而辅助索引插很可能入到页F中。因为辅助索引不是顺序的( "abc"和”12$“可能中间隔了10000个节点)。
+
+**所以引入insert buffer** 对辅助索引的插入或者更新，不是每次都插入到索引页中，而是先判断插入的非聚集索引页是否在缓冲池中，如果在直接插入，如果没有放入到**insert buffer**。 然后以一定的披绿和情况将insert buffer和辅助索引节点合并，而且可以多个操作合为一个，加快速度。
+
+##### 3. 使用 insert buffer的时机
+1. 索引是辅助索引，  
+2. 索引不是唯一索引。 
+不是唯一索引因为 唯一索引在插入时候要判断索引的唯一性。
