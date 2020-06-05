@@ -582,7 +582,7 @@ mysql>
 
 ```
 
-#### 2. 内存池中用存了什么东动？
+#### 2. 内存池中用存了什么东西？
 1. 数据页(date page) , 索引页(index page) 这两个占了缓冲池绝大部分空间。
 2. 插入缓冲(insert buffer),自适应哈希索引(adaptive hash index),锁信息(lock info),数据字典信息(data dictionary).
 **可以有多个内存池来减少资源竞争，增加并发。**
@@ -594,6 +594,7 @@ mysql> show variables like "%buffer_pool_instances%";
 +------------------------------+-------+
 1 row in set (0.07 sec)
 
+**公司使用阿里云rds，使用了8个内存池。**
 
 **查看缓冲池的状态**
 ```shell
