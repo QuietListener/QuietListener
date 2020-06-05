@@ -810,8 +810,7 @@ mysql>
 a. Master Thread每秒或者每n秒从缓冲池中将脏页列表中刷新一定比例到磁盘。       
 b. Innodb要保证一定比例的空闲页比如(1000个)可供使用，当没有这么多的时候，就需要溢出尾端的页，如果有脏页，就会执行Checkpoint,比如下面表示至少需要1024个空闲页。  
 
-c. 如果重做日志已经满了，不可用，需要强制做checkpoint。   
-  
+
 ```shell
 mysql> show variables like "%scan_depth";
 +-----------------------+-------+
@@ -821,6 +820,9 @@ mysql> show variables like "%scan_depth";
 +-----------------------+-------+
 1 row in set (0.01 sec) 
 ```  
+
+c. 如果重做日志已经满了，不可用，需要强制做checkpoint。  重做日志是固定大小循环使用的。 
+  
 
 d.**Dirty Page Too Much** 
     当脏页太多超过一定比例会强制做checkpoint,让脏页保持在一定比例一下。
