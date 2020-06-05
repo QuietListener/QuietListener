@@ -567,7 +567,7 @@ mysql> show variables like "%page_clean%";
 ### 1. 缓冲池(buffer pool)
 #### 1. 为什么要有缓冲池?
 innodb是基于磁盘的存储引擎(有基于内存的引擎)。磁盘的io速度与cpu速度天生就是一个鸿沟。 需要缓冲池来提升读写性能。
-innodb在磁盘上的数据是按照**页**来组织的。 在数据库中读取某个也的时候，先将读到的页放入缓冲池中，下一次在读到相同页的时候，直接读取缓冲池的页。 对数据页的修改时候，先修改缓冲池中的页，在以一定的频率刷新到磁盘上。
+innodb在磁盘上的数据是按照**页**来组织的。 在数据库中读取某个**页**的时候，先将读到的页放入缓冲池中，下一次在读到相同页的时候，直接读取缓冲池的页。 对数据页的修改时候，先修改缓冲池中的页，在以一定的频率刷新到磁盘上。
 **缓冲池的大小直接决定了数据库的整体性能**
 ```shell
 mysql> show variables like "%buffer_pool_size%";
@@ -582,7 +582,7 @@ mysql>
 
 ```
 
-#### 2. 内存池中用存了什么东西？
+#### 2. 内存池中存了什么东西？
 1. 数据页(date page) , 索引页(index page) 这两个占了缓冲池绝大部分空间。
 2. 插入缓冲(insert buffer),自适应哈希索引(adaptive hash index),锁信息(lock info),数据字典信息(data dictionary).
 **可以有多个内存池来减少资源竞争，增加并发。**
@@ -631,7 +631,7 @@ I/O sum[0]:cur[0], unzip sum[0]:cur[0]
 #### 3. 使用LRU算法管理缓冲池
 1. 朴素的LRU算法。
 最频繁使用的页在LRU列表的最前端，最少使用的页在LRU列表的最尾端。当缓冲池不能存放新页的时候，淘汰最尾端的页。
-2. innodb改进的LRU算法。
+2. innodb使用**改进的LRU算法**。
 innodb读到的一个新页并不是放到LRU队列的最前端，而是放到LRU长度的37%处，这个位置叫midpoint。
 innodb把midpoint之后的列表成为old列表(最不活跃，老了吧)，把midpont之前的列表称为new列表(最活跃，新生事物)，new表里是最热的数据。
 
@@ -650,7 +650,7 @@ mysql> show variables like "innodb_old_blocks_pct";
 ```
 
 3. 为什么要使用这种midpont改进过LRU算法呢?
- 如果直接将读取到的页放入LRU列表首部，那一些Sql操作可能是缓冲池的页被淘汰，比如一个慢查询扫描了100万行数据，这些数据所在的页只在这个偶尔出现的慢查询中需要，并不是热点数据。放在首部的话，可能将真正的热点数据淘汰，下一次又要去磁盘读取，降低了效率。
+ 如果直接将读取到的页放入LRU列表首部，那一些Sql操作可能导致缓冲池的页被淘汰，比如一个慢查询扫描了100万行数据，这些数据所在的页只在这个偶尔出现的慢查询中需要，并不是热点数据。放在首部的话，可能将真正的热点数据淘汰，下一次又要去磁盘读取，降低了效率。
 
  为了减少上面的情况发生，innodb还加入了一个参数 innodb_old_blocks_time 来控制一个页读取到midpoint位置后还需要等多久才能够放到LRU列表的热端。
  ```sql
@@ -663,7 +663,7 @@ mysql> show variables like "innodb_old_blocks_pct";
 1 row in set (0.02 sec)
  ```
 
- 4. Free List和LRU List
+ 4. Free List和LRU List 怎么配合
  mysql刚启动的时候LRU list是空的，页都存放在Free List中，当需要从缓冲池中分配新的页的时候，Innodb先看看Free List中找，如果有，将页从Free List中删除，添加到LRU List中，如果Free List中也没有空闲页，就会淘汰LRU list尾端的页。当页从old部分移动到new部分时候,此时的发生的操作叫做，page make young,因为innodb_old_blocks_time使得页没有从old部分移动到new部分操作叫做page not made young。   
 
 使用 show engine innodb status 查看：
@@ -673,11 +673,11 @@ BUFFER POOL AND MEMORY
 ----------------------
 Total memory allocated 6609174528; in additional pool allocated 0
 Dictionary memory allocated 1400366
-Buffer pool size   393216  # 缓存词中，总共有393216多个页
+Buffer pool size   393216  # 缓存池中，总共有393216个页
 Free buffers       8191   #Free List的数据
 Database pages     384820  # 表示LRU List中的数量
 Old database pages 141889
-Modified db pages  80
+Modified db pages  80 #脏页
 Pending reads 0
 Pending writes: LRU 0, flush list 0, single page 0
 Pages made young 243955242, not young 0    # page make young 表示 LRU列表中将页移动到前端的数量
@@ -689,7 +689,7 @@ Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
 LRU len: 384820, unzip_LRU len: 0
 I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
 ```
-**一个重要的指标: Buffer pool hit rate 998 / 1000** 表示缓冲池的命中率，一般要高于95%，当前值是99.8%。当小于95%的时候就要查一下是不是有全表烧苗污染了LRU列表了。
+**一个重要的指标: Buffer pool hit rate 998 / 1000** 表示缓冲池的命中率，一般要高于95%，当前值是99.8%。当小于95%的时候就要查一下是不是有全表扫描污染了LRU列表了。
 
 Innodb1.2之后也可以直接从information_schema中查出来：
 ```sql
@@ -748,19 +748,22 @@ LRU len: 384820, unzip_LRU len: 0
 I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
 
 ......
+
 ```
 Innodb使用**伙伴算法**来分配压缩页: 
-伙伴算法可以参考: https://blog.csdn.net/csdn_kou/article/details/82355452
+**伙伴算法可以参考**: https://blog.csdn.net/csdn_kou/article/details/82355452
+
 例如要申请4KB的页,过程如下
 1: 检查unzip_LRU 列表是有有可用的空闲页
 2: 如果有直接使用
 3: 否则检查8KB的unzip_LRU列表
 4: 如果有空闲页，将该页分为2个4KB的页，放到4KB的unzip_LRU列表
-5: 如果没有,从LRU列表中申请一个15KB的页，将它分为1个8KB的页，和2个4KB的页，分别放到对应的unzip_LRU列表中。
+5: 如果没有,从LRU列表中申请一个15KB的页，将它分为1个8KB的页，和2个4KB的页，分别放到对应的unzip_LRU列表中。  
+
 
 
 5. Flush List  脏页列表
-当LRU列表中的页被修改后，该页就”脏“了，需要将数据写会磁盘。这时可以通过 Innodb的 checkpoint机制将脏页刷新会磁盘。 **Flush List**就是脏页列表。 注意:脏页即存在于LRU list也存在 Flush list中。
+当LRU列表中的页被修改后，该页就”脏“了，需要将数据写会磁盘。这时可以通过 Innodb的 checkpoint机制将脏页刷新会磁盘。 **Flush List**就是脏页列表。 注意:脏页既存在于LRU list也存在 Flush list中。
 
 可以使用show engine innodb status 查看脏页数量。
 ```sql
@@ -768,3 +771,29 @@ Old database pages 141889
 Modified db pages  80 # Flush List中脏页数量
 Pending reads 0
 ```
+
+### 2. 重做日志缓冲(redo log buffer)
+Innodb先将重做日志信息放入到这个缓冲区，然后定时刷新到重做日子文件。 一遍不用太大，默认8M，可以由innodb_log_buffer_size控制大小。
+```shell
+mysql> show variables like "innodb_log_buffer_size";
++------------------------+----------+
+| Variable_name          | Value    |
++------------------------+----------+
+| innodb_log_buffer_size | 16777216 |
++------------------------+----------+
+1 row in set (0.10 sec)
+mysql> 
+```
+
+刷新重做日志到磁盘日子文件的时机:
+1. Master Thread 每秒做一次。
+2. 每个事务提交后会做一次。
+3. 重做日志缓冲区大小小于1/2时候，做一次。
+
+### 3. 额外内存池
+
+### 4. Checkpoint技术
+
+#### 1. 为什么要要有redo log?
+1. 当执行update/delete改变了**页**中的记录，**页**就变成了**脏**页，需要将缓冲池中的**脏页**刷新到磁盘~
+2. 如果有脏页就刷新到磁盘，开销会非常慢~，如果在从缓冲池刷新到磁盘时候宕机，数据就丢失了，不能恢复。为了解决这个问题，防止丢失数据，现在的引擎一般都采用 **Write Ahead Log** 的策略，***当事务提交时候，先写重做日志，再修改页***,当发生宕机的时候可以用重做日志恢复数据~。
