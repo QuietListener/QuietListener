@@ -896,10 +896,8 @@ mysql> show variables like "%dirty_pages_pct";
 使用:
 **show GLOBAL  status like "%dblwr%"** 查看状态线上库
 
-```
-Innodb_dblwr_page_number
-4521032878
-Innodb_dblwr_writes
-211745660
+```java
+Innodb_dblwr_page_number: 4521032878
+Innodb_dblwr_writes:   211745660
 ```
 4521032878/211745660 = 21 说明服务器比较忙
