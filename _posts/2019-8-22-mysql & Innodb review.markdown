@@ -901,3 +901,41 @@ Innodb_dblwr_page_number: 4521032878
 Innodb_dblwr_writes:   211745660
 ```
 4521032878/211745660 = 21 说明服务器比较忙
+
+
+#### 3. 自适应哈希AHI(adaptive hash index)
+innodb默认使用B+树来索引，一般需要查3到4次才能查到数据，hash基本是1次就能查到，如果频繁查询某个热点数据，innod不会建立hash索引，加快速度。
+
+自适应哈希只能 在 等值查询才能使用，范围查询不能用。
+比如: WHERE a=xxx and b=xxx。
+```shell
+-------------------------------------
+INSERT BUFFER AND ADAPTIVE HASH INDEX
+-------------------------------------
+Ibuf: size 1, free list len 11723, seg size 11725, 18697212 merges
+merged operations:
+ insert 18553004, delete mark 4516929, delete 4326944
+discarded operations:
+ insert 0, delete mark 0, delete 0
+AHI PARTITION 1: Hash table size 1593833, node heap has 2 buffer(s)
+AHI PARTITION 2: Hash table size 1593833, node heap has 1 buffer(s)
+AHI PARTITION 3: Hash table size 1593833, node heap has 1 buffer(s)
+AHI PARTITION 4: Hash table size 1593833, node heap has 1 buffer(s)
+AHI PARTITION 5: Hash table size 1593833, node heap has 9 buffer(s)
+AHI PARTITION 6: Hash table size 1593833, node heap has 186 buffer(s)
+AHI PARTITION 7: Hash table size 1593833, node heap has 3 buffer(s)
+AHI PARTITION 8: Hash table size 1593833, node heap has 2 buffer(s)
+14.76 hash searches/s, 393.23 non-hash searches/s #可以看到 hash search和no-hash search
+```
+
+
+## 1. 启动，恢复和恢复
+关闭时 innodb_fast_shutdown 影响着表的存储引擎~ 
+### 1. innodb_fast_shutdown为0:
+mysql关闭时，InnoDb需要完成所有full purge和merge insert buffer,并且将所有脏页刷新会磁盘。 这个需要很多时间极端时候可能是几小时。
+### 2. innodb_fast_shutdown为1:
+上面的操作不必做完，但是缓冲池中的脏数据需要刷新会磁盘
+### 3. innodb_fast_shutdown为2:
+上面1和2都不用做，但是日子都要写入日志文件，事物不会丢失，下次mysql启动会进行恢复操作。
+
+
