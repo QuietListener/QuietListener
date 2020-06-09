@@ -1019,4 +1019,172 @@ mysql> select @@session.autocommit ;
 
 
 
+### 2. 错误文件
+```sql
+mysql> show variables like "%log_error%";
++---------------------+-----------------------------------------------------------+
+| Variable_name       | Value                                                     |
++---------------------+-----------------------------------------------------------+
+| binlog_error_action | ABORT_SERVER                                              |
+| log_error           | /usr/local/mysql/data/junjunkaifarnxiaojuyuwang.local.err |
+| log_error_verbosity | 3                                                         |
++---------------------+-----------------------------------------------------------+
+3 rows in set (0.02 sec)
 
+```
+
+**查看一下 /usr/local/mysql/data/junjunkaifarnxiaojuyuwang.local.err**
+连链接断开都记录在error中。
+
+```shell
+➜  test-thrift-client git:(master) tail  /usr/local/mysql/data/junjunkaifarnxiaojuyuwang.local.err
+2020-06-06T22:31:17.825828Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 27396520ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-07T01:25:36.408242Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 10492072ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-07T04:11:25.926892Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 9915267ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-08T01:37:45.824116Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 77150274ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-08T01:46:55.215325Z 352 [Note] Aborted connection 352 to db: 'information_schema' user: 'root' host: 'localhost' (Got timeout reading communication packets)
+2020-06-08T22:33:08.826486Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 43299187ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-09T01:33:15.473189Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 10800941ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-09T01:35:07.402265Z 0 [Note] InnoDB: page_cleaner: 1000ms intended loop took 110309ms. The settings might not be optimal. (flushed=0 and evicted=0, during the time.)
+2020-06-09T02:18:47.650939Z 319 [Note] Aborted connection 319 to db: 'unconnected' user: 'root' host: 'localhost' (Got an error reading communication packets)
+2020-06-09T02:18:47.650804Z 339 [Note] Aborted connection 339 to db: 'stock' user: 'root' host: 'localhost' (Got an error reading communication packets)
+```
+
+
+### 3. 慢查询文件
+1. 阈值
+```sql
+mysql> show variables like "long_query_time"
+    -> ;
++-----------------+-----------+
+| Variable_name   | Value     |
++-----------------+-----------+
+| long_query_time | 10.000000 |
++-----------------+-----------+
+1 row in set (0.01 sec)
+
+```
+2. 是否开启
+```sql
+mysql> show variables like "%slow_query_log%";
++---------------------+----------------------------------------------------------+
+| Variable_name       | Value                                                    |
++---------------------+----------------------------------------------------------+
+| slow_query_log      | OFF                                                      |
+| slow_query_log_file | /usr/local/mysql/data/junjunkaifarnxiaojuyuwang-slow.log |
++---------------------+----------------------------------------------------------+
+2 rows in set (0.02 sec)
+
+mysql> 
+```
+
+**如果没有使用索引的sql也计入slow log**
+```sql
+mysql> show variables like "%log_queries_not%";
++-------------------------------+-------+
+| Variable_name                 | Value |
++-------------------------------+-------+
+| log_queries_not_using_indexes | OFF   |
++-------------------------------+-------+
+1 row in set (0.02 sec)
+
+mysql> 
+
+```
+
+**5.1开始可以从 mysql.slow_log 表里查询了:**
+```sql
+mysql> show create table  mysql.slow_log \G;
+*************************** 1. row ***************************
+       Table: slow_log
+Create Table: CREATE TABLE `slow_log` (
+  `start_time` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `user_host` mediumtext NOT NULL,
+  `query_time` time(6) NOT NULL,
+  `lock_time` time(6) NOT NULL,
+  `rows_sent` int(11) NOT NULL,
+  `rows_examined` int(11) NOT NULL,
+  `db` varchar(512) NOT NULL,
+  `last_insert_id` int(11) NOT NULL,
+  `insert_id` int(11) NOT NULL,
+  `server_id` int(10) unsigned NOT NULL,
+  `sql_text` mediumblob NOT NULL,
+  `thread_id` bigint(21) unsigned NOT NULL
+) ENGINE=CSV DEFAULT CHARSET=utf8 COMMENT='Slow log'
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+```
+
+如果要从表里查slow log的话需要将下面参数设置为TABLE; 当前是FILE
+
+```sql
+mysql> show variables like "log_output"
+    -> ;
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| log_output    | FILE  |
++---------------+-------+
+1 row in set (0.02 sec)
+
+mysql> 
+```
+
+**打开慢日志，并执行一条很久的sql**
+```sql
+mysql> set @@global.slow_query_log = on;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> 
+mysql> select sleep(11)\G; #睡11秒
+*************************** 1. row ***************************
+sleep(11): 0
+1 row in set (11.01 sec)
+
+ERROR: 
+No query specified
+
+mysql> 
+
+```
+
+**查看slow log；**
+
+```log
+➜  test-thrift-client git:(master) tail /usr/local/mysql/data/junjunkaifarnxiaojuyuwang-slow.log
+/usr/local/mysql/bin/mysqld, Version: 5.7.17 (MySQL Community Server (GPL)). started with:
+Tcp port: 3306  Unix socket: /tmp/mysql.sock
+Time                 Id Command    Argument
+# Time: 2020-06-09T03:24:38.308863Z
+# User@Host: root[root] @ localhost []  Id:   353
+# Query_time: 11.010569  Lock_time: 0.000000 Rows_sent: 1  Rows_examined: 0
+use information_schema;
+SET timestamp=1591673078;
+select sleep(11);
+➜  test-thrift-client git:(master) 
+```
+
+
+可以使用 **mysqldumpslow** 来分析 slow log
+```sql
+➜  test-thrift-client git:(master) mysqldumpslow   /usr/local/mysql/data/junjunkaifarnxiaojuyuwang-slow.log
+
+Reading mysql slow query log from /usr/local/mysql/data/junjunkaifarnxiaojuyuwang-slow.log
+Count: 1  Time=0.00s (0s)  Lock=0.00s (0s)  Rows=0.0 (0), 0users@0hosts
+  # Time: N-N-09T03:N:N.308863Z
+  # User@Host: root[root] @ localhost []  Id:   N
+  # Query_time: N.N  Lock_time: N.N Rows_sent: N  Rows_examined: N
+  use information_schema;
+  SET timestamp=N;
+  select sleep(N)
+
+➜  test-thrift-client git:(master) 
+
+```
+
+3.2.3
