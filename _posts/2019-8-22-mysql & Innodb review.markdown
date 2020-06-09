@@ -1186,5 +1186,3 @@ Count: 1  Time=0.00s (0s)  Lock=0.00s (0s)  Rows=0.0 (0), 0users@0hosts
 ➜  test-thrift-client git:(master) 
 
 ```
-
-3.2.3
