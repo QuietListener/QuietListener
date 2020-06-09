@@ -939,3 +939,84 @@ mysql关闭时，InnoDb需要完成所有full purge和merge insert buffer,并且
 上面1和2都不用做，但是日子都要写入日志文件，事物不会丢失，下次mysql启动会进行恢复操作。
 
 
+## 3.文件
+ mysql中有几类文件:
+ 1. 参数文件: my.cnf
+ 2. 日子文件: 错误日志，二进制文件(bin log)，慢查询文件，查询日志文件
+ 3. pid
+ 4. 表结构文件:存放mysql表结构定义
+ 5. 存储引擎相关文件。innodb的redo log和 和 undo log.
+
+
+### 1. 参数文件
+一般放在 my.cnf
+
+#### 1. 查看参数
+可以使用 show variables 查看所有参数，也可使用 show variables like "%xxx%" 来过滤。
+```sql
+mysql> show variables like "%buffer_pool%";
++-------------------------------------+----------------+
+| Variable_name                       | Value          |
++-------------------------------------+----------------+
+| innodb_buffer_pool_chunk_size       | 134217728      |
+| innodb_buffer_pool_dump_at_shutdown | ON             |
+| innodb_buffer_pool_dump_now         | OFF            |
+| innodb_buffer_pool_dump_pct         | 25             |
+| innodb_buffer_pool_filename         | ib_buffer_pool |
+| innodb_buffer_pool_instances        | 1              |
+| innodb_buffer_pool_load_abort       | OFF            |
+| innodb_buffer_pool_load_at_startup  | ON             |
+| innodb_buffer_pool_load_now         | OFF            |
+| innodb_buffer_pool_size             | 134217728      |
++-------------------------------------+----------------+
+10 rows in set (0.06 sec)
+
+mysql> 
+
+```
+#### 2. 参数类型
+1. 动态 在运行期间可以修改
+2. 静态 在运行期间不可以修改
+
+**动态参数设置:**
+可以分为 global和session两部分。
+
+例如:
+```sql
+mysql> select @@session.autocommit ;
++----------------------+
+| @@session.autocommit |
++----------------------+
+|                    1 |
++----------------------+
+1 row in set (0.01 sec)
+
+mysql> select @@global.autocommit ;
++---------------------+
+| @@global.autocommit |
++---------------------+
+|                   1 |
++---------------------+
+1 row in set (0.00 sec)
+
+```
+
+设置 自动提交参数:
+```sql
+mysql> set @@session.autocommit = 0;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select @@session.autocommit ;
++----------------------+
+| @@session.autocommit |
++----------------------+
+|                    0 |
++----------------------+
+1 row in set (0.00 sec)
+```
+
+
+
+
+
+
