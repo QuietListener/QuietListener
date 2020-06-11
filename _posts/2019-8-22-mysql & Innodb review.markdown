@@ -1368,8 +1368,8 @@ mysql> show variables like "%binlog%";
 
 ```
 
-1. max_binlog_size: binlog的大小默认为1G
-2. binlog_cache_size:
+##### 1. max_binlog_size: binlog的大小默认为1G
+##### 2. binlog_cache_size:
    默认为32K，这个参数是基于回话的，每一个回话会分配一个。  
    使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。Binlog_cache_use会显示使用binlog_cache的次数。
    下面是一个线上的一个结果：
@@ -1381,6 +1381,21 @@ Binlog_cache_disk_use 15
 Binlog_cache_use 1699305934
 
 ```
-3.  
+
+##### 3. **binlog_format**二进制日志的格式
+   这个参数控制二进制文件的日志。非常重要。
+   在MySQL有3种格式:
+1. statement   
+记录的是逻辑SQL语句，比如update test set name="11".这条sql修改了100万行，binlog也只记录这一个sql语句。
+
+2. row   
+记录的是每一行的改变，比如update test set name="11".这条sql修改了100万行，那binlog会记录100万个行改变的记录，可能binlog会增加几十兆
+
+3. mixed
+默认使用statement来记录，有一些情况使用row格式，
+a. 使用了UUID，USER,CURRENT_USER,FOUND_ROW,ROW_COUNT等不确定函数。
+b. 使用了零时表
+c. 使用自定义函数
+d. 使用insert delay
 
 
