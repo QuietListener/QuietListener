@@ -1371,10 +1371,10 @@ mysql> show variables like "%binlog%";
 1. max_binlog_size: binlog的大小默认为1G
 2. binlog_cache_size:
    默认为32K，这个参数是基于回话的，每一个回话会分配一个。  
-   使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。
+   使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。Binlog_cache_use会显示使用binlog_cache的次数。
    下面是一个线上的一个结果：
    
-**show global status like "%binlog_cache%";**
+**show global status like "%binlog_cache%";**，一共用了1699305934次binlog缓存，15次磁盘临时文件，说明binlog_cache_size大小比较合适。
 
 ```sql
 Binlog_cache_disk_use 15
