@@ -1201,3 +1201,13 @@ mysql> show variables like "%general_log%";
 +------------------+-----------------------------------+
 2 rows in set (0.00 sec)
 ```
+
+```shell
+➜  ~ tail  /usr/local/mysql/data/tyj-dev.log                  
+/usr/local/mysql/bin/mysqld, Version: 5.7.17 (MySQL Community Server (GPL)). started with:
+Tcp port: 3306  Unix socket: /tmp/mysql.sock
+Time                 Id Command    Argument
+2020-06-11T07:08:21.111679Z	    5 Query	show variables like "%general_log%"
+2020-06-11T07:09:21.520872Z	    5 Query	select 1
+
+```
