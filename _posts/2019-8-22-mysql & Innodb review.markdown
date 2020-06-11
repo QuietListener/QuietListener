@@ -1402,3 +1402,57 @@ d. 使用insert delay
 **通常使用binlog_format=row 在数据库恢复和复制的时候会更可靠**，缺点是binlog会更大，master和slave之间同步更慢。
 
 
+
+#### 4. 查看binlog
+binlog不可读，可以使用mysqlbinlog 来查看 binlog。
+```sql
+➜  data mysqlbinlog -vv --start-position=2224  ON.000002
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#200611 15:50:58 server id 1001  end_log_pos 123 CRC32 0x1fd23855 	Start: binlog v 4, server v 5.7.17-log created 200611 15:50:58 at startup
+# Warning: this binlog is either in use or was not closed properly.
+ROLLBACK/*!*/;
+BINLOG '
+YuLhXg/pAwAAdwAAAHsAAAABAAQANS43LjE3LWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAABi4uFeEzgNAAgAEgAEBAQEEgAAXwAEGggAAAAICAgCAAAACgoKKioAEjQA
+AVU40h8=
+'/*!*/;
+# at 2224
+#200611 16:16:38 server id 1001  end_log_pos 2302 CRC32 0x25f73241 	Query	thread_id=4	exec_time=0	error_code=0
+SET TIMESTAMP=1591863398/*!*/;
+SET @@session.pseudo_thread_id=4/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1075838976/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8 *//*!*/;
+SET @@session.character_set_client=33,@@session.collation_connection=33,@@session.collation_server=8/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+BEGIN
+/*!*/;
+# at 2302
+#200611 16:16:38 server id 1001  end_log_pos 2358 CRC32 0xb8cbc9a7 	Table_map: `mysqllearn`.`test` mapped to number 745
+# at 2358
+#200611 16:16:38 server id 1001  end_log_pos 2401 CRC32 0xac0133e9 	Write_rows: table id 745 flags: STMT_END_F
+
+BINLOG '
+ZujhXhPpAwAAOAAAADYJAAAAAOkCAAAAAAEACm15c3FsbGVhcm4ABHRlc3QAAgMPAv0CAqfJy7g=
+ZujhXh7pAwAAKwAAAGEJAAAAAOkCAAAAAAEAAgAC//wCAAAAAQBi6TMBrA==
+'/*!*/;
+### INSERT INTO `mysqllearn`.`test`
+### SET
+###   @1=2 /* INT meta=0 nullable=0 is_null=0 */
+###   @2='b' /* VARSTRING(765) meta=765 nullable=1 is_null=0 */
+# at 2401
+#200611 16:16:38 server id 1001  end_log_pos 2432 CRC32 0x6a28a159 	Xid = 207
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;
+➜  data 
+
+```
