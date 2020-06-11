@@ -1212,7 +1212,7 @@ Time                 Id Command    Argument
 
 ```
 
-### 4. 二进制文件(binlog)
+### 5. 二进制文件(binlog)
 二进制文件记录了对mysql数据库执行更改的操作，select和show操作不会计入这个log。
 配置my.cnf
 ```shell
@@ -1368,7 +1368,8 @@ mysql> show variables like "%binlog%";
 
 ```
 
-##### 1. max_binlog_size: binlog的大小默认为1G
+##### 1. max_binlog_size:
+   binlog的大小默认为1G
 ##### 2. binlog_cache_size:
    默认为32K，这个参数是基于回话的，每一个回话会分配一个。  
    使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。Binlog_cache_use会显示使用binlog_cache的次数。
@@ -1458,7 +1459,7 @@ DELIMITER ;
 ```
 
 
-### 3. mysql表结构(与引擎无关)
+### 6. mysql表结构(与引擎无关)
 msyql都有一个后缀为frm的文件，这个文件记录了该表的表结构定义。
 例如数据库mysqllearn下有一个test表，在mysqllearn目录下生成了一个test.frm文件。
 
@@ -1488,7 +1489,7 @@ total 224
 
 ```
 
-### 4. Innodb存储引擎文件
+### 7. Innodb存储引擎文件
 #### 1. 表空间文件
 Innodb存储的数据默然按照表空间来存放: 默认情况下会有一个名字为ibdata1的文件作为表空间文件：
 
