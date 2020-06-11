@@ -1538,3 +1538,5 @@ total 224
 192 -rw-r-----   1 junjun  _mysql    96K Jun 11 16:16 test.ibd
 
 ```
+
+#### 2. 重做日志文件
