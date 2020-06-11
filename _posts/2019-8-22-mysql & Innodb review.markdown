@@ -1456,3 +1456,85 @@ DELIMITER ;
 ➜  data 
 
 ```
+
+
+### 3. mysql表结构(与引擎无关)
+msyql都有一个后缀为frm的文件，这个文件记录了该表的表结构定义。
+例如数据库mysqllearn下有一个test表，在mysqllearn目录下生成了一个test.frm文件。
+
+```sql
+mysql> desc test;
++-------+--------------+------+-----+---------+----------------+
+| Field | Type         | Null | Key | Default | Extra          |
++-------+--------------+------+-----+---------+----------------+
+| id    | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name  | varchar(255) | YES  |     | NULL    |                |
++-------+--------------+------+-----+---------+----------------+
+2 rows in set (0.01 sec)
+
+```
+文件信息
+
+```shell
+➜  mysqllearn pwd
+/usr/local/mysql/data/mysqllearn
+➜  mysqllearn ls -lahs                          
+total 224
+  0 drwxr-x---   5 junjun  _mysql   160B Jun 11 16:15 .
+  0 drwxr-x---  73 junjun  _mysql   2.3K Jun 11 16:12 ..
+  8 -rw-r-----   1 junjun  _mysql    65B Jun 11 16:12 db.opt
+ 24 -rw-r-----   1 junjun  _mysql   8.4K Jun 11 16:15 test.frm
+192 -rw-r-----   1 junjun  _mysql    96K Jun 11 16:16 test.ibd
+
+```
+
+### 4. Innodb存储引擎文件
+#### 1. 表空间文件
+Innodb存储的数据默然按照表空间来存放: 默认情况下会有一个名字为ibdata1的文件作为表空间文件：
+
+```sql
+mysql> show variables like "%innodb_data_file%";
++-----------------------+------------------------+
+| Variable_name         | Value                  |
++-----------------------+------------------------+
+| innodb_data_file_path | ibdata1:12M:autoextend |
++-----------------------+------------------------+
+1 row in set (0.01 sec)
+
+```
+
+是嘛可以看到 **ibdata1:12M:autoextend** 表示，表空间文件为ibdata1，默认为12M，autoextend表示可以自动增加。 我们可以从下面看到 ibdata1 已经76M了。
+```shell
+➜  data pwd
+/usr/local/mysql/data
+➜  data ls -lahs ibdata*
+155648 -rw-r-----  1 junjun  _mysql    76M Jun 11 16:16 ibdata1
+```
+
+**每个表一个表空间文件**
+如果设置了 innodb_file_per_table 了,每个表都会有一个表空间文件
+
+```sql
+mysql> show variables like "%per_table%";
++-----------------------+-------+
+| Variable_name         | Value |
++-----------------------+-------+
+| innodb_file_per_table | ON    |
++-----------------------+-------+
+1 row in set (0.00 sec)
+```
+
+下面**test.ibd**就是test表的表空间文件。但是这个单独的表空间文件，仅仅存放，该表的数据，索引，插入缓冲bitmap等，其余信息还是在默认表空间中。
+
+```shell
+➜  mysqllearn pwd
+/usr/local/mysql/data/mysqllearn
+➜  mysqllearn ls -lahs                          
+total 224
+  0 drwxr-x---   5 junjun  _mysql   160B Jun 11 16:15 .
+  0 drwxr-x---  73 junjun  _mysql   2.3K Jun 11 16:12 ..
+  8 -rw-r-----   1 junjun  _mysql    65B Jun 11 16:12 db.opt
+ 24 -rw-r-----   1 junjun  _mysql   8.4K Jun 11 16:15 test.frm
+192 -rw-r-----   1 junjun  _mysql    96K Jun 11 16:16 test.ibd
+
+```
