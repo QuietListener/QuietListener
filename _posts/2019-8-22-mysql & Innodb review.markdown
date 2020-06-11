@@ -1211,3 +1211,14 @@ Time                 Id Command    Argument
 2020-06-11T07:09:21.520872Z	    5 Query	select 1
 
 ```
+
+### 4. 二进制文件(binlog)
+二进制文件记录了对mysql数据库执行更改的操作，select和show操作不会计入这个log。
+配置my.cnf
+```java
+#bin log
+slow_query_log=ON
+server-id=1001
+```
+**mysql5.7以后必须有server-id**，不然启动报错，这个id不能和集群中其他机器的id相同。
+
