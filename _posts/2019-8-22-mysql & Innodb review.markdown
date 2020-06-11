@@ -1215,10 +1215,172 @@ Time                 Id Command    Argument
 ### 4. 二进制文件(binlog)
 二进制文件记录了对mysql数据库执行更改的操作，select和show操作不会计入这个log。
 配置my.cnf
-```java
+```shell
 #bin log
-slow_query_log=ON
+log_bin=ON
 server-id=1001
 ```
 **mysql5.7以后必须有server-id**，不然启动报错，这个id不能和集群中其他机器的id相同。
+
+
+#### 1. 使用 **show master status**查看当前binlog的状态。
+
+```sql
+mysql> show master status;
++-----------+----------+--------------+------------------+-------------------+
+| File      | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------+----------+--------------+------------------+-------------------+
+| ON.000002 |     2159 |              |                  |                   |
++-----------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> insert into test values (NULL,"b");
+Query OK, 1 row affected (0.02 sec)
+
+mysql> show master status;
++-----------+----------+--------------+------------------+-------------------+
+| File      | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------+----------+--------------+------------------+-------------------+
+| ON.000002 |     2432 |              |                  |                   |
++-----------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from test;
++----+------+
+| id | name |
++----+------+
+|  1 | a    |
+|  2 | b    |
++----+------+
+2 rows in set (0.00 sec)
+
+mysql> show master status;
++-----------+----------+--------------+------------------+-------------------+
+| File      | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++-----------+----------+--------------+------------------+-------------------+
+| ON.000002 |     2432 |              |                  |                   |
++-----------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+mysql> 
+
+```
+
+
+当前使用的binlog是**ON.000002**，当使用 **insert into test values (NULL,"b");** 插入一条记录后Position从2159变为2432,说明binlog变化了，执行select后Position保持2432不变。说明select操作没有记如binlog。
+
+
+**还可以使用show binlog events in "ON.000002"来查看具体每一次的变化。**
+
+```sql
+mysql> show binlog events in "ON.000002";
++-----------+------+----------------+-----------+-------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Log_name  | Pos  | Event_type     | Server_id | End_log_pos | Info                                                                                                                                                                          |
++-----------+------+----------------+-----------+-------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ON.000002 |    4 | Format_desc    |      1001 |         123 | Server ver: 5.7.17-log, Binlog ver: 4                                                                                                                                         |
+| ON.000002 |  123 | Previous_gtids |      1001 |         154 |                                                                                                                                                                               |
+| ON.000002 |  154 | Anonymous_Gtid |      1001 |         219 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 |  219 | Query          |      1001 |         300 | BEGIN                                                                                                                                                                         |
+| ON.000002 |  300 | Table_map      |      1001 |         356 | table_id: 377 (stock.stock)                                                                                                                                                   |
+| ON.000002 |  356 | Update_rows    |      1001 |         462 | table_id: 377 flags: STMT_END_F                                                                                                                                               |
+| ON.000002 |  462 | Xid            |      1001 |         493 | COMMIT /* xid=163 */                                                                                                                                                          |
+| ON.000002 |  493 | Anonymous_Gtid |      1001 |         558 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 |  558 | Query          |      1001 |         639 | BEGIN                                                                                                                                                                         |
+| ON.000002 |  639 | Table_map      |      1001 |         695 | table_id: 377 (stock.stock)                                                                                                                                                   |
+| ON.000002 |  695 | Update_rows    |      1001 |         801 | table_id: 377 flags: STMT_END_F                                                                                                                                               |
+| ON.000002 |  801 | Xid            |      1001 |         832 | COMMIT /* xid=176 */                                                                                                                                                          |
+| ON.000002 |  832 | Anonymous_Gtid |      1001 |         897 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 |  897 | Query          |      1001 |         978 | BEGIN                                                                                                                                                                         |
+| ON.000002 |  978 | Table_map      |      1001 |        1034 | table_id: 377 (stock.stock)                                                                                                                                                   |
+| ON.000002 | 1034 | Update_rows    |      1001 |        1140 | table_id: 377 flags: STMT_END_F                                                                                                                                               |
+| ON.000002 | 1140 | Xid            |      1001 |        1171 | COMMIT /* xid=182 */                                                                                                                                                          |
+| ON.000002 | 1171 | Anonymous_Gtid |      1001 |        1236 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 | 1236 | Query          |      1001 |        1348 | create database mysqllearn                                                                                                                                                    |
+| ON.000002 | 1348 | Anonymous_Gtid |      1001 |        1413 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 | 1413 | Query          |      1001 |        1580 | use `stock`; create table test ( `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY, `name` varchar(255) )                                                                      |
+| ON.000002 | 1580 | Anonymous_Gtid |      1001 |        1645 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 | 1645 | Query          |      1001 |        1886 | use `mysqllearn`; CREATE TABLE `test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 |
+| ON.000002 | 1886 | Anonymous_Gtid |      1001 |        1951 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 | 1951 | Query          |      1001 |        2029 | BEGIN                                                                                                                                                                         |
+| ON.000002 | 2029 | Table_map      |      1001 |        2085 | table_id: 745 (mysqllearn.test)                                                                                                                                               |
+| ON.000002 | 2085 | Write_rows     |      1001 |        2128 | table_id: 745 flags: STMT_END_F                                                                                                                                               |
+| ON.000002 | 2128 | Xid            |      1001 |        2159 | COMMIT /* xid=205 */                                                                                                                                                          |
+| ON.000002 | 2159 | Anonymous_Gtid |      1001 |        2224 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'                                                                                                                                          |
+| ON.000002 | 2224 | Query          |      1001 |        2302 | BEGIN                                                                                                                                                                         |
+| ON.000002 | 2302 | Table_map      |      1001 |        2358 | table_id: 745 (mysqllearn.test)                                                                                                                                               |
+| ON.000002 | 2358 | Write_rows     |      1001 |        2401 | table_id: 745 flags: STMT_END_F                                                                                                                                               |
+| ON.000002 | 2401 | Xid            |      1001 |        2432 | COMMIT /* xid=207 */                                                                                                                                                          |
++-----------+------+----------------+-----------+-------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+33 rows in set (0.00 sec)
+
+
+```
+
+#### 2. 二进制文件的作用
+1. 恢复:使用binlog进行恢复数据
+2. 复制:从mysql与主mysql进行实时同步
+3. 审计: 判断数据是否有注入攻击等
+
+#### 3. 相关参数:
+```sql
+mysql> show variables like "%log_bin%";
++---------------------------------+--------------------------------+
+| Variable_name                   | Value                          |
++---------------------------------+--------------------------------+
+| log_bin                         | ON                             |
+| log_bin_basename                | /usr/local/mysql/data/ON       |
+| log_bin_index                   | /usr/local/mysql/data/ON.index |
+| log_bin_trust_function_creators | OFF                            |
+| log_bin_use_v1_row_events       | OFF                            |
+| sql_log_bin                     | ON                             |
++---------------------------------+--------------------------------+
+6 rows in set (0.00 sec)
+```
+log_bin = xxname 用来开启binlog，**开启后会有1%的性能损失**
+这里我们可看到 **log_bin_basename** 就是具体的binlog文件。Binlog的后缀后不断增加。这里有两个ON.000001，ON.000002。   
+**log_bin_index** 是binlog的索引文件，用来记录过往产生过的二进制日志序号。
+
+```sql
+mysql> system ls -l /usr/local/mysql/data/ON*
+-rw-r-----  1 junjun  _mysql   177 Jun 11 15:50 /usr/local/mysql/data/ON.000001
+-rw-r-----  1 junjun  _mysql  2432 Jun 11 16:16 /usr/local/mysql/data/ON.000002
+-rw-r-----  1 junjun  _mysql    24 Jun 11 15:50 /usr/local/mysql/data/ON.index
+mysql> 
+
+```
+
+```sql
+mysql> show variables like "%binlog%";
++-----------------------------------------+----------------------+
+| Variable_name                           | Value                |
++-----------------------------------------+----------------------+
+| binlog_cache_size                       | 32768                |
+| binlog_format                           | ROW                  |
+| max_binlog_cache_size                   | 18446744073709547520 |
+| max_binlog_size                         | 1073741824           |
+| sync_binlog                             | 1                    |
++-----------------------------------------+----------------------+
+20 rows in set (0.00 sec)
+
+```
+
+1. max_binlog_size: binlog的大小默认为1G
+2. binlog_cache_size:
+   默认为32K，这个参数是基于回话的，每一个回话会分配一个。  
+   使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。
+   下面是一个线上的一个结果：
+   
+**show global status like "%binlog_cache%";**
+
+```sql
+Binlog_cache_disk_use 15
+Binlog_cache_use 1699305934
+
+```
+3.  
+
 
