@@ -1399,3 +1399,6 @@ c. 使用自定义函数
 d. 使用insert delay
 
 
+**通常使用binlog_format=row 在数据库恢复和复制的时候会更可靠**，缺点是binlog会更大，master和slave之间同步更慢。
+
+
