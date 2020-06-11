@@ -1186,3 +1186,18 @@ Count: 1  Time=0.00s (0s)  Lock=0.00s (0s)  Rows=0.0 (0), 0users@0hosts
 ➜  test-thrift-client git:(master) 
 
 ```
+
+
+### 4. 查询日志
+查询日志记录了所有对mysql数据库请求的信息，无论这些请求是否得到了正确的执行。
+
+```sql
+mysql> show variables like "%general_log%";
++------------------+-----------------------------------+
+| Variable_name    | Value                             |
++------------------+-----------------------------------+
+| general_log      | ON                                |
+| general_log_file | /usr/local/mysql/data/tyj-dev.log |
++------------------+-----------------------------------+
+2 rows in set (0.00 sec)
+```
