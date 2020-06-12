@@ -1372,7 +1372,7 @@ mysql> show variables like "%binlog%";
    binlog的大小默认为1G
 ##### 2. binlog_cache_size:
    默认为32K，这个参数是基于会话的，每一个会话会分配一个。  
-   使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，当commit的时候才写入binlog文件, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。Binlog_cache_use会显示使用binlog_cache的次数。
+   使用事务的引擎(Innodb)，会将未提交的二进制日志写入一个缓存中，**当commit的时候才写入binlog文件**, 如果binlog_cache_size设置太小cache放不下，会写入磁盘零时文件，Binlog_cache_disk_use会显示使用磁盘临时文件的次数。Binlog_cache_use会显示使用binlog_cache的次数。
    下面是一个线上的一个结果：
    
 **show global status like "%binlog_cache%";**，一共用了1699305934次binlog缓存，15次磁盘临时文件，说明binlog_cache_size大小比较合适。
@@ -1541,3 +1541,68 @@ total 224
 ```
 
 #### 2. 重做日志文件
+##### 1. 作用
+重做日志记录了innodb存储引擎的事务日志，当掉电后可以恢复到掉电钱的时刻。
+
+默认有1个重做日志组，包括2个重做日志，如下所示。采用**循环写**的方式写日志，日志1写满后，会写日志2，日志2写满后会再切换到日志1.
+
+**下面两个就是重做日志文件:**
+```sql
+mysql> system ls -l /usr/local/mysql/data/ib_log*;
+-rw-r-----  1 junjun  _mysql  50331648 Jun 11 16:16 /usr/local/mysql/data/ib_logfile0
+-rw-r-----  1 junjun  _mysql  50331648 Jun 11 16:16 /usr/local/mysql/data/ib_logfile1
+```
+
+##### 2.重要的参数:
+```sql
+mysql> show variables like "innodb_log%";
++-----------------------------+----------+
+| Variable_name               | Value    |
++-----------------------------+----------+
+| innodb_log_buffer_size      | 16777216 |
+| innodb_log_checksums        | ON       |
+| innodb_log_compressed_pages | ON       |
+| innodb_log_file_size        | 50331648 |
+| innodb_log_files_in_group   | 2        |
+| innodb_log_group_home_dir   | ./       |
+| innodb_log_write_ahead_size | 8192     |
++-----------------------------+----------+
+7 rows in set (0.01 sec)
+```
+1. innodb_log_file_size   
+每个重做日志的大小 默认为 512M
+
+2. innodb_log_files_in_group   
+每一个日志组里日志文件个数，默认为2
+
+3. innodb_log_group_home_dir 
+日志文件所在目录 
+
+##### 3. tip
+重做日志文件大小对性能有很大的影响，设置得太大，回复时可能需要很长时间，日志太小，可能导致一个事务多次切换重做日志，日志太小的话，**会让async checkpoint更频繁**，降低性能。
+
+##### 4. binlog和redo log的区别。
+1. binlog 记录的是mysql的日志，跟引擎无关； redo log记录的是innodb的事务日志。
+2. binlog 不管是 statement还是row，都世纪路的一个事务的具体操作，比如对数据表的更改，对某几行的更改。
+   redo log是记录的每一个物理页的修改。例如:把页A偏移量为0x111的位置修改为0xab12.
+
+##### 5.  写重做日志
+重做日志也是先写入到 redo log buffer中，然后再将重做日志缓存中的内容写入磁盘。 
+有几个时机写重做日志:其中有个参数控制在commit时候写日志的行为.
+
+```sql
+mysql> show variables like "innodb_flush_log_at_tr%";
++--------------------------------+-------+
+| Variable_name                  | Value |
++--------------------------------+-------+
+| innodb_flush_log_at_trx_commit | 1     |
++--------------------------------+-------+
+1 row in set (0.00 sec)
+
+```
+**innodb_flush_log_at_trx_commit**有0，1，2三个值，0表示commit时候不讲事务的重做日志同步到磁盘。
+1表示写入磁盘，并且调用fsync(保证确实写入磁盘)，2表示写入磁盘，不调用fsync(数据可能还在文件系统的缓存中)。 所以要保证ACID的D，持久性就必须把**innodb_flush_log_at_trx_commit**设置为1.
+
+
+
+
