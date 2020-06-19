@@ -554,6 +554,7 @@ mysql> show variables like "%purge_thread%";
 
 #### 4. page cleaner 线程
 将老版本的胀页刷新也放到一个线程来做。
+```sql
 mysql> show variables like "%page_clean%";
 +----------------------+-------+
 | Variable_name        | Value |
@@ -561,7 +562,7 @@ mysql> show variables like "%page_clean%";
 | innodb_page_cleaners | 1     |
 +----------------------+-------+
 1 row in set (0.01 sec)
-
+```
 
 ## 2.内存
 ### 1. 缓冲池(buffer pool)
@@ -582,10 +583,12 @@ mysql>
 
 ```
 
+
 #### 2. 内存池中存了什么东西？
 1. 数据页(date page) , 索引页(index page) 这两个占了缓冲池绝大部分空间。
 2. 插入缓冲(insert buffer),自适应哈希索引(adaptive hash index),锁信息(lock info),数据字典信息(data dictionary).
 **可以有多个内存池来减少资源竞争，增加并发。**
+```sql
 mysql> show variables like "%buffer_pool_instances%";
 +------------------------------+-------+
 | Variable_name                | Value |
@@ -593,6 +596,7 @@ mysql> show variables like "%buffer_pool_instances%";
 | innodb_buffer_pool_instances | 1     |
 +------------------------------+-------+
 1 row in set (0.07 sec)
+```
 
 **公司使用阿里云rds，使用了8个内存池。**
 
@@ -649,7 +653,8 @@ mysql> show variables like "innodb_old_blocks_pct";
 
 ```
 
-3. 为什么要使用这种midpont改进过LRU算法呢?
+3. 为什么要使用这种midpont改进过LRU算法呢?   
+
  如果直接将读取到的页放入LRU列表首部，那一些Sql操作可能导致缓冲池的页被淘汰，比如一个慢查询扫描了100万行数据，这些数据所在的页只在这个偶尔出现的慢查询中需要，并不是热点数据。放在首部的话，可能将真正的热点数据淘汰，下一次又要去磁盘读取，降低了效率。
 
  为了减少上面的情况发生，innodb还加入了一个参数 innodb_old_blocks_time 来控制一个页读取到midpoint位置后还需要等多久才能够放到LRU列表的热端。
@@ -664,7 +669,7 @@ mysql> show variables like "innodb_old_blocks_pct";
  ```
 
  4. Free List和LRU List 怎么配合
- mysql刚启动的时候LRU list是空的，页都存放在Free List中，当需要从缓冲池中分配新的页的时候，Innodb先看看Free List中找，如果有，将页从Free List中删除，添加到LRU List中，如果Free List中也没有空闲页，就会淘汰LRU list尾端的页。当页从old部分移动到new部分时候,此时的发生的操作叫做，page make young,因为innodb_old_blocks_time使得页没有从old部分移动到new部分操作叫做page not made young。   
+ mysql刚启动的时候LRU list是空的，页都存放在**Free List**中，当需要从缓冲池中分配新的页的时候，Innodb先看看Free List中找，如果有，将页从Free List中删除，添加到LRU List中，如果Free List中也没有空闲页，就会淘汰LRU list尾端的页。当页从old部分移动到new部分时候,此时的发生的操作叫做，**page make young**,因为innodb_old_blocks_time使得页没有从old部分移动到new部分操作叫做**page not made young**。   
 
 使用 show engine innodb status 查看：
 ```sql
@@ -737,19 +742,22 @@ mysql>
 ```
 
 
-4. 压缩页
-1.0.x之后支持压缩也，页的大小可以为1KB，2KB，4KB,8KB. 非16KB的页由unzip_LRU 列表来单独管理,比如有8KB，4KB，2KB的unzip_LRU 列表。
-例如 show engine innodb status ; 可以看到
-```sql
-......
+4. 压缩页   
 
+1.0.x之后支持压缩也，页的大小可以为1KB，2KB，4KB,8KB. 非16KB的页由unzip_LRU 列表来单独管理,比如有8KB，4KB，2KB的unzip_LRU 列表。
+例如 show engine innodb status ; 可以看到 
+
+```sql
+
+......
 Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
 LRU len: 384820, unzip_LRU len: 0
 I/O sum[109776]:cur[2256], unzip sum[0]:cur[0]
-
-......
+......   
 
 ```
+
+
 Innodb使用**伙伴算法**来分配压缩页: 
 **伙伴算法可以参考**: https://blog.csdn.net/csdn_kou/article/details/82355452
 
@@ -762,10 +770,12 @@ Innodb使用**伙伴算法**来分配压缩页:
 
 
 
-5. Flush List  脏页列表
+5. Flush List  脏页列表   
+
 当LRU列表中的页被修改后，该页就”脏“了，需要将数据写会磁盘。这时可以通过 Innodb的 checkpoint机制将脏页刷新会磁盘。 **Flush List**就是脏页列表。 注意:脏页既存在于LRU list也存在 Flush list中。
 
 可以使用show engine innodb status 查看脏页数量。
+
 ```sql
 Old database pages 141889
 Modified db pages  80 # Flush List中脏页数量
@@ -773,7 +783,8 @@ Pending reads 0
 ```
 
 ### 2. 重做日志缓冲(redo log buffer)
-Innodb先将重做日志信息放入到这个缓冲区，然后定时刷新到重做日子文件。 一遍不用太大，默认8M，可以由innodb_log_buffer_size控制大小。
+Innodb先将重做日志信息放入到这个缓冲区，然后定时刷新到重做日志文件。 一般不用太大，默认8M，可以由innodb_log_buffer_size控制大小。
+
 ```shell
 mysql> show variables like "innodb_log_buffer_size";
 +------------------------+----------+
@@ -796,20 +807,22 @@ mysql>
 
 #### 1. 为什么要要有redo log?
 1. 当执行update/delete改变了**页**中的记录，**页**就变成了**脏**页，需要将缓冲池中的**脏页**刷新到磁盘~
-2. 如果有脏页就刷新到磁盘，开销会非常慢~，如果在从缓冲池刷新到磁盘时候宕机，数据就丢失了，不能恢复。为了解决这个问题，防止丢失数据，现在的引擎一般都采用 **Write Ahead Log** 的策略，***当事务提交时候，先写重做日志，再修改页***,当发生宕机的时候可以用重做日志恢复数据~。这就做到了**ACID**的**D**, 重做日志也是先写到**重做日志缓冲**里面。
+2. 如果有脏页就刷新到磁盘，开销会非常大~，如果在从缓冲池刷新到磁盘时候宕机，数据就丢失了，不能恢复。为了解决这个问题，防止丢失数据，现在的引擎一般都采用 **Write Ahead Log** 的策略，***当事务提交时候，先写重做日志，再修改页***,当发生宕机的时候可以用重做日志恢复数据~。这就做到了**ACID**的**D**, 重做日志也是先写到**重做日志缓冲**里面。
 
 **注意:重做log里面记录的是页的物理操作，比如在某页偏移800写入0x1111**
 
 #### 2.为什么需要有Checkpoint(检查点)机制?
   1. 如果没有检查点机制? 宕机恢复的时候就需要恢复所有的redo log，量很大速度慢，而且这么多的redo log磁盘也基本存不放下，比如线上的阿里云的rds 我司买的磁盘都是2T的。
   2. 如果有Checkpoint机制，检查点之前的**页** 都已经是刷新到磁盘的了，所以在数据库故障的时候只需要对Checkpoint后面的**重做日志**进行恢复。
-     当需页不够用，需要淘汰页的时候，这些淘汰的页需要强制执行Checkpoint，将脏页刷新回磁盘。
+     当需页不够用，需要淘汰页的时候，这些淘汰的页需要强制执行Checkpoint，将脏页刷新回磁盘。  
+
 #### 3. 两种Checkpoint: Sharp Checkpoint和Fuzzy Checkpoint
 ##### 1. Sharp Checkpoint
 将所有脏页都刷新回磁盘，一般在关闭数据库的时候使用。参数innodb_fast_shutdown=1
 ##### 2. Fuzzy Checkpoint
 只刷回一部分脏页，有几种情况:
 a. Master Thread每秒或者每n秒从缓冲池中将脏页列表中刷新一定比例到磁盘。       
+
 b. Innodb要保证一定比例的空闲页比如(1000个)可供使用，当没有这么多的时候，就需要溢出尾端的页，如果有脏页，就会执行Checkpoint,比如下面表示至少需要1024个空闲页。  
 
 
@@ -844,14 +857,16 @@ mysql> show variables like "%dirty_pages_pct";
      
 ### 3. Innodb关键特性
 #### 1. 插入缓冲(Insert Buffer)
+
 ##### 1. Innodb索引是什么样的?
  1. innodb使用B+树来实现索引。 
  2. 索引分为**聚集索引(Primary Key)**和**辅助索引(Secondary index)**
  3. 聚集索引是按照id递增顺序存放在一起放在数据页(挨着放的，像是差不多大的primary key聚集在一起),所以聚集索引的顺序插入和顺序读取都是非常快的(磁盘的随机写入/读取都很慢)。
  4. 辅助索引的值并不是数据本身，而是聚集索引(primary key)。所以如果按照辅助索引查找数据，分为两步，1. 通过辅助索引找primay key，2. 通过primary key找到数据。
 
- ##### 2. 为什么需要Insert Buffer。
- 当插入一条数据时候，插入聚集索引非常快(顺序插入到一个数据页，有可能数据页还是在Buffer Pool,还是热的)，但是辅助索引不是离散的，很有可能辅助索引所在的页没有在内存，需要从磁盘读入。如果要同时插入会大大影响性能。
+ ##### 2. 为什么需要Insert Buffer。   
+
+ 当插入一条数据时候，插入聚集索引非常快(顺序插入到一个数据页，有可能数据页还是在Buffer Pool,还是热的)，但是辅助索引是离散的，很有可能辅助索引所在的页没有在内存，需要从磁盘读入。如果要同时插入会大大影响性能。
  比如表
 
  ```sql
@@ -866,14 +881,14 @@ mysql> show variables like "%dirty_pages_pct";
 当插入 insert into t values(NULL, "abc");  主键自增，插入到一个页A中，辅助索引插入到页B中。
 当我们再插入一条 insert into t values(NULL, "12$"); 主键自增，我们有非常大的可能 primary key也会插入到一个页A中,因为是顺序插入，而辅助索引插很可能入到页F中。因为辅助索引不是顺序的( "abc"和”12$“可能中间隔了10000个节点)。
 
-**所以引入insert buffer** 对辅助索引的插入或者更新，不是每次都插入到索引页中，而是先判断插入的非聚集索引页是否在缓冲池中，如果在直接插入，如果没有放入到**insert buffer**。 然后以一定的披绿和情况将insert buffer和辅助索引节点合并，而且可以多个操作合为一个，加快速度。
+**所以引入insert buffer** 对辅助索引的插入或者更新，不是每次都插入到索引页中，而是先判断插入的非聚集索引页是否在缓冲池中，如果在直接插入，如果没有放入到**insert buffer**。 然后以一定的比例和情况将insert buffer和辅助索引节点合并，而且可以多个操作合为一个，加快速度。
 
 ##### 3. 使用 insert buffer的时机
 1. 索引是辅助索引，  
 2. 索引不是唯一索引。 
-不是唯一索引因为 唯一索引在插入时候要判断索引的唯一性,如果重复需要立即失败。
+不是唯一索引因为 **唯一索引在插入时候要判断索引的唯一性,如果重复需要立即失败。所以唯一索引会减慢插入速度**
 
-**insert buffer** 解决的是性能问题
+所以**insert buffer** 解决的是性能问题
 
 
 #### 2. 两次写(double write)
@@ -942,7 +957,7 @@ mysql关闭时，InnoDb需要完成所有full purge和merge insert buffer,并且
 ## 3.文件
  mysql中有几类文件:
  1. 参数文件: my.cnf
- 2. 日子文件: 错误日志，二进制文件(bin log)，慢查询文件，查询日志文件
+ 2. 日志文件: 错误日志，二进制文件(bin log)，慢查询文件，查询日志文件
  3. pid
  4. 表结构文件:存放mysql表结构定义
  5. 存储引擎相关文件。innodb的redo log和 和 undo log.
