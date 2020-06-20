@@ -1615,8 +1615,53 @@ mysql> show variables like "innodb_flush_log_at_tr%";
 1 row in set (0.00 sec)
 
 ```
-**innodb_flush_log_at_trx_commit**有0，1，2三个值，0表示commit时候不讲事务的重做日志同步到磁盘。
+**innodb_flush_log_at_trx_commit**有0，1，2三个值，0表示commit时候不将事务的重做日志同步到磁盘。
 1表示写入磁盘，并且调用fsync(保证确实写入磁盘)，2表示写入磁盘，不调用fsync(数据可能还在文件系统的缓存中)。 所以要保证ACID的D，持久性就必须把**innodb_flush_log_at_trx_commit**设置为1.
+
+
+
+
+## 4.表
+
+### 1 索引组织表
+Innodb是根据主键顺序组织存放的，在Innodb中每一个表都**必须**有一个主键(Primary Key),如果没有明确指定主键，Innodb会按下面的方式来创建主键:
+
+1. 如果有**非空唯一索引(Unique NOT NULL)**,如果有，选为主键。
+   如果有多个这样的非空唯一索引，选建表时第一个定义的为主键。  
+
+2. 不符合上面条件 ，自动生成一个6字节大小的指针为主键。
+
+### 2 Innodb逻辑存储结构
+
+#### 1. 表空间
+所有数据都被逻辑存放在一个空间中，叫做表空间。表空间由**段(segment)**,**区(extent)**, **页(page)**组成。
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200620-mysql-innodb_.jpg)
+
+ Innodb有一个共享表空间文件，ibdata1, 如果配置了inndb_file_per_table=ON,每个表都有一个单独的表空间文件，但是这个单独的表空间文件只存放数据，索引和插入缓冲bitmap，其他的比如回滚信息(undo)，插入缓存索引页，系统事务信息，二次写缓冲都还在共享表空间中。
+
+#### 2. 段(segment)   
+表空间由各个段组成，比如数据段，索引段，回滚段等。 Innodb表由索引组织的，那么**数据段就是B+树的叶子节点**（leaf node segment）,**索引段为B+树的非索引节点**(no-leaf node segment)
+
+
+#### 3. 区(extent)     
+区是有连续页组成的空间，每个区大小固定为1M。
+
+#### 4. 页(块) 
+页是Innodb磁盘管理的最小单位    
+**常见的页有:** 数据页(B-tree Node) , undo页(undo log page), 插入缓冲空间列表页(Insert Buffer free list),未压缩的二进制大对象页(uncompressed Blob page), 压缩的二进制大对象页(uncompressed Blob page)，事务数据页(Transaction System page)。
+
+#### 5.行(row)
+Innodb是面向行的数据库(row-oriented)，也就是说数据是按行来进行存放的，每页(16K)存放的记录也是有规定的,只能存放 7992行(16K/2-200)记录。
+##### 面向列的数据库vs面向行的数据库 
+如果面向行的数据库有100个column，如果值需要其中一个column的数据，也需要将所有的100column读出来，然后修改。  面向列的数据就可以值取这个column的数据即可。比如我只想分析性别和年龄两个column时候，面向列的数据库就更有优势。 所以面向列的数据库多用子啊olap中。
+
+
+
+
+
+
+
 
 
 
