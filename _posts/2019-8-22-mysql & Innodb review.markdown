@@ -1661,6 +1661,9 @@ Innodb是面向行的数据库(row-oriented)，也就是说数据是按行来进
 
 
 
+# 5. 索引与算法
+B+树 看这里: https://www.cnblogs.com/nullzx/p/8729425.html
+
 
 
 
