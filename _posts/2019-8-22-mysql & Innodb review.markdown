@@ -1777,3 +1777,68 @@ DDL（data definition language）： DDL比DML要多，主要的命令有CREATE
  
 DCL（Data Control Language）：  是数据库控制功能。是用来设置或更改数据库用户或角色权限的语句，包括（grant,deny,revoke等）语句。在默认状态下，只有 sysadmin,dbcreator,db_owner或db_securityadmin等人员才有权力执行DCL
 ```
+
+
+#### 3. online DDL
+##### 1. 在mysql5.5之前,要修改表结构
+1. 创建一张新的临时表，通过alter table 修改表结构
+2. 把原表的数据导入新表
+3. 删除原表
+4. 新表重命名为原表
+
+如果表是大表，这非常繁琐和耗时,而且如果有大龄事务需要访问正在被修改的表，这时候数据库不可用。
+
+##### 2. fast index creation (FIC)
+对于辅助索引的创建，InnoDB对表添加一个S锁，这在索引创建过程中不需要重建表，速度提升了。但是**只允许读操作，但是不能写**。也只能用在添加辅助索引。
+
+#### 3. online schema change（OSC）
+OSC是facebook开发的一个在线ddl工具，使用php语言。OSC使用了触发器和零时表的方法，具体过程如下:
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200620osc.jpg)
+
+#### 4. online ddl; 
+mysql 5.6提供了online ddl，允许了再ddl的同时，还允许insert update delete等dml操作。
+下面几类操作都可以使用 online ddl:    
+1. 辅助索引的创建于删除
+2. 改变自增长值
+3. 添加或者删除外键约束
+4. 列的重命名
+
+online ddl 可以有2个参数:
+alter table xxx add xxxIndexName (col1,col2,...) 
+algorithm={default|implace|copy}
+lock={default|NONE|shared|exclusive}
+
+
+##### 1. algorithm:
+1. copy表示使用创建零时表的方式，
+2. inplace表示索引的删除和创建不需要添加零时表。
+
+##### 2. lock:
+1. none 
+执行创建删除索引时候，不添加任何锁，事务的读写操作都不会阻塞，并发度最高
+
+2. share
+执行创建删除索引时候，对表加S锁，读事务不阻塞，写事务会等待
+
+3. exclusive
+加s锁，读写都不能进行
+
+4. default
+default模式会自动判断用哪个上面的模式，先判断是否为none，如果不行，能不能为share，然后尝试exclusive，有限选择最大的并发度。
+
+##### 3. online ddl 原理
+
+在执行online ddl的时候，将 insert update delete等操作日志写入一个日志中，创建完索引后再将日志重做到表上。日志大小由innodb_online_alter_log_max_size控制。如果日志满了 也会报错。
+
+```sql
+mysql> show variables like "%alter_log_max%%";
++----------------------------------+-----------+
+| Variable_name                    | Value     |
++----------------------------------+-----------+
+| innodb_online_alter_log_max_size | 134217728 |
++----------------------------------+-----------+
+1 row in set (0.00 sec)
+
+
+```
+
