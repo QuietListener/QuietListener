@@ -1681,7 +1681,8 @@ Innodb的B+树索引每一个飞叶子节点很大，所有基本上B+树只有2
 
 
 **每张表只能一个主键，只能有一个聚集索引**
-下面是一个聚集索引的例子:
+下面是一个聚集索引的例子:   
+数据页有3个，用双向链表链接，非数据页只有一个，存放的是主键和指向相应数据页的偏移(pointer)。   
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622mysql-innodb-bplustree.jpg)
 
@@ -1696,14 +1697,11 @@ Innodb的B+树索引每一个飞叶子节点很大，所有基本上B+树只有2
 select * from t where name = "Tom"   
 
 1. 使用辅助索引name来找到对应的主键id，这里需要3次io，因为辅助索引为3层。  
-2. 再按照聚集索引查找具体的数据页，io也为3层。一共需要6次io。
+2. 再按照聚集索引查找具体的数据页，io也为3层。一共需要6次io。   
 
-
+**下面是一个辅助索引查询的示意图**   
+辅助索引仲存放的key是辅助索引的值，如name，pointer是主键。
+可以看到辅助索引只有
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622-mysql-innodb-secondarIndex.jpg)
-
-
-
-
-
 
 
