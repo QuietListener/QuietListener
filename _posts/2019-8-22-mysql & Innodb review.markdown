@@ -1699,9 +1699,9 @@ select * from t where name = "Tom"
 1. 使用辅助索引name来找到对应的主键id，这里需要3次io，因为辅助索引为3层。  
 2. 再按照聚集索引查找具体的数据页，io也为3层。一共需要6次io。   
 
-**下面是一个辅助索引查询的示意图**   
-辅助索引仲存放的key是辅助索引的值，如name，pointer是主键。
-可以看到辅助索引只有
+**下面是一个辅助索引查询的示意图**     
+可以看到辅助索引只有一个数据页，辅助索引仲存放的key是辅助索引的值，如name，pointer是主键。
+
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622-mysql-innodb-secondarIndex.jpg)
 
 
