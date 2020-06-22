@@ -1705,3 +1705,60 @@ select * from t where name = "Tom"
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622-mysql-innodb-secondarIndex.jpg)
 
 
+### 3. 索引分裂
+
+### 4. 索引管理
+
+#### 1.  索引的添加删除    
+
+1. 加索引
+alter table xxTableName add index/key xxxIndexName index type (columnName1,columnName2,...) 
+
+2. 删索引
+alter table xxTableName drop index/key xxxIndexName.
+
+
+#### 1. 创建例子
+1. 下面创建了一个联合索引 index_name_user_id，一个index_info值索引了info的钱5个字符。   
+2. Sub_part指定是不是部分索引。
+3. **cardinality** 非常重要，表中唯一值的个数
+> cardinality /kɑːdɪ'nælɪtɪ/ n.基数
+
+```sql
+mysql> alter table test add index index_info (info(5));
+Query OK, 0 rows affected (0.14 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+mysql> alter table test add index index_name_user_id (name,user_id);
+Query OK, 0 rows affected (0.08 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> show create table test;
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                                                                                                                       |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| test  | CREATE TABLE `test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `info` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `key_1` (`user_id`,`name`),
+  KEY `index_info` (`info`(5)),
+  KEY `index_name_user_id` (`name`,`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> show index from test;
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+| Table | Non_unique | Key_name           | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment |
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+| test  |          0 | PRIMARY            |            1 | id          | A         |           3 |     NULL | NULL   |      | BTREE      |         |               |
+| test  |          1 | key_1              |            1 | user_id     | A         |           3 |     NULL | NULL   | YES  | BTREE      |         |               |
+| test  |          1 | key_1              |            2 | name        | A         |           3 |     NULL | NULL   | YES  | BTREE      |         |               |
+| test  |          1 | index_info         |            1 | info        | A         |           3 |        5 | NULL   | YES  | BTREE      |         |               |
+| test  |          1 | index_name_user_id |            1 | name        | A         |           3 |     NULL | NULL   | YES  | BTREE      |         |               |
+| test  |          1 | index_name_user_id |            2 | user_id     | A         |           3 |     NULL | NULL   | YES  | BTREE      |         |               |
++-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
+6 rows in set (0.00 sec)
+```
