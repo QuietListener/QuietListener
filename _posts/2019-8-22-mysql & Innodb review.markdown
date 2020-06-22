@@ -1671,7 +1671,7 @@ B+树的飞叶子几点是不存放数据的，所有数据都存放在叶子节
 ## 2. B+树索引
 Innodb的B+树索引每一个飞叶子节点很大，所有基本上B+树只有2到4层，也就是最多需要2到4次io就能完成B+树的搜索，如果磁盘一秒可以有100到200次io，所以2到4次io也就话20毫秒左右的时间。 非常快了~
 
-### 1. 聚集索引
+### 1. 聚集索引（clustered index）
 ####  理解聚集索引:       
 1. innodb表中的数据按照主键顺序存放，
 2. 聚集索引就是取表中主键建立的B+树
@@ -1679,11 +1679,27 @@ Innodb的B+树索引每一个飞叶子节点很大，所有基本上B+树只有2
 4. 非叶子几点存放的是**主键的值以及指向数据页的偏移**。
 5. 关于顺序存放，数据按主键**顺序存放**,这里的**顺序**不是物理上的顺序，是逻辑上的顺序，第一:数据页不是物理上连续的，是用双向链表来链接的。 第二：每个数据页上的数据也是按照双向链表来链接的。 所以都是**逻辑上的顺序**
 
+
+**每张表只能一个主键，只能有一个聚集索引**
 下面是一个聚集索引的例子:
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622mysql-innodb-bplustree.jpg)
 
 
+### 2. 辅助索引 （secondary index）
+辅助索引也叫做 **非聚集索引**，叶子节不包含行记录的全部数据，叶子节点包含**主键的值**，还包括一个书签(bookmark)，书签高数Innodb到哪里去找到与索引相应的行数据。
+
+
+#### 1. 使用辅助索引来查询数据的过程：
+(假设辅助索引和聚集索引的B+树都是3层)
+假设表为t，主键为id，辅助索引为name
+select * from t where name = "Tom"   
+
+1. 使用辅助索引name来找到对应的主键id，这里需要3次io，因为辅助索引为3层。  
+2. 再按照聚集索引查找具体的数据页，io也为3层。一共需要6次io。
+
+
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200622-mysql-innodb-secondarIndex.jpg)
 
 
 
