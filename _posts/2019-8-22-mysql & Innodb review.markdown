@@ -1721,8 +1721,13 @@ alter table xxTableName drop index/key xxxIndexName.
 #### 1. 创建例子
 1. 下面创建了一个联合索引 index_name_user_id，一个index_info值索引了info的钱5个字符。   
 2. Sub_part指定是不是部分索引。
-3. **cardinality** 非常重要，表中唯一值的个数
+3. **cardinality** 非常重要，表中唯一值的个数，
 > cardinality /kɑːdɪ'nælɪtɪ/ n.基数
+优化器会使用这个值来决定是否使用这个索引，所以很重要，这个值并不是实时更新的，不是每次索引更新都会更新，要强制清晰的话可以使用analyze table命令。   
+
+**如果有时候建立索在explain的时候并没有使用，或者两条差不多的语句一条使用索引，一个使用全表扫描，可以使用analyze table一下**   
+**可以在高峰期使用analyze table，这能使得优化器更好的工作**    
+
 
 ```sql
 mysql> alter table test add index index_info (info(5));
@@ -1761,4 +1766,14 @@ mysql> show index from test;
 | test  |          1 | index_name_user_id |            2 | user_id     | A         |           3 |     NULL | NULL   | YES  | BTREE      |         |               |
 +-------+------------+--------------------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+
 6 rows in set (0.00 sec)
+```
+
+#### 2. 几个术语 DDL DML
+```sql
+TCL （Transaction Control Language）：事务控制语言   
+DML（data manipulation language）： 它们是SELECT、UPDATE、INSERT、DELETE，这4条命令是用来对数据库里的数据进行操作的语言     
+
+DDL（data definition language）： DDL比DML要多，主要的命令有CREATE、ALTER、DROP等，DDL主要是用在定义或改变表（TABLE）的结构，数据类型，表之间的链接 和约束等初始化工作上，他们大多在建立表时使用 
+ 
+DCL（Data Control Language）：  是数据库控制功能。是用来设置或更改数据库用户或角色权限的语句，包括（grant,deny,revoke等）语句。在默认状态下，只有 sysadmin,dbcreator,db_owner或db_securityadmin等人员才有权力执行DCL
 ```
