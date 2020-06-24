@@ -1910,7 +1910,7 @@ mysql> select * from t1;
 ```
 例如上面 buy_date 是购买日期.
 
-下面我们只使用索引user_id的时候会有 mysql会执行一次排序(filesort),但是使用联合索引idx_u_date，就没有filesort，因为idx_u_date已经将date进行了排序。
+下面第一条sql只使用索引user_id的时候会有 mysql会执行一次排序(filesort), 第二条sql使用联合索引idx_u_date，就没有filesort，**因为idx_u_date联合索引已经将date进行了排序**。
 
 ```sql
 mysql> explain select * from t1 force index(user_id) where user_id = 1 order by buy_date desc;
@@ -1928,5 +1928,22 @@ mysql> explain select * from t1 force index(idx_u_date) where user_id = 1 order 
 |  1 | SIMPLE      | t1    | NULL       | ref  | idx_u_date    | idx_u_date | 5       | const |    3 |   100.00 | Using where; Using index |
 +----+-------------+-------+------------+------+---------------+------------+---------+-------+------+----------+--------------------------+
 1 row in set, 1 warning (0.00 sec)
+
+```
+
+
+#### 5. 覆盖索引(covering index)
+覆盖索引就是从辅助索引仲就可以得到需要查询的数据，不需要再查一遍聚集索引，还有聚集索引不包含一行记录的所有信息，只包含了很少的信息，所以比聚集索引小很多，所有覆盖索引会减少很多的io操作。
+
+**extra: Using index** 就表示使用到了覆盖索引。
+```sql
+mysql> explain select * from t1 force index(idx_u_date) where user_id = 1 order by buy_date desc;
++----+-------------+-------+------------+------+---------------+------------+---------+-------+------+----------+--------------------------+
+| id | select_type | table | partitions | type | possible_keys | key        | key_len | ref   | rows | filtered | Extra                    |
++----+-------------+-------+------------+------+---------------+------------+---------+-------+------+----------+--------------------------+
+|  1 | SIMPLE      | t1    | NULL       | ref  | idx_u_date    | idx_u_date | 5       | const |    3 |   100.00 | Using where; Using index |
++----+-------------+-------+------------+------+---------------+------------+---------+-------+------+----------+--------------------------+
+1 row in set, 1 warning (0.00 sec)
+
 
 ```
