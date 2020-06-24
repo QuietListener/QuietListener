@@ -1954,10 +1954,21 @@ mysql> explain select * from t1 force index(idx_u_date) where user_id = 1 order 
 **innodb提供了一致性的非锁定读，行锁，可以同时得到并发性和一致性。**
 
 ## 1. 锁的类型:
+
+### 1. 共享锁，排它锁
 Innodb实现了两种标准的行级锁：   
 1. 共享锁(S Lock): 允许事务读取一行    
 2. 和排它锁(X Lock)：允许事务删除或者更新一行  
 
 
 下面是两种锁的兼容性:
+**注意x锁和s锁都是行锁，兼容是指对同一行(row)记录的兼容情况**
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200624-sxlock.jpg)
+
+
+
+### 2. 意向锁
+意向锁是将要锁定的对象分为很多层次，对某一个细粒度的对象上锁，需要对粗粒度的对象上锁，如果将数据库 分为三层： **表-页-记录**的话，那么要对某个记录r上X锁，就需要分别对**表和页**上加IX锁，然后再对r加X锁，如果任何一部分导致等待，改操作需要等待粗粒度的锁的完成。 例如： 如果**事务1**对表加了S锁，表上已经存在S锁了，如果之后**事务2**要对记录r加上加X锁，就需要先对表加IX锁，但是IX锁与S锁不兼容，所以需要等待表S锁释放
+
+IX IS S X 互斥性    
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200624-ixislock.jpg)
