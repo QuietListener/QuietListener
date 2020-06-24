@@ -1947,3 +1947,17 @@ mysql> explain select * from t1 force index(idx_u_date) where user_id = 1 order 
 
 
 ```
+
+
+# 锁
+>锁机制是用来管理对共享资源的并发访问
+**innodb提供了一致性的非锁定读，行锁，可以同时得到并发性和一致性。**
+
+## 1. 锁的类型:
+Innodb实现了两种标准的行级锁：   
+1. 共享锁(S Lock): 允许事务读取一行    
+2. 和排它锁(X Lock)：允许事务删除或者更新一行  
+
+
+下面是两种锁的兼容性:
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200624-sxlock.jpg)
