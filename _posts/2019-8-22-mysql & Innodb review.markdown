@@ -2007,3 +2007,100 @@ innodb对select语句支持2总一致性的锁定读:
 
 这两种操作都必须在事务之中
 
+
+## 1. 锁算法
+
+### 1. 行锁的三种算法
+1. record lock: 单个记录上的锁
+2. gap lock 剪辑所，锁定一个范围，不包含记录本身
+3. next key lock: gap lock + record lock; 锁定一个范围并锁定记录
+
+next-key lock 结合了gaplock和recordlock，锁定的是一个范围. 其引入目的是为了解决**幻读问题** 
+
+例如下面的表z，a为primary key，b为secondary key;
+```sql
+mysql> show create table z;
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                   |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| z     | CREATE TABLE `z` (
+  `a` int(11) NOT NULL,
+  `b` int(11) DEFAULT NULL,
+  `c` int(11) DEFAULT NULL,
+  PRIMARY KEY (`a`),
+  KEY `b` (`b`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from z;
++----+------+------+
+| a  | b    | c    |
++----+------+------+
+|  1 |    1 |   -1 |
+|  3 |    1 |    2 |
+|  5 |    3 |    7 |
+|  7 |    6 |    9 |
+| 10 |    8 |   13 |
++----+------+------+
+5 rows in set (0.00 sec)
+
+mysql> 
+
+
+```
+索引b可能锁住的区间为  (-∞,1],(1,3],(3,6],(6,8],(8,+∞)   
+
+1. 事务1  select * from z where b=3 for update; 由于a是聚集索引 所以 对a=3这一行加了一个行X锁,所以第4行 使用 select * from z where a = 5 lock in share mode加S锁会失败。
+2.  b是辅助索引，对b加上的next-key 锁，锁住的范围是(1,3),innodb还会对b的下一个兼职加上一个gap lock，锁定范围为(3,6). 所以插入(2,2),(2,3),(4,5)会阻塞。 
+
+|时间|事务1|事务2|
+|---|---|---|
+|1|begin||
+|2| select * from z where b=3 for update;||
+|3| |begin|
+|4| |select * from z where a = 5 lock in share mode //失败|
+|5| |insert into z values (2,2) //阻塞|
+|6| |insert into z values (4,5) //阻塞|
+|7| |insert into z values (2,3) //阻塞|
+|8| |insert into z values (0,1) //立即执行|
+|9| |insert into z values (8,6) //立即执行|
+|10| commit |commit|
+
+
+**gap lock的作用是防止多个事务将记录插入到同一个范围内**，这将会导致**幻读**问题，上面事务1，对b=3的记录进行锁定，如果没有gap lock 锁定[3,6), 那么用户可以插入b=3的记录，这回导致事务1再次执行形同的查询语句时候会返回不同的记录，导致幻读。
+
+tip1
+**gap lock 是在repeatable read事务隔离级别下才起作用**，在**read committed**下只会使用 record lock.
+
+tip2: 
+**如果查询的所有包含唯一属性(主键或者唯一索引)，next-key lock会降级为 record lock**，这样可以增加并发。
+
+### 2. 解决幻读
+
+如果事务1执行**select * from z where a > 2 for update.** 是对 [2,+∞) 都加了X锁,那么其他事务任何插入[2,+∞)范围的数据都会等待，从而解决了**幻读问题**
+
+next-key locking 机制可以实现唯一性检查。
+由于next-key是锁定的一个范围。如果我们要实现，一个"**按条件查询，不存在则然后插入**"的操作，可以用下面的方式
+
+```sql
+select * from table where col = xxx lock in share mode;
+//如果找不到记录及可以插入
+insert into values ()
+```
+例如  select * from z where b=4 lock in share mode;就算没有找到记录，也对一个范围加了锁，如果其他事务对这个范围进行插入时候，会死锁，最终只有一个会插入成功。
+
+|时间|事务1|事务2|
+|---|---|---|
+|1|begin||
+|2| select * from z where b=4 lock in share mode;||
+|3| |begin|
+|4| |select * from z where b=4 lock in share mode;|
+|5| insert into z values (4,4) ||
+|6| |insert into z values (4,4) //ERROR 1213 (40001): Deadlock found when trying to get lock; try restarting transaction|
+|7| commit |commit|
+
+
+
+
+
