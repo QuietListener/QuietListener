@@ -2216,6 +2216,43 @@ mysql> show variables like "%_at_trx%";
 
 #### undo
 事务回滚的时候需要undo log。
+##### 1. undo 与redo log的不同。
 redo 放在redo 日志，undo放在共享表空间中的一个段内，叫做undu segment。
 redo log记录的是页物理修改，undo记录的不是物理修改是逻辑日志。在某个事务rollback后所有的修改都取消了，但是数据结构和页的物理结构可能大不一样，因为同一时间有几十，几百个事务在并发操作。例如 一个事务将一个页的某几条记录修改了，同事另一个事务也修改这个页的其他几条记录，所以不能讲一个也回复你到事务开始的样子，因为这样会影响其他事务正在进行的工作。
 
+在rollback的时候做的与先前相反的操作，比如对于每一个insert都会执行一个delete，对每一个update，会执行一条相反的update，将修改前的行改回去。
+
+tip:
+**undo的时候也会产生redo log。**
+
+##### 2. undo log可以实现mvvc
+由于undo log记录了 相反的操作，也就是可以找到**以前的信息**(老版本信息)，当一个事务读取一行记录时候，发现该记录已经被其他事务占用了，当前事务可以读取之前的行版本信息，这样就实现了**非锁定读**。
+
+
+##### 3. 管理undo log
+**也是还用“段页”式的管理**
+Innodb有一个回滚段(rollback segment)，每个回滚段包含1024个 **undo log段**。在每个**undo log段**申请**undo页**。
+
+**事务在undo log 并分配页并写入undo log这个过程也需要写redo log**。
+
+事务提交后并不能马上删除，因为mvvc机制，可能有的事务还需要从里面读数据。所以当事务提交时候是将undo log放入一个链表中，到底什么时候删除由**purge线程**来决定。
+
+show engine innodb status 可以看当前undo log数量:
+History list length 表示当前的数量，purge线程会不断处理这些undo log。
+```sql
+------------
+TRANSACTIONS
+------------
+Trx id counter 58676939911
+Purge done for trx's n:o < 58676939911 undo n:o < 0 state: running but idle
+History list length 3350
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 422102844737640, not started
+
+```
+
+
+##### undo log的格式。
+undo log分为两类
+1. insert undo log;
+2. update undo log;
