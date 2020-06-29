@@ -2256,3 +2256,67 @@ LIST OF TRANSACTIONS FOR EACH SESSION:
 undo log分为两类
 1. insert undo log;
 2. update undo log;
+
+###### 1. insert undo log
+insert操作中产生的undo log。
+本事务的insert操作只对自己事务可见，所以这类undo log在事务提交后可以直删除。
+
+###### 2. update undo log
+对delete操作和update操作参数的undo log。 这种undo log需要提供mvcc机制，不能再commit后直接删除。commit提交后需要将其放入log链表，等待purge线程处理。
+
+
+**mysql的delete操作**:只是标记记录为删除，并不真正删除，记录的最终删除在purge线程中执行。
+**mysql的update会产生2个操作**: 1.将原来主键的记录标记为删除，2.插入一新记录。
+
+
+#### purge
+delete和update后，并不立即执行，而是在purge线程中“延时”执行。purge用来最终完成delete和update，这样设计是为了支持mvcc。
+
+#### group commit
+每次事务提交为了保证D(持久性)，将redo log写盘，都会调用fsync，这是涉及磁盘io比较耗时。group commit会将多个事务一起提交，只需调用一次fsync。这样提高了mysql性能。
+就算某一刻只有一个事务提交，也让这个事务等一等，看能不能有其他事务到来，一起提交。下面这个参数控制等待时间。 0表示不等待。
+
+```sql
+mysql> show variables like "%flush_queue%";
++-----------------------------+-------+
+| Variable_name               | Value |
++-----------------------------+-------+
+| binlog_max_flush_queue_time | 0     |
++-----------------------------+-------+
+1 row in set (0.03 sec)
+
+```
+
+
+
+### 事务的隔离级别。
+#### 1. 设置
+ set global/session transaction isolation level { read uncommited/read committed/repeatable read/serializable}
+#### 2. 查看
+1. 查看当前会话的隔离级别
+select @@tx_isolation
+```sql
+mysql> select @@tx_isolation
+    -> ;
++-----------------+
+| @@tx_isolation  |
++-----------------+
+| REPEATABLE-READ |
++-----------------+
+1 row in set (0.01 sec)
+
+```
+
+2. 查看全局隔离级别：
+```sql
+mysql> select @@global.tx_isolation
+    -> ;
++-----------------------+
+| @@global.tx_isolation |
++-----------------------+
+| REPEATABLE-READ       |
++-----------------------+
+1 row in set (0.00 sec)
+
+```
+
