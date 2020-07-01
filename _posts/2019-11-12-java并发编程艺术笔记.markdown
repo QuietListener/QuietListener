@@ -1,0 +1,94 @@
+---
+layout: post
+title: java并发编程艺术笔记
+date: 2019-10-29 14:32:00
+categories:  java review
+---
+
+# 1. 并发编程的挑战
+## 1. 并发编程会遇到的挑战
+死锁，上下文切换频繁
+## 2.挑战1: 上下文切换
+>可以看看这篇文章 https://www.linuxblogs.cn/articles/18120200.html
+
+### 1. 什么是上下文切换
+1.cpu是分时处理的，会给每个线程分配一个时间片，当这个时间片用完后会，会保存状态，然后切换到下一个任务。下一次切会某个任务时候，需要恢复保存的状态。 这就是上下文切换。，上下文切换需要保存状态(寄存器，缓存等) 所以会影响效率。
+
+### linux 查看上下文切换
+>#每秒打印一下当前状态
+>vmstat -w 1  
+```shell
+[www@iZbp15pf7sr2cgwbyqi1inZ ~]$ vmstat -w 1
+procs -------------------memory------------------ ---swap-- -----io---- --system-- -----cpu-------
+ r  b       swpd       free       buff      cache   si   so    bi    bo   in   cs  us sy  id wa st
+ 0  0          0     149856     146620     914276    0    0     1    14    1    1   1  0  99  0  0
+ 0  0          0     149684     146620     914276    0    0     0     8 1082 2211   1  0  99  0  0
+ 1  0          0     149716     146620     914276    0    0     0     8 1113 2253   1  1  98  0  0
+ 0  0          0     149716     146620     914276    0    0     0     8 1093 2249   1  1  98  0  0
+
+```
+
+cs:上下文切换次数
+r:就绪队列的长度
+us和sy:用户cpu时间和系统cpu时间使用率
+in:(interupt)中断次数
+
+cs一般几百到1万都是正常的
+r值如果大于cpu核数就可能有大量争抢cpu出现。
+
+
+### 1. 怎么解决上下文切换
+1. 减少锁的使用，将数据分段，不同线程处理不同段。
+2. CAS(comapre and swap),不用加锁
+3. 减少线程的创建，比如任务少，线程多，很多线程会处于等待状态，从等待到running就会有一次上线文切换。
+4. 协程: 协程可以在单线程里实现任务调度和切换
+
+#### 1. **查看java线程状态**
+```shell
+[www@bcz-app-study-record-consumer-1 ~]$ jstack -l 16015 | grep java.lang.Thread.State | awk '{print $2$3$4$5}' | sort | uniq -c 
+     36 RUNNABLE
+      1 TIMED_WAITING(onobjectmonitor)
+     18 TIMED_WAITING(parking)
+      3 TIMED_WAITING(sleeping)
+      2 WAITING(onobjectmonitor)
+     28 WAITING(parking)
+```
+
+#### 2. java线程的状态
+1. NEW 线程创建了但是还没有启动
+2. RUNNABLE:正在运行的任务，也可能在等待状态，比如等待IO
+3. BLOCK:阻塞状态，线程要进入一个临界区，但是没有获德锁
+4. WATING: 执行了不带世家参数的 wait, join，或者 LockSupport.park方法
+5. TIMED_WATING: 执行了带世家参数的 wait ,join，或者 LockSupport.parkNanos/LockSupport.parkUntil
+6. TERMINATED: 终止状态
+
+
+## 挑战2：死锁
+### 解决死锁的办法
+1. 使用定时锁(本质是被动超时的机制)
+2. 主动检查,等待图(wait-for graph)中有环就有死锁，然后强制释放某一个线程获取的资源。mysql使用的方法
+3. 加锁的顺序必须一致。
+4. 避免一个线程同时获取多个锁。
+
+
+
+# 2. java并发机制的底层原理
+## 可见性
+**可见性指的是当一个线程修改一个共享变量的时候，另一个线程能读到这个修改值。**
+synchronized 和 volatile都可以保证变量的可见性。
+### 1. volatile
+>  volatile [ˈvɒlətaɪl] adj.易变的;无定性的;无常性的;可能急剧波动的;不稳定的;易恶化的;易挥发的;易发散的
+
+如果一个变量被声明为volatile java内存模型(JMM)保证所有线程看到这个变量的值是一致的。
+
+#### 1. volatile 修饰的变量有什么不同
+volatile修饰的变量有两个特殊处理:
+1. 将这个变量在缓存中的副本写回到系统内存。
+2. 让其他cpu的缓冲了改变量失效(必须去系统内存中去取，不能从缓存中去取) 这个由**cpu的缓冲一致性协议**来保证。
+
+### 1. synchronized
+java每一个对象都可以是锁。
+1. 普通同方法 锁是当前的实例对象
+2. 静态同步方法，锁是当前类的class对象
+3. 同步方法块，所以synchronized括号里的对象。
+
