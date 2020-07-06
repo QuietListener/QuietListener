@@ -41,7 +41,7 @@ r值如果大于cpu核数就可能有大量争抢cpu出现。
 
 ### 1. 怎么解决上下文切换
 1. 减少锁的使用，将数据分段，不同线程处理不同段。
-2. CAS(comapre and swap),不用加锁
+2. CAS(comapre and swap),不用加锁(其实是乐观锁)
 3. 减少线程的创建，比如任务少，线程多，很多线程会处于等待状态，从等待到running就会有一次上线文切换。
 4. 协程: 协程可以在单线程里实现任务调度和切换
 
@@ -179,7 +179,7 @@ MarkWord就跟锁优化息息相关
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200701-markword.png)
 
-ObjectMonitor是**悲观锁**，需要操作系统的支持，非常好资源。 java 1.6以后使用**偏向锁**和**轻量级**锁对synchronized进行锁优化， **偏向锁**和**轻量级**是**乐观锁**,使用CAS原子操作实现，在某些情况下会有效率。
+ObjectMonitor是**悲观锁**，需要操作系统的支持，非常耗资源。 java 1.6以后使用**偏向锁**和**轻量级**锁对synchronized进行锁优化， **偏向锁**和**轻量级**是**乐观锁**,使用CAS原子操作实现，在某些情况下会有效率。
 
 ##### 1. 偏向锁
 ##### 2. 轻量级锁
