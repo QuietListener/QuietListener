@@ -2320,3 +2320,54 @@ mysql> select @@global.tx_isolation
 
 ```
 
+
+
+
+# replication
+## 1. 为什么需要replication
+1. 解决性能问题，master负责读写，slave负责读   
+2. 解决高可用问题，主从切换
+
+## 2. 原理
+
+### 1. 流程
+1. master将数据更改日志写入binlog
+2. 从服务器把主服务器的binlog复制到自己的中继日志(relay log)
+3. 从服务器重做relay log中的日志，把更改应用到自己的数据库
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-7-7-replication-mysql.jpg)
+
+
+### 2. 问题
+1. 不是完全实时地同步(网络原因)，如果master压力很大，时延可能较大。
+2. 如果master commit并写binlog后，log还没有来得及同步到slave，master就挂掉，然后主从切换，上一个事务的数据就丢失了。
+
+
+### 3. semi-sync(半同步) 解决数据丢失问题
+#### 1. 原理
+ 从mysql5.5开始推出半同步，在master dumper线程通知slave后，增加一个ack，表示slave已经成功收到并写入了relay log。如果异常(比如等待超时)，会降级到普通的**异步复制**
+
+#### 2. rpl_semi_sync_master_wait_point
+ 这个参数决定了**在什么时间点等待slave的ack**，有两个点。
+
+##### 1. after commit
+**这里的commit是 engine的commit** 
+ 1. mysql写入binlog，
+ 2. engine 写入(commit)
+ 3. 发送ack 并等待ack
+ 4. 收到ack的话就 通知 客户端 commit ok。
+
+**after commit的问题:**
+事务T 在engine写入后等待ack的时间内，master宕机，然后主从切换，slave可能还没有收到事务T的数据，造成事务丢失。
+
+##### 2. after sync
+这里的sync是binlog sync,也就是把binlog 刷盘后。
+1. mysql写入binlog(sync)
+2. 发送ack 并等待ack
+3. engine写入
+4. 收到ack的话就 通知 客户端 commit ok。
+
+**after sync** 在 写engine之前 等待ack， master宕机主从切换，由于engine没有提交，所以最坏情况是**多数据**，因为master宕机，slave可能已经正确执行。但是多数据比丢数据好。
+
+
+
+
