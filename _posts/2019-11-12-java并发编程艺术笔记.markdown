@@ -16,7 +16,9 @@ categories:  java review
 
 ### linux 查看上下文切换
 >#每秒打印一下当前状态
->vmstat -w 1  
+>vmstat -w 1     
+
+
 ```shell
 [www@iZbp15pf7sr2cgwbyqi1inZ ~]$ vmstat -w 1
 procs -------------------memory------------------ ---swap-- -----io---- --system-- -----cpu-------
