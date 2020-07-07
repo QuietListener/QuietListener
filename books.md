@@ -5,7 +5,7 @@ permalink: /books/
 ---
 ## 一、技术
 ### java
-1. [**《深入理解Java虚拟机(JVM高级特性与最佳实践)》**]()  1个星期
+1. [**《深入理解Java虚拟机(JVM高级特性与最佳实践) 第三版》周志明**]()  1个星期
 2. [**《JAVA并发编程实践》**]()  3个星期
 3. [**《Java 8函数式编程》**]()  1个星期
 4. 《Effective Java 中文第二版》
@@ -14,6 +14,7 @@ permalink: /books/
 7. [**《Spring in action (第四版)》**]()  2个星期
 8. 《Servlet和JSP学习指南》
 9. 《深入剖析tomcat》(how tomcat works)
+10. 《java并发编程艺术》 方鹏飞
 
 ### 中间件
 1. [**《Java Persistence with MyBatis 3》**]()
@@ -22,7 +23,9 @@ permalink: /books/
 
 ### 数据库
 1. [**《高性能mysql第三版》**]()  4个星期
-1. [**《Mysql技术内幕 InnoDB存储引擎》**]()  4个星期
+2. [**《Mysql技术内幕 InnoDB存储引擎》第二版**]()  4个星期
+3. [**《mysql运维内参》**]()  参考用，写得一般
+4. [**《Redis开发与运维》付磊/张益军**]
 
 ### 操作系统
 1. 《The AWK Programming Language》 1个星期
