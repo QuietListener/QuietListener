@@ -61,7 +61,7 @@ procs -------------------memory------------------ ---swap-- -----io---- --system
 2. RUNNABLE:正在运行的任务，也可能在等待状态，比如等待IO
 3. BLOCK:阻塞状态，线程要进入一个临界区，但是没有获德锁
 4. WATING: 执行了不带世家参数的 wait, join，或者 LockSupport.park方法
-5. TIMED_WATING: 执行了带世家参数的 wait ,join，或者 LockSupport.parkNanos/LockSupport.parkUntil
+5. TIMED_WATING: 执行了带时间参数的 wait ,join，或者 LockSupport.parkNanos/LockSupport.parkUntil
 6. TERMINATED: 终止状态
 
 
@@ -78,7 +78,7 @@ procs -------------------memory------------------ ---swap-- -----io---- --system
 ## 1. 可见性
 **可见性指的是当一个线程修改一个共享变量的时候，另一个线程能读到这个修改值。**
 synchronized 和 volatile都可以保证变量的可见性。
-## 1. volatile
+## 2. volatile
 >  volatile [ˈvɒlətaɪl] adj.易变的;无定性的;无常性的;可能急剧波动的;不稳定的;易恶化的;易挥发的;易发散的
 
 如果一个变量被声明为volatile java内存模型(JMM)保证所有线程看到这个变量的值是一致的。
@@ -88,7 +88,7 @@ volatile修饰的变量有两个特殊处理:
 1. 将这个变量在缓存中的副本写回到系统内存。
 2. 让其他cpu的缓冲了改变量失效(必须去系统内存中去取，不能从缓存中去取) 这个由**cpu的缓冲一致性协议**来保证。
 
-## 1. synchronized
+## 3. synchronized
 java每一个对象都可以是锁。
 1. 普通同方法 锁是当前的实例对象
 2. 静态同步方法，锁是当前类的class对象
@@ -139,13 +139,16 @@ public void increase();
 ```
 
 ##### 2.同步方法  
-对于**同步方法**是检查昂发有没有ACC_SYNCHRONIZED标志，来判断要不要去竞争锁
+对于**同步方法**是检查方法有没有**ACC_SYNCHRONIZED**标志，来判断要不要去竞争锁
+
 ```java
 public synchronized void increase() {
         i++;
     }
 ```
-字节码
+
+**字节码**
+
 ```java
 public synchronized void increase();
     descriptor: ()V
@@ -183,6 +186,9 @@ ObjectMonitor是**悲观锁**，需要操作系统的支持，非常耗资源。
 
 ##### 1. 偏向锁
 ##### 2. 轻量级锁
+
+#### 2. 锁升级
+使用synchronized时候，会优先使用偏向锁，如果有竞争出现会使用 轻量级锁，如果还有竞争再使用重量级锁。
 
 
 ## 1. CAS实现的原子操作的问题
