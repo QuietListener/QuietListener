@@ -214,7 +214,33 @@ ABA问题是 如果一个值原来是A，变成了B，又变成了A，那么CAS�
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/20200701-jmm.jpg)
 1. 共享变量存放在主存中，每个线程有一个私有的本地内存(其实是缓存，写缓存，寄存器等)。
 2. 线程的本地内存存放的是共享变量在主存中的副本，（相当于一个共享内存的缓存）
-3. AB线程要通信的话，需要下面步骤:1. 线程A把本地内存贡献变量修改后刷新到主存，2. 线程B到主存去读取A更新过的共享变量。
+3. AB线程要通信的话，需要下面步骤:1. 线程A把本地内存贡献变量修改后刷新到主存，2. 线程B到主存去读取A更新过的共享变量。   
+**上面就是线程A向线程B发送消息的过程**
 
 
 
+
+### 1. 指令重排
+#### 1.3种指令重排
+java为了提高性能，会进行指令重排序，java从源代码到最终的执行指令序列，可能要经过3种指令重排序
+1. 编译器优化重排序  编译器在不改变单线程程序语义的前提下，重新安排语句的执行顺序
+2. 指令级并行重排序  处理器使用指令并行技术，如果没有数据依赖，可以改变语句对应机器指令的执行顺序
+3. 内存系统重排序    处理器使用缓存来读/写缓冲区，这使得加载和存储操作看上去可能是乱序执行。
+
+#### 2.怎么规避指令重排带来的问题
+ 对于1 编译器重排，java编译器会禁止特定类型的编译重排。对于2，3 JMM处理规则会要求编译器在生成指令序列时候，插入特定类型的**内存屏障**(Memory Barries)指令，**内存屏障**会禁止特定的处理器重排序
+
+内存屏障有下面4类
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-07-10-memory-barrier.jpg)
+
+#### 3. happen-before
+java使用JSR-133内存模型,JSR-133使用happen-before概念来说明操作之间的**可见性**，**如果一个操作的结果需要对另一个操作可见**，那么这两个操作就必须要存在**happen-before**关系。这两个操作可以是一个单线程内的，也可以是两个线程之间的。
+
+**为什么要有happen-before规则?**
+一个happen-before规则对应一个或者多个编译器或者处理器重排规则，程序员只需要知道JMM提供的happen-before规则，不需要去理解复杂重排规则。
+
+下面是与程序员相关的happen-before规则
+1. 程序顺序规则:一个线程找那个的每个
+2. 监视器锁规则： 一个锁的解锁，happen-before与随后对这个锁的加锁
+3. volatile变量规则: 对一个volatile的写happen-before于任意后续对这个volatile域的读
+4. 传递性： A happen-before B，B happen-before C 那么 A happen-before C.
