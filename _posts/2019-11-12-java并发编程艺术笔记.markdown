@@ -244,3 +244,10 @@ java使用JSR-133内存模型,JSR-133使用happen-before概念来说明操作之
 2. 监视器锁规则： 一个锁的解锁，happen-before与随后对这个锁的加锁
 3. volatile变量规则: 对一个volatile的写happen-before于任意后续对这个volatile域的读
 4. 传递性： A happen-before B，B happen-before C 那么 A happen-before C.
+
+#### 4. 数据依赖性
+如果两个操作访问同一个变量，如果其中有一个为写操作，这两个操作之间就有依赖性。如果交换这两个操作的顺序，就会改变执行结果。 **这里的操作是指在单线程内的两个操作**。  **编译器和处理器在处理重排序时，会准守依赖性，不会改变有依赖关系的操作之间的顺序**
+
+
+#### 5.java的 同步状态下的顺序一致性
+
