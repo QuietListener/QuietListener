@@ -292,3 +292,6 @@ intel对带有Lock前缀有如下描述:
 2. 禁止该指令与前后的读和写指令重排序
 3. 将缓冲中的所有数据刷新到内存。
 
+#### concurrent包的实现
+concurrent包就是建立在volatile和CAS上的。
+例如 AQS 就是一个volatile变量state和一个队列(存放线程)组成，AQS本质上就是用CAS来各种操作state的一个库。
