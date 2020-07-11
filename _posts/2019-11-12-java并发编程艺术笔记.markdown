@@ -295,3 +295,5 @@ intel对带有Lock前缀有如下描述:
 #### concurrent包的实现
 concurrent包就是建立在volatile和CAS上的。
 例如 AQS 就是一个volatile变量state和一个队列(存放线程)组成，AQS本质上就是用CAS来各种操作state的一个库。
+
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-09-07-resort.jpg)
