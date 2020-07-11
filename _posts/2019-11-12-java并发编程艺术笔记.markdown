@@ -296,4 +296,16 @@ intel对带有Lock前缀有如下描述:
 concurrent包就是建立在volatile和CAS上的。
 例如 AQS 就是一个volatile变量state和一个队列(存放线程)组成，AQS本质上就是用CAS来各种操作state的一个库。
 
-![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-09-07-resort.jpg)
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2017-7-11-concurrent-structure.jpg)
+
+### 3. final的内存语义
+
+final域的重排规则
+1. 写: 在构造函数内对一个final域的写入，与随后把这个被构造对象的引用赋值给一个引用变量，这两个操作不能重排序
+   JMM也会禁止编译器将final域的写重排到构造函数以外。
+   写final可以保证，在对象引用为任意线程可见之前，对象的final域已经被正确初始化了，普通域没有这个保证。
+
+
+2. 读： 读一个包含final域的对象引用，与随后初次读这个final域，这两个操作不能重排序。
+
+在读一个对象的final域之前，一定会先读包含这个final域的对象的引用。如果该引用不为null，那么这个对象的final域一定被线程A初始化了。
