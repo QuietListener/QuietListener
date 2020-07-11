@@ -309,3 +309,82 @@ final域的重排规则
 2. 读： 读一个包含final域的对象引用，与随后初次读这个final域，这两个操作不能重排序。
 
 在读一个对象的final域之前，一定会先读包含这个final域的对象的引用。如果该引用不为null，那么这个对象的final域一定被线程A初始化了。
+
+
+final 为引用类型的规则
+改构造函数内对一个final引用对象的成员域写入，与随后再构造函数外把这个构造对象引用赋值给另个引用变量 这两个操作不能重排序。
+
+
+## 双重检查锁定 延迟初始化(单例模式)
+### 问题
+```java
+public class DoubleCheckLoking {
+    public static DoubleCheckLoking instance;
+
+    public static DoubleCheckLoking getInstance() {
+        if (instance == null) {
+            synchronized (DoubleCheckLoking.class) {
+                if (instance == null) {
+                    instance = new DoubleCheckLoking();
+                }
+            }
+        }
+
+        return instance;
+    }
+}
+```
+
+这是一个典型的单例代码 但是由于指令重拍却有可能有问题
+
+这是因为  **instance = new DoubleCheckLoking();** 可能会有指令重拍
+这句话包含了三部
+
+```java
+ memory = allocate();// 1. 分配对象的内存空间
+ createInstance(memory); // 2 初始化对象
+ instance = memory; // 3 设置instance指向分配的内存。
+```
+
+上面的 2和3 可能会有指令重排序，在多线程的时候就会发生下面的情况
+**对象还没有初始化 就被其他线程看到了**
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2017-09-11-double-check-locking.jpg)
+
+
+### 解决办法
+#### 1. 不让2和3 重排
+```
+
+public class DoubleCheckLoking {
+    //volatile 禁止重排序
+    public static volatile DoubleCheckLoking instance;
+
+    public static DoubleCheckLoking getInstance() {
+        if (instance == null) {
+            synchronized (DoubleCheckLoking.class) {
+                if (instance == null) {
+                    instance = new DoubleCheckLoking();
+                }
+            }
+        }
+        return instance;
+    }
+}
+
+```
+
+2.  2和3可以重排，但是不对其他线程可见
+
+在调用 getInstance1 时候会导致InstanceHolder类被初始化，多个线程去初始化同一个类或者接口的时候，jvm都会有**初始化锁**来进行同步。
+```java
+public class DoubleCheckLoking {
+    
+    public static DoubleCheckLoking getInstance1() {
+        return InstanceHolder.instance;
+    }
+    private static class InstanceHolder{
+        static DoubleCheckLoking instance = new DoubleCheckLoking();
+    }
+}
+
+```
