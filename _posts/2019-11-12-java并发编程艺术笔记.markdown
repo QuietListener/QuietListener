@@ -250,4 +250,8 @@ java使用JSR-133内存模型,JSR-133使用happen-before概念来说明操作之
 
 
 #### 5.java的 同步状态下的顺序一致性
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2017-7-11-syc-demo-1.jpg)
 
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-09-07-resort.jpg)
+
+**锁能保证线程间的同步，但是在单线程的时候可能会有重排序。**
