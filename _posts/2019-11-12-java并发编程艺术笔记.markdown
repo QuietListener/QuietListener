@@ -388,3 +388,136 @@ public class DoubleCheckLoking {
 }
 
 ```
+
+
+
+
+
+# java线程
+### 1. 线程优先级
+不能依赖优先级，有的平台上，会忽略对优先级 比如macos 和 ubuntu。
+### 2. 线程的状态
+上面已经讲过了
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2020-7-15-thread-states.jpg)
+
+
+1. java将操作系统中的运行和就绪合并为运行状态。
+2. 阻塞是线程进入synchronized保护的临界区时候的状态，但是在阻塞在juc里的Lock时候是”等待“状态，因为Lock使用的是LockSupport的相关方法
+
+
+### 3. deamon线程
+1. daemo是作为支持型线程，当java虚拟机中不存在非deamon线程时候，jvm会退出。
+2. 虚拟机退出daemon线程时，线程中的finally快并不一定会执行。在使用daemon线程时候，不能用finally来执行清理逻辑。
+
+### 4.线程的创建启动和终止
+#### 1. 创建线程
+```java
+ private void init(ThreadGroup g, Runnable target, String name,
+                      long stackSize, AccessControlContext acc,
+                      boolean inheritThreadLocals) {
+        if (name == null) {
+            throw new NullPointerException("name cannot be null");
+        }
+
+        this.name = name;
+
+        Thread parent = currentThread();
+        SecurityManager security = System.getSecurityManager();
+        if (g == null) {
+            /* Determine if it's an applet or not */
+
+            /* If there is a security manager, ask the security manager
+               what to do. */
+            if (security != null) {
+                g = security.getThreadGroup();
+            }
+
+            /* If the security doesn't have a strong opinion of the matter
+               use the parent thread group. */
+            if (g == null) {
+                g = parent.getThreadGroup();
+            }
+        }
+
+        /* checkAccess regardless of whether or not threadgroup is
+           explicitly passed in. */
+        g.checkAccess();
+
+        /*
+         * Do we have the required permissions?
+         */
+        if (security != null) {
+            if (isCCLOverridden(getClass())) {
+                security.checkPermission(SUBCLASS_IMPLEMENTATION_PERMISSION);
+            }
+        }
+
+        g.addUnstarted();
+
+        this.group = g;
+        this.daemon = parent.isDaemon();
+        this.priority = parent.getPriority();
+        if (security == null || isCCLOverridden(parent.getClass()))
+            this.contextClassLoader = parent.getContextClassLoader();
+        else
+            this.contextClassLoader = parent.contextClassLoader;
+        this.inheritedAccessControlContext =
+                acc != null ? acc : AccessController.getContext();
+        this.target = target;
+        setPriority(priority);
+        if (inheritThreadLocals && parent.inheritableThreadLocals != null)
+            this.inheritableThreadLocals =
+                ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+        /* Stash the specified stack size in case the VM cares */
+        this.stackSize = stackSize;
+
+        /* Set thread ID */
+        tid = nextThreadID();
+    }
+```
+
+看源码我们可以看到
+一个新线程对象都是由parent线程来空间分配，child继承了parent的优先级，contextClassLoader以及可以继承的ThreadLocal，最后分配一个唯一的ID。 这样，一个能运行的线程对象就初始化好了，在堆内等待运行。
+
+#### 2. 中断
+##### 什么是中断
+1. 中断好比其他线程对改线程打了一个招呼，其他线程通过调用该线程的interrupt方法对其进行中断操作。
+
+##### 中断怎么工作
+线程可以检查自生是否被中断来进行响应，线程通过isInterrupted来判断是否被中断，也可以调用静态的Thread.interrupted()对当前线程的中断标识位进行复位。
+
+java api中很多声明抛出InterruptedException方法，这些方法在抛出InterruptException后会将中断标识位清除。然后抛出InterruptException,此时调用isInterruped()会返回false。
+
+#### 3. 为什么不用suspend和resume和stop
+suspend调用后，线程不会释放已经占有的资源(比如锁)，而是占着资源进入随眠状态。可能引发死锁。
+stop在终结一个线程时候也不保证线程资源的蒸菜释放。
+
+#### 4. 安全地终止线程
+```java
+  /**
+     * 优雅地停止线程
+     * interrupt和cannel都可以
+     */
+    public static class Runner1 implements Runnable{
+
+        private long i = 0;
+        private volatile  boolean on = true;
+
+        @Override
+        public void run() {
+            while(on && !Thread.currentThread().isInterrupted()){
+                i++;
+            }
+
+            System.out.println("count i="+i);
+        }
+
+        public void cannel(){
+            this.on = false;
+        }
+    }
+```
+
+上面可以通过调用interrupt和cannel来终止线程，相比stop()这种武断地停止线程，有机会去清理资源。
+
+#### 5. 线程间通信
