@@ -595,3 +595,97 @@ public Object synchronized getResult(long mills) throw InterruptedException{
 }
 ```
 
+
+#### 6. Thread.join()
+线程A调用了 thread.join()的含义是：当前线程**A等待thread终止**后才从thread.jion()返回。
+也提供了超时的方法Thread.join(long milis).
+
+join的源码如下 也是上面的那种模式写的
+```java
+public final synchronized void join(long millis)  throws InterruptedException {
+        long base = System.currentTimeMillis();
+        long now = 0;
+
+        if (millis < 0) {
+            throw new IllegalArgumentException("timeout value is negative");
+        }
+
+        if (millis == 0) {
+            while (isAlive()) {
+                wait(0);
+            }
+        } else {
+            while (isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0) {
+                    break;
+                }
+                wait(delay);
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+```
+
+
+#### 7.ThreadLocal使用
+ThreadLocal是以线程为键，以任意对象为值的存储结构，这个值被附带在线程上。
+
+下面是用ThreadLocal来进行记时的一个应用。
+```java
+
+import java.util.concurrent.TimeUnit;
+
+public class ThreadLocalProfiler {
+    private static final ThreadLocal<Long> TIME_THREADLOCAL = new ThreadLocal<>();
+
+    public static final void begin() {
+        TIME_THREADLOCAL.set(System.currentTimeMillis());
+    }
+
+    public static final long end() {
+        return System.currentTimeMillis() - TIME_THREADLOCAL.get();
+    }
+
+
+    public static void main(String[] args) {
+
+        for (int i = 1; i < 5; i++) {
+            final int time = i;
+            Thread t = new Thread() {
+
+                @Override
+                public void run() {
+                    ThreadLocalProfiler.begin();
+                    try {
+                        TimeUnit.SECONDS.sleep(time);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    System.out.println("time=" + time + " time consume:" + ThreadLocalProfiler.end() + " ms");
+                }
+            };
+            t.start();
+
+            try {
+                t.join();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+}
+
+```
+
+输出结果是:
+```shell
+time=1 time consume:1005 ms
+time=2 time consume:2003 ms
+time=3 time consume:3000 ms
+time=4 time consume:4002 ms
+```
+
+
