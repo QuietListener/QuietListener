@@ -521,3 +521,77 @@ stop在终结一个线程时候也不保证线程资源的蒸菜释放。
 上面可以通过调用interrupt和cannel来终止线程，相比stop()这种武断地停止线程，有机会去清理资源。
 
 #### 5. 线程间通信
+
+##### 1. 共享变量(共享内存)   
+使用 sychronized和volatile来实现
+
+##### 2. 等待/通知机制   
+1. 线程A调用对象O的wait方法，进入等待状态
+2. 线程B调用了对象O的notifyAll方法
+3. 线程A收到对象O的通知后，从对象O的wait方法返回，继续执行操作。
+
+等待通知的经典范式
+
+**等待方**
+```java
+sychronized(obj){
+
+    while(条件不满足){
+        obj.wait()
+    }
+
+    逻辑
+}
+
+```
+
+**通知方**
+
+```java
+sychronized(obj){
+    改变条件
+    obj.notifyAll()
+}
+
+```
+
+
+
+
+#### 6. 应用例子
+##### 1. 等待超时的方法
+
+需求是: 调用一个方法，等待一段时间，如果在给定时间内得到结果立即返回，反之超时返回默认结果。
+
+也是应该用 下面的模式，只是稍作修改
+```java
+sychronized(obj){
+
+    while(条件不满足){
+        obj.wait()
+    }
+
+    逻辑
+}
+
+```
+
+
+```java
+public Object synchronized getResult(long mills) throw InterruptedException{
+
+    long waitUntil = System.currentTimeMillis()+mills;
+    long remaining = mills;
+
+    Object result = queryResult();
+    
+    while(result == null && remaining > 0){
+        wait(remaining);
+        result = queryResult();
+        remainning = waitUntil - System.currentTimeMillis();
+    }
+
+    return result;
+}
+```
+
