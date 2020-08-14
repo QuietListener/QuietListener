@@ -32,6 +32,6 @@ gzip_static on;
 gzip_proxied any;
 
 #哪些类型的需要压缩
-gzip_types text/plain application/javascript application/css text/css application/xml text/javascript application/x-httpd-php image/jpeg image/gif image/png;
+gzip_types text/plain application/javascript application/css text/css application/xml text/javascript application/x-httpd-php
 
 ```
