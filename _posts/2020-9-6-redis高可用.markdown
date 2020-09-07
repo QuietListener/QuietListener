@@ -1,0 +1,38 @@
+---
+layout: post
+title: redis高可用
+date: 2020-5-8 14:32:00
+categories:  java maven
+---
+
+# 1. redis master-slave 搭建
+## 1个master 2个slave
+配置如下
+1. master
+```shell
+port 6479
+daemonize yes
+logfile "6479.log" 
+dbfilename "dump6479.rdb" 
+dir "/home/www/software/redis-3.2.0/data/"
+```
+
+2. slave1
+```shell
+port 6480
+daemonize yes
+logfile "6480.log" 
+dbfilename "dump6480.rdb" 
+dir "/home/www/software/redis-3.2.0/data/"
+slaveof 126.0.0.1 6479
+```
+3. slave2
+```shell
+port 6481
+daemonize yes
+logfile "6481.log" 
+dbfilename "dump6481.rdb" 
+dir "/home/www/software/redis-3.2.0/data/"
+slaveof 126.0.0.1 6479
+```
+
