@@ -360,7 +360,10 @@ redis支持集合的增删改查，和集合的交集，并集，差集等操作
 5) "music"
 127.0.0.1:6379> sdiff user1 user2 #差集
 1) "music"
-
+127.0.0.1:6379> sdiffstore user12diff  user1 user2 #如果要把结果存到另一个set在原来命令后面加一个store 并指定名字即可
+(integer) 1
+127.0.0.1:6379> smembers user12diff
+1) "music"
 
 ```
 
