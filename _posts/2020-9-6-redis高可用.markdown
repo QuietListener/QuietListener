@@ -36,3 +36,34 @@ dir "/home/www/software/redis-3.2.0/data/"
 slaveof 126.0.0.1 6479
 ```
 
+
+然后启动三个服务器
+然后可以看到集群的情况 有2个slave 1个master
+```shell
+[www@localhost master-slave]$ redis-cli -h  172.16.10.12 -p 6479 info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=127.0.0.1,port=6480,state=online,offset=337,lag=0
+slave1:ip=127.0.0.1,port=6481,state=online,offset=337,lag=1
+master_repl_offset:337
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:336
+[www@localhost master-slave]$ 
+
+```
+
+
+**在本地访问虚拟机中的redis需要打开相应的端口(centos7.0)**
+```shell
+   [root@xxx]# firewall-cmd --add-port=6479/tcp --permanent
+
+   success
+
+   [root@xxx]# firewall-cmd --reload
+
+   success
+```
+
