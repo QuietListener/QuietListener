@@ -50,3 +50,71 @@ string, hash, list, set, zset.
 改动内部编码不影响外部编码，也是一种分层的设计思想。
 
  ![aaa]](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-1.png)
+
+
+#### 1.字符串
+最大不能超过512M
+##### 命令；
+
+###### 1. set 
+1. set key value [ex seconds] [px milliseconds] [nx|xx]    
+2. ex 秒级过期时间
+3. px 毫秒级过期时间
+4. nx 表示not exist 健不存在才能设置成功，用于添加 ，redis也提供了setnx
+5. xx 表示exists 健存在才能设置成功，用于更新。
+
+```shell
+127.0.0.1:6379> set b 1 ex 100  nx
+OK
+127.0.0.1:6379> set b 1 ex 100  nx #第二次会失败，因为已经存在了
+(nil)
+127.0.0.1:6379> ttl b
+(integer) 87
+127.0.0.1:6379> ttl b
+(integer) 86
+127.0.0.1:6379> 
+
+```
+###### 2. mset mget 批零操作
+```shell
+127.0.0.1:6379> mset a 1 b 2 c 3 
+OK
+127.0.0.1:6379> mget a b
+1) "1"
+2) "2"
+
+```
+
+mset 和 mget 主要是节约了网络时间。因为一次请求的网络时间可能比redis操作还多。
+###### 2. 数字操作 incr decr incrby decrby incrbyfloat
+如果不是数字会返回错误
+```shell
+127.0.0.1:6379> set num a""
+OK
+127.0.0.1:6379> incr num
+(error) ERR value is not an integer or out of range
+127.0.0.1:6379> 
+127.0.0.1:6379> set num1 1
+OK
+127.0.0.1:6379> incr num1 
+(integer) 2
+127.0.0.1:6379> incr num1 
+(integer) 3
+127.0.0.1:6379> incrby num1 10 
+(integer) 13
+
+```
+
+
+### redis单线程架构
+1. 使用io多路复用
+2. 命令会进入一个队列然后依次执行
+3. 单线程不会有并发问题
+
+#### 为什么快?
+1. 内存操作
+2. 单线程，没有上下文切换，也没有线程并发的问题
+3. epoll 非阻塞io多路复用
+
+#### 问题
+某个命令执行时间过长，造成阻塞，很致命
