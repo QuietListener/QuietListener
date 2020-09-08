@@ -109,6 +109,30 @@ OK
 
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-string.png)
 
+##### 内部编码
+3中内部编码:
+1. int 8个自己的长整型，
+2. embstr 小于39个字节的字符串，
+3. raw 大于39个字节的字符串
+
+```shell
+127.0.0.1:6379> set a 10000000000000000
+OK
+127.0.0.1:6379> object encoding a
+"int"
+127.0.0.1:6379> set b "hello"
+OK
+127.0.0.1:6379> object encoding b
+"embstr"
+127.0.0.1:6379> set c "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+OK
+127.0.0.1:6379> object encoding c
+"raw"
+127.0.0.1:6379> 
+
+```
+
+
 
 ### redis单线程架构
 1. 使用io多路复用
