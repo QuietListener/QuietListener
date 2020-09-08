@@ -1,0 +1,52 @@
+---
+layout: post
+title: redis基本操作 备忘
+date: 2020-9-8 14:32:00
+categories:  java maven
+---
+### 1. 命令行直接操作
+···shell
+[www@localhost tests]$ redis-cli 
+127.0.0.1:6379> set aa 111
+OK
+127.0.0.1:6379> exit
+[www@localhost tests]$ redis-cli get aa
+"111"
+
+···
+
+### 2. 优雅关闭redis
+save 表示先生成次持久化文件
+```shell
+[www@localhost tests]$ redis-cli shutdown save
+[www@localhost tests]$ tree .
+.
+|-- data
+|   `-- dump6379.rdb
+|-- logs
+|   `-- 6379.log
+|-- redis-6379.conf
+`-- start.sh
+
+2 directories, 4 files
+
+```
+
+
+### 3. 常用命令
+1.  keys * 列出所有健
+2. dbsize 健总数
+3. exists key 是否存在某个键
+4. del key 删除
+5. expire key 设置key的过期时间
+6. type key 返回类型
+
+
+### 4.5种数据结构
+string, hash, list, set, zset.
+这五种是对外的数据结构，每一种数据结构内部有自己的**编码**，内部编码可以使用**object encoding key**来查看
+
+**这种设计的好处**:
+改动内部编码不影响外部编码，也是一种分层的设计思想。
+
+ ![aaa]](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-1.png)
