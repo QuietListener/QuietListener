@@ -107,7 +107,7 @@ OK
 
 ```
 
- ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-string.png)
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-string.jpg)
 
 ##### 内部编码
 3中内部编码:
