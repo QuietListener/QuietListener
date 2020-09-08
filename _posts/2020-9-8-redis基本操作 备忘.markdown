@@ -5,7 +5,7 @@ date: 2020-9-8 14:32:00
 categories:  java maven
 ---
 ### 1. 命令行直接操作
-···shell
+```shell
 [www@localhost tests]$ redis-cli 
 127.0.0.1:6379> set aa 111
 OK
