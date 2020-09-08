@@ -304,6 +304,67 @@ OK
 
 ```
 
+##### 使用场景
+1. lpush+lpop 栈
+2. lpush+rpop 队列 fifo
+3. lpush+ltrim 有限集合
+4. lpush+brpop 消息队列
+
+
+
+#### 4.集合(set)
+集合不允许有相同元素，集合是无序的
+redis支持集合的增删改查，和集合的交集，并集，差集等操作
+
+最大不能超过512M
+##### 命令；
+1. 集合内操作
+```shell
+127.0.0.1:6379> sadd s1 a b c c  
+(integer) 3
+127.0.0.1:6379> scard s1 #元素个数
+(integer) 3
+127.0.0.1:6379> sismember s1 c #判断c是否在集合中
+(integer) 1
+127.0.0.1:6379> sismember s1 d #判断d是否在集合中
+(integer) 0
+127.0.0.1:6379> srandmember s1 2 #随机返回2个元素 但是不删除
+1) "b"
+2) "a"
+127.0.0.1:6379> srandmember s1 2
+1) "c"
+2) "a"
+127.0.0.1:6379> spop s1 #随机弹出一个元素，并删除
+"a"
+127.0.0.1:6379> smembers s1 #列出所有元素
+1) "c"
+2) "b"
+
+```
+
+2. 集合间操作
+```shell
+127.0.0.1:6379> sadd user1 music football drinking
+(integer) 3
+127.0.0.1:6379> sadd user2 football drinking swimming
+(integer) 3
+127.0.0.1:6379> sadd user3 football swimming singing
+(integer) 3
+127.0.0.1:6379> sinter user1 user2 user3 #交集
+1) "football"
+127.0.0.1:6379> sunion user1 user2 user3  #并集
+1) "singing"
+2) "drinking"
+3) "swimming"
+4) "football"
+5) "music"
+127.0.0.1:6379> sdiff user1 user2 #差集
+1) "music"
+
+
+```
+
+
 ### redis单线程架构
 1. 使用io多路复用
 2. 命令会进入一个队列然后依次执行
