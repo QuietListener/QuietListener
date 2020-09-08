@@ -13,7 +13,7 @@ OK
 [www@localhost tests]$ redis-cli get aa
 "111"
 
-···
+```
 
 ### 2. 优雅关闭redis
 save 表示先生成次持久化文件
@@ -450,6 +450,26 @@ redis支持集合的增删改查，和集合的交集，并集，差集等操作
 ```
 
 
+
+##### zsort内部编码
+1. ziplist(整数集合)
+元素个数小于zset-max-ziplist-entries（默认128个）并且所有元素长度都小于zet-max-ziplist-value(默认64字节)，这样减少内存使用。
+
+2. skiplist（跳表）
+读写效率高
+
+```shell
+127.0.0.1:6379> zadd z2  10 a
+(integer) 1
+127.0.0.1:6379> object encoding z2
+"ziplist"
+127.0.0.1:6379> zadd z2  10 bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+(integer) 1
+127.0.0.1:6379> object encoding z2
+"skiplist"
+127.0.0.1:6379> 
+
+```
 
 
 ### redis单线程架构
