@@ -1,0 +1,12 @@
+---
+layout: post
+title: redis运维 备忘
+date: 2020-9-9 14:32:00
+categories:  java maven
+---
+### 1. 持久化 RDB AOF
+#### 1. redis持久化的机制 
+redis有RDB和AOF两种持久化机制，下次重启时候利用之前持久化的文件即可恢复数据。
+
+#### 2.RDB
+RDB是把当前进程数据生成快照保存到硬盘的过程，可以手动也可以自动触发。
