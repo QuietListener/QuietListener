@@ -40,7 +40,13 @@ save 表示先生成次持久化文件
 4. del key 删除
 5. expire key 设置key的过期时间
 6. type key 返回类型
-
+7. rename key1 key2  重命名，
+8. renamenx key1 key2  key2不存在的时候才执行成功
+9. randomkey 随机返回一个key
+10. expireat key timestamp 在某一秒过期
+11. ttl key 查看key过期时间 -1表示不过期
+12. pexpire pexpireat 毫秒级别的过期 与expire相同。
+13. 
 
 ### 4.5种数据结构
 string, hash, list, set, zset.
@@ -472,7 +478,50 @@ redis支持集合的增删改查，和集合的交集，并集，差集等操作
 127.0.0.1:6379> 
 
 ```
+##### 使用场景
+1. 用户排行榜
 
+
+
+### 健的管理
+#### 1. 迁移
+##### 1. 同一个实例的迁移 
+move key db 
+##### 2. 不同实例之间迁移
+**第一种方案**   
+
+1. dump key
+2. restore key ttl value
+
+**第二种方案**   
+migrate
+这个是原子操作 一次可以迁移多个健。
+
+
+#### 2. 遍历 keys scan
+1. keys 容易造成阻塞，线上少用
+2. scan
+线上使用scan，每次返回一部分数据
+
+```shell
+127.0.0.1:6379> keys *
+1) "fedis"
+2) "ladis"
+3) "user3"
+4) "jedis"
+5) "redis"
+6) "dedis"
+127.0.0.1:6379> scan  0  MATCH *edis  COUNT 3 #第一次游标必须用0
+1) "6"
+2) 1) "jedis"
+   2) "redis"
+127.0.0.1:6379> scan  6  MATCH *edis  COUNT 3  #使用上一次返回的游标6
+1) "0"   #0表示结束了
+2) 1) "dedis"
+   2) "fedis"
+127.0.0.1:6379> 
+
+```
 
 ### redis单线程架构
 1. 使用io多路复用
