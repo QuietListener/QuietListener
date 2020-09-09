@@ -541,3 +541,67 @@ flushdb 清除当前数据库的数据,flushall清除所有数据的数据。
 
 #### 问题
 某个命令执行时间过长，造成阻塞，很致命
+
+
+### 慢查询
+#### 配置
+
+redis.conf
+```shell
+#slow log
+#操作10微秒算slowlog
+slowlog-log-slower-than 10
+#最多保留最近的1000条慢日志
+slowlog-max-len 1000
+
+```
+slowlog-log-slower-than=0会记录所有命令，
+slowlog-log-slower-than<0不记录
+这个时间是server执行时间，**不包括网络时间和命令排队时间**
+#### 
+
+```shell
+127.0.0.1:6379> mset a b c d e f g h i j k l m n o p q r s t u v w x y z 
+OK
+127.0.0.1:6379> slowlog get
+1) 1) (integer) 0             #id
+   2) (integer) 1599622748    #时间戳
+   3) (integer) 16            #耗时 微秒
+   4)  1) "mset"              #命令和参数
+       2) "a"
+       3) "b"
+       4) "c"
+       5) "d"
+       6) "e"
+       7) "f"
+       8) "g"
+       9) "h"
+      10) "i"
+      11) "j"
+      12) "k"
+      13) "l"
+      14) "m"
+      15) "n"
+      16) "o"
+      17) "p"
+      18) "q"
+      19) "r"
+      20) "s"
+      21) "t"
+      22) "u"
+      23) "v"
+      24) "w"
+      25) "x"
+      26) "y"
+      27) "z"
+127.0.0.1:6379> slowlog len     #slow当前长度
+(integer) 2
+127.0.0.1:6379> slowlog reset   #清除所有slow log
+OK
+127.0.0.1:6379> slowlog len     #清除完成
+(integer) 0
+```
+
+
+
+
