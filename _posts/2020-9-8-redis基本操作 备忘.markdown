@@ -727,7 +727,8 @@ OK
 
 #### 2. redis 执行 Lua
 ##### eval活evalsha都可以
-eval 脚本内容 key个数 key列表 参数列表
+###### 1. eval
+**eval 脚本内容 key个数 key列表 参数列表**
 
 ```shell
 127.0.0.1:6379> eval 'return "hello "..KEYS[1]..ARGV[1]' 1 redis world
@@ -739,4 +740,23 @@ eval 脚本内容 key个数 key列表 参数列表
 2. key个数是1
 3. key列表只有一个元素 redis
 4. 参数列表也只有一个元素 world
+
+###### 2. 使用redis.call 在lua脚本调用 redis命令
+
+在lua脚本中可以使用redis.call调用redis命令，如下所示
+```shell
+127.0.0.1:6379> set kk 1234
+OK
+127.0.0.1:6379> eval 'return redis.call("get","kk")' 0
+"1234"
+127.0.0.1:6379> 
+```
+
+
+###### 3.lua脚本的好处与风险
+1. lua脚本是原子执行的，所以lua脚本可以使用多条命令定制个性化的命令
+2. lua跟pipeline一样，多条命令一起发送，减少网络消耗
+3. 当有lua脚本陷入死循环，可以用script kill 杀掉当前正在执行的脚本。
+4. **风险**：当有lua脚本在死循环中有写入操作时候 比如 set，script kill也杀不掉。只有重启机器
+
 
