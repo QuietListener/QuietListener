@@ -557,8 +557,7 @@ slowlog-max-len 1000
 ```
 slowlog-log-slower-than=0会记录所有命令，
 slowlog-log-slower-than<0不记录
-这个时间是server执行时间，**不包括网络时间和命令排队时间**
-#### 
+####  命令
 
 ```shell
 127.0.0.1:6379> mset a b c d e f g h i j k l m n o p q r s t u v w x y z 
@@ -602,6 +601,66 @@ OK
 (integer) 0
 ```
 
+####  注意事项
+1. 慢查询存在一个FIFO队列，如果慢查询较多，可能丢失慢查询命令。可以使用定期执行slowlog get将慢查询导出来。
+2. 这个时间是server执行时间，**不包括网络时间和命令排队时间**
 
 
 
+### redis基准测试
+基准测试可以看看redis server的性能 , 下面可以看到这个实例最多只能支持1w的个请求。这样可以知道redis-server的能力边界。
+
+```java
+redis-benchmark  -h  172.16.10.12 -p 6479 -c 100 -n 20000
+
+====== SET ======
+  20000 requests completed in 1.81 seconds
+  100 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+0.00% <= 6 milliseconds
+0.39% <= 7 milliseconds
+22.97% <= 8 milliseconds
+68.60% <= 9 milliseconds
+84.01% <= 10 milliseconds
+90.86% <= 11 milliseconds
+94.74% <= 12 milliseconds
+96.62% <= 13 milliseconds
+98.42% <= 14 milliseconds
+99.21% <= 15 milliseconds
+99.61% <= 16 milliseconds
+99.84% <= 17 milliseconds
+99.93% <= 18 milliseconds
+99.96% <= 20 milliseconds
+99.96% <= 21 milliseconds
+99.97% <= 22 milliseconds
+100.00% <= 22 milliseconds
+11025.36 requests per second
+
+====== GET ======
+  20000 requests completed in 1.74 seconds
+  100 parallel clients
+  3 bytes payload
+  keep alive: 1
+
+0.00% <= 5 milliseconds
+0.06% <= 6 milliseconds
+1.37% <= 7 milliseconds
+36.93% <= 8 milliseconds
+79.50% <= 9 milliseconds
+89.44% <= 10 milliseconds
+94.61% <= 11 milliseconds
+95.92% <= 12 milliseconds
+96.36% <= 13 milliseconds
+97.59% <= 14 milliseconds
+99.00% <= 15 milliseconds
+99.47% <= 16 milliseconds
+99.71% <= 17 milliseconds
+99.93% <= 18 milliseconds
+99.97% <= 19 milliseconds
+100.00% <= 19 milliseconds
+11474.47 requests per second
+
+
+```
