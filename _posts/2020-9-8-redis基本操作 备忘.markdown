@@ -760,3 +760,84 @@ OK
 4. **风险**：当有lua脚本在死循环中有写入操作时候 比如 set，script kill也杀不掉。只有重启机器
 
 
+### redis 的一些高级数据结构
+#### 1. bitmaps
+bitmaps底层是String
+#### 2.HyperLogLog
+这是一个算法，用来估计一堆数据中，唯一值的个数，比如[a b c]唯一值是3个 [a b a c]也是三个。 
+HyperLoglog非常节约内存，100w个uuid使用的内存还不到100M.
+
+```
+127.0.0.1:6379> pfadd  testh  a b c a #添加
+(integer) 1
+127.0.0.1:6379> pfcount testh #有个3唯一值
+(integer) 3
+127.0.0.1:6379> pfadd testh e f g h i j j j j 
+(integer) 1
+127.0.0.1:6379> pfcount testh #有个9唯一值
+(integer) 9
+127.0.0.1:6379> 
+
+```
+
+#### 3.发布/订阅 的消息机制
+
+1. client1
+```shell
+127.0.0.1:6379> publish c_sports "hello from sprots again"
+(integer) 2
+```
+
+2. client2
+```shell
+1127.0.0.1:6379> subscribe c_sports
+Reading messages... (press Ctrl-C to quit)
+1) "subscribe"
+2) "c_sports"
+3) (integer) 1
+1) "message"
+2) "c_sports"
+3) "hello from sprots"
+1) "message"
+2) "c_sports"
+3) "hello from sprots again"
+
+```
+
+
+3. client3
+```shell
+127.0.0.1:6379> subscribe c_sports
+Reading messages... (press Ctrl-C to quit)
+1) "subscribe"
+2) "c_sports"
+3) (integer) 1
+1) "message"
+2) "c_sports"
+3) "hello from sprots again"
+
+```
+
+**查看某个channel有几个在订阅**   
+
+```shell
+127.0.0.1:6379> pubsub numsub c_sports
+1) "c_sports"
+2) (integer) 2
+```
+**至少有一个订阅的channnel (活跃channel)**
+
+```shell
+127.0.0.1:6379> pubsub channels
+1) "c_sports"
+127.0.0.1:6379> 
+```
+
+##### 注意事项
+1. 一旦进入订阅状态就只能接受 subscribe，psubscribe，unsubscribe，punsubscribe这几个命令
+2. redis不会持久化消息，新打开的客户端收不到以前的message。
+
+
+
+#### 2. 地理信息 GEO
+底层是使用zset实现的。
