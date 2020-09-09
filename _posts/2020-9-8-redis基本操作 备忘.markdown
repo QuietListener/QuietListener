@@ -722,3 +722,21 @@ OK
 
 #### watch实现乐观锁
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-watch.png)
+
+**exec执行会失败。**
+
+#### 2. redis 执行 Lua
+##### eval活evalsha都可以
+eval 脚本内容 key个数 key列表 参数列表
+
+```shell
+127.0.0.1:6379> eval 'return "hello "..KEYS[1]..ARGV[1]' 1 redis world
+"hello redisworld"
+127.0.0.1:6379> 
+```
+
+1. 脚本是 'return "hello "..KEYS[1]..ARGV[1]'
+2. key个数是1
+3. key列表只有一个元素 redis
+4. 参数列表也只有一个元素 world
+
