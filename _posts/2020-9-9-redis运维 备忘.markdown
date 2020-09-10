@@ -9,4 +9,53 @@ categories:  java maven
 redis有RDB和AOF两种持久化机制，下次重启时候利用之前持久化的文件即可恢复数据。
 
 #### 2.RDB
-RDB是把当前进程数据生成快照保存到硬盘的过程，可以手动也可以自动触发。
+RDB是把当前**进程数据生成快照保存到硬盘**的过程，可以手动也可以自动触发。
+
+##### 1.手动rdb
+```shell
+127.0.0.1:6379> set aabb ccdd
+OK
+127.0.0.1:6379> bgsave
+Background saving started
+
+```
+
+log 信息
+```java
+8906:M 10 Sep 10:03:38.417 * Background saving started by pid 8995
+8995:C 10 Sep 10:03:38.568 * DB saved on disk
+8995:C 10 Sep 10:03:38.568 * RDB: 6 MB of memory used by copy-on-write
+8906:M 10 Sep 10:03:38.643 * Background saving terminated with success
+
+```
+
+
+##### 2.自动rdb
+```shell
+#rdb 10秒钟有3次修改就作rdb
+save 10 3
+```
+
+执行三次set   
+
+```shell
+127.0.0.1:6379> 
+127.0.0.1:6379> set aabb ccdd
+OK
+127.0.0.1:6379> set aabb ccdd1
+OK
+127.0.0.1:6379> set aabb ccdd12
+OK
+127.0.0.1:6379> set aabb ccdd124
+OK
+```
+
+log信息   
+
+```java
+9184:M 10 Sep 10:13:03.227 * Background saving started by pid 9195
+9195:C 10 Sep 10:13:03.240 * DB saved on disk
+9195:C 10 Sep 10:13:03.242 * RDB: 0 MB of memory used by copy-on-write
+9184:M 10 Sep 10:13:03.328 * Background saving terminated with success
+
+```
