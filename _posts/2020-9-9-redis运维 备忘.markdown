@@ -59,3 +59,69 @@ log信息
 9184:M 10 Sep 10:13:03.328 * Background saving terminated with success
 
 ```
+
+##### 3. rdb过程
+rdb是使用fork一个子进程在后台执行的。
+1. 判断是否已经有rdb/aof子进程，如果存在就返回。
+2. fork一个子进程，fork会阻塞父进程
+3. 父进程fork完成后，bgsave返回Background saving stated.
+4. 子进程根据父进程内存生成临时快照文件，并对原文件做快照替换。
+5. 进程发送信号给父进程表示完成。
+
+
+下面是状态。
+```shell
+127.0.0.1:6379> info stats
+# Stats
+total_connections_received:6
+total_commands_processed:100007
+instantaneous_ops_per_sec:0
+total_net_input_bytes:10089094
+total_net_output_bytes:504551
+instantaneous_input_kbps:0.00
+instantaneous_output_kbps:0.00
+rejected_connections:0
+sync_full:0
+sync_partial_ok:0
+sync_partial_err:0
+expired_keys:0
+evicted_keys:51083
+keyspace_hits:0
+keyspace_misses:0
+pubsub_channels:0
+pubsub_patterns:0
+latest_fork_usec:322  #上一次fork 使用了 322微妙(阻塞了父进程322微秒)
+migrate_cached_sockets:0
+127.0.0.1:6379> 
+
+```
+
+
+```shell
+127.0.0.1:6379> info Persistence
+# Persistence
+loading:0
+rdb_changes_since_last_save:0
+rdb_bgsave_in_progress:0
+rdb_last_save_time:1599708110 #上次开始rdb的时间
+rdb_last_bgsave_status:ok
+rdb_last_bgsave_time_sec:0
+rdb_current_bgsave_time_sec:-1
+aof_enabled:0
+aof_rewrite_in_progress:0
+aof_rewrite_scheduled:0
+aof_last_rewrite_time_sec:-1
+aof_current_rewrite_time_sec:-1
+aof_last_bgrewrite_status:ok
+aof_last_write_status:ok
+127.0.0.1:6379> 
+```
+
+##### 4 rdb优缺点
+###### 优点
+1. rdb是**压缩**过的二进制文件，是一个时间点的快照。适用于全量备份，全量复制等场景，用于灾难恢复。
+2. redis加载rdb也远远快于AOF
+
+###### 缺点
+1. 无法实时的持久化，或者秒级持久化。
+bgsave需要fork进程，非常耗时，线上8G内存的redis实例，fork需要200毫秒。如果一个qps是5万的话，就影响了1/5，大约1万个请求。
