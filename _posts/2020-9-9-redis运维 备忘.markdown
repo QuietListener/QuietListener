@@ -166,11 +166,16 @@ bgrewriteaof命令
 
 ##### 2. 自动触发
 ```shell
+#aof
+appendonly yes
+appendfilename "aof6379.aof"
+#重写
 #同时满足下面2个才进行重写
 #当aof文件大于64M才重写
-auto-aof-rewrite-min-size 64M 
+auto-aof-rewrite-min-size 40M
 #当aof比上一次aof后的文件大的比例，比如上次是100m percentage设置为20  120M的时候就可以进行重写了。
 auto-aof-rewrite-percentage  20
+
 ```
 
 
@@ -222,5 +227,17 @@ drwxrwxr-x. 4 www www   65 9月  10 14:40 ..
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-aof-rdb-reload.png) 
 
 
+### 优化
+#### 1. fork
+##### 问题
+1. aof或者rdb都需要操作系统fork操作。fork是很重的一个操作。
+2. fork时候不需要复制父进程的内存空间，但要复制父进程的**内存页**，10G内存也需要复制20Md内存页。
+3. 经验值是10G内存大概需要20毫秒fork时间。
+
+
+##### 怎么优化
+1. 单个redis实例最好不要操作10G内存。
+2. redis尽量使用物理机，使用用fork很高效的虚拟机。不用虚拟机。
+3. 降低fork频率，不使用自动rdb，aof 合理配置 减少不必要的全量复制。
 
 
