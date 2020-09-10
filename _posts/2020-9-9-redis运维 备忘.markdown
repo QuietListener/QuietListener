@@ -217,5 +217,10 @@ drwxrwxr-x. 4 www www   65 9月  10 14:40 ..
 6. 3 替换老的aof文件。
 
 
+### 重启后持久化文件加载
+ 优先加载aof
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-aof-rdb-reload.png) 
+
+
 
 
