@@ -125,3 +125,82 @@ aof_last_write_status:ok
 ###### 缺点
 1. 无法实时的持久化，或者秒级持久化。
 bgsave需要fork进程，非常耗时，线上8G内存的redis实例，fork需要200毫秒。如果一个qps是5万的话，就影响了1/5，大约1万个请求。
+
+
+#### 3.AOF(append of file)
+##### 1. 原理
+aof以独立日志的方式记录每次写命令，重启时候在重新执行aof文件中的命令达到恢复目的。
+**aof解决了吃鸡化的实时性**
+
+#### 2#. aof工作流程
+1. 写入命令写到aof_buf
+2. aof缓冲根据**策略**向硬盘做**同步**操作
+3. aof文件越来越大，需要定期对aof重写，达到压缩的目的
+4. redis重启时候，可以加在aof文件进行数据恢复
+
+##### 注意事项
+1. aof使用文本协议格式
+有很好的兼容性和可读性。
+2. aof不直接写入磁盘，使用aof_buf 缓冲区
+单线程，防止io阻塞，可以有不同的策略将缓冲同步到磁盘，在性能和安全性做出平衡。
+
+##### 3. aof缓冲区同步策略
+1. alaways 命令写aof_buf后调用fsync同步到磁盘文件，然后再返回。
+2. everysec 命令写入aof_buf后调用write操作，立即返回，由一个单独的同步线程每秒做一次fsync同步。
+3. no 命令写入aof_buf后调用write操作，立即返回，不对aof文件做fsync同步。
+
+**建议使用everysec**，如果突然宕机，值丢失1秒左右的数据。
+
+##### 4. aof文件重写
+命令不断写入 aof会越来越大，重写机制可以解决这个问题。 
+aof文件变小了 redis加载aof文件也会更快。
+
+###### 1. 为什么重写可以使得命令变小
+1. 进程内超时的数据可以不用写了。
+2. 多条命令可以合并，比如 lpush l a , lpush l b 可以合并为 lpush l a b
+3. 旧的aof文件里的无效命令已经可以不用写了。
+
+#### aof重写触发时机
+1. 手动触发
+bgrewriteaof命令
+
+2. 自动触发
+```shell
+#同时满足下面2个才进行重写
+#当aof文件大于64M才重写
+auto-aof-rewrite-min-size 64M 
+#当aof比上一次aof后的文件大的比例，比如上次是100m percentage设置为20  120M的时候就可以进行重写了。
+auto-aof-rewrite-percentage  20
+```
+
+
+下面是自动开始aof rewrite的过程
+```
+13195:M 10 Sep 14:41:23.925 * Starting automatic rewriting of AOF on 6405058400% growth
+13195:M 10 Sep 14:41:23.926 * Background append only file rewriting started by pid 13404
+13195:M 10 Sep 14:41:25.071 * AOF rewrite child asks to stop sending diffs.
+13404:C 10 Sep 14:41:25.071 * Parent agreed to stop sending diffs. Finalizing AOF...
+13404:C 10 Sep 14:41:25.071 * Concatenating 0.48 MB of AOF diff received from parent.
+13404:C 10 Sep 14:41:25.098 * SYNC append only file rewrite performed
+13404:C 10 Sep 14:41:25.099 * AOF rewrite: 9 MB of memory used by copy-on-write
+13195:M 10 Sep 14:41:25.214 * Background AOF rewrite terminated with success
+13195:M 10 Sep 14:41:25.214 * Residual parent diff successfully flushed to the rewritten AOF (0.62 MB)
+13195:M 10 Sep 14:41:25.215 * Background AOF rewrite finished successfully
+
+```
+
+重写aof文件后问价大小的对比,**aof文件从60多M变为了13M**
+```shell
+[www@localhost tests]$ ls data -lah
+总用量 71M
+drwxrwxr-x. 2 www www   43 9月  10 14:41 .
+drwxrwxr-x. 4 www www   65 9月  10 14:40 ..
+-rw-r--r--. 1 www www  61M 9月  10 14:41 aof6379.aof
+-rw-rw-r--. 1 www www 5.5M 9月  10 14:41 dump6379.rdb
+[www@localhost tests]$ ls data -lah
+总用量 19M
+drwxrwxr-x. 2 www www   43 9月  10 14:41 .
+drwxrwxr-x. 4 www www   65 9月  10 14:40 ..
+-rw-rw-r--. 1 www www  13M 9月  10 14:41 aof6379.aof
+-rw-rw-r--. 1 www www 2.8M 9月  10 14:41 dump6379.rdb
+```
