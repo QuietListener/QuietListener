@@ -107,3 +107,6 @@ Topic:topic1	PartitionCount:5	ReplicationFactor:3	Configs:
 	Topic: topic1	Partition: 4	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
 
 ```
+
+文档
+https://www.cnblogs.com/senlinyang/p/8124322.html
