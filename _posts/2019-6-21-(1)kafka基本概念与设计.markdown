@@ -10,3 +10,100 @@ categories: 消息队列 kafka
 ![kafka](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2019-06-21-kafka-1.png)
 
 ![下载](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/files/kafka-基本概念与设计.mindnode)
+
+
+
+# 1. kafa
+三台机器
+|name|端口|
+|---|---|
+|server-1| 9093|
+|server-2| 9094|
+|server-3| 9095|
+
+
+```java
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 3 --partitions  5 --topic topic1 
+Created topic "topic1".
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic topic1Topic:topic1	PartitionCount:5	ReplicationFactor:3	Configs:
+	Topic: topic1	Partition: 0	Leader: 1	Replicas: 1,3,2	Isr: 1,3,2
+	Topic: topic1	Partition: 1	Leader: 2	Replicas: 2,1,3	Isr: 2,1,3
+	Topic: topic1	Partition: 2	Leader: 3	Replicas: 3,2,1	Isr: 3,2,1
+	Topic: topic1	Partition: 3	Leader: 1	Replicas: 1,2,3	Isr: 1,2,3
+	Topic: topic1	Partition: 4	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
+
+```
+
+
+
+**第一条命令**创建了一个名字为topic1的主题，这个主题有5个partition，副本数为3。
+**第二条命令**查看了当前topic的状态
+比如
+> topic: topic1	Partition: 0	Leader: 1	Replicas: 1,3,2	Isr: 1,3,2
+
+partition 0 分布在 1 3 2 这三台机器上，其中leader 为1这台机器,并且leader负责这个partition的读写。
+
+partition 0和3 的 leader在server1 
+partition 1和4 的 leader在server12
+partition 2 的 leader在server3
+
+isr = in sync replica, 表示某个partition褒词同步的server，partition 0 的leader是1，并且副本在2，3这两台机器上保持了同步。
+
+读写partition0的consumer和读写取partition1的consumer会 在不同的机器上，可以看到leader在整个集群中做了**负载均衡**。
+
+
+
+**杀掉 server-1**后再看看集群的情况
+```java
+[www@localhost local-cluster]$ jps -lm
+14161 org.apache.zookeeper.server.quorum.QuorumPeerMain configs/zookeeper.properties
+14467 kafka.Kafka configs/server-1.properties
+14468 kafka.Kafka configs/server-2.properties
+14469 kafka.Kafka configs/server-3.properties
+17710 sun.tools.jps.Jps -lm
+[www@localhost local-cluster]$ kill -9 14467
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic topic1
+Topic:topic1	PartitionCount:5	ReplicationFactor:3	Configs:
+	Topic: topic1	Partition: 0	Leader: 3	Replicas: 1,3,2	Isr: 3,2
+	Topic: topic1	Partition: 1	Leader: 2	Replicas: 2,1,3	Isr: 2,1,3
+	Topic: topic1	Partition: 2	Leader: 3	Replicas: 3,2,1	Isr: 3,2,1
+	Topic: topic1	Partition: 3	Leader: 2	Replicas: 1,2,3	Isr: 2,3
+	Topic: topic1	Partition: 4	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
+
+```
+
+
+我们可以看到  leader有很大的变化，集群做了**rebalance(重平衡)**, 将partition的leader做了调整。
+
+
+
+**将server 1重新启动起来**
+```java
+[www@localhost local-cluster]$ nohup ../kafka_2.11-2.1.1/bin/kafka-server-start.sh configs/server-1.properties >> logs/kafka1.log &
+[2] 18764
+[www@localhost local-cluster]$ nohup: 忽略输入重定向错误到标准输出端
+
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic topic1
+Topic:topic1	PartitionCount:5	ReplicationFactor:3	Configs:
+	Topic: topic1	Partition: 0	Leader: 3	Replicas: 1,3,2	Isr: 3,2,1
+	Topic: topic1	Partition: 1	Leader: 2	Replicas: 2,1,3	Isr: 2,1,3
+	Topic: topic1	Partition: 2	Leader: 3	Replicas: 3,2,1	Isr: 3,2,1
+	Topic: topic1	Partition: 3	Leader: 2	Replicas: 1,2,3	Isr: 2,3,1
+	Topic: topic1	Partition: 4	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
+
+```
+重新加入server1后，isr都加上了1.
+这个时候我们没有往kafka写数据。leader还是保持原来的样子，没有执行rebalance操作。我们可以手动执行rebalance操作
+```java
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-preferred-replica-election.sh --zookeeper localhost:2181
+Created preferred replica election path with topic1-2,topic1-4,topic1-0,topic1-3,topic1-1
+Successfully started preferred replica election for partitions Set(topic1-2, topic1-4, topic1-0, topic1-3, topic1-1)
+[www@localhost local-cluster]$ ../kafka_2.11-2.1.1/bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic topic1
+Topic:topic1	PartitionCount:5	ReplicationFactor:3	Configs:
+	Topic: topic1	Partition: 0	Leader: 1	Replicas: 1,3,2	Isr: 3,2,1
+	Topic: topic1	Partition: 1	Leader: 2	Replicas: 2,1,3	Isr: 2,1,3
+	Topic: topic1	Partition: 2	Leader: 3	Replicas: 3,2,1	Isr: 3,2,1
+	Topic: topic1	Partition: 3	Leader: 1	Replicas: 1,2,3	Isr: 2,3,1
+	Topic: topic1	Partition: 4	Leader: 2	Replicas: 2,3,1	Isr: 2,3,1
+
+```
