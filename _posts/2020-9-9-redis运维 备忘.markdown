@@ -260,6 +260,162 @@ https://cloud.tencent.com/developer/article/1633077
 主要是磁盘io问题
 
 ### 部署
-1. 不要在同一台机器上部署等io密集型的服务。例如 kafka
+1. 不要在同一台机器上部署io密集型的服务。例如 kafka
 2. aof重写不要自动执行，可以外部监控，然后在适当的时候手动做aof重写，比如凌晨或者业务低风时候做。
 3. 如果一台机器有有多个redis实例，也是手动做aof重写，并且一台完了再做另一台。不要有多台同时做。
+
+
+
+### 2. 复制 replication
+复制可以解决单点问题，将一个数据多个副本放在不同机器上。
+
+#### 1. 命令 slave of
+下面是1个master 2个slave的配置
+
+**master配置**
+
+```shell
+port 6479
+daemonize yes
+logfile "logs/6479.log"
+dbfilename "dump6479.rdb"
+dir "/home/www/programs/redis/master-slave/data"
+
+```
+**2个slave的配置**  
+```shell
+port 6480
+daemonize yes
+logfile "logs/6480.log"
+dbfilename "dump6480.rdb"
+dir "/home/www/programs/redis/master-slave/data"
+slaveof 127.0.0.1 6479 #指定master
+
+```
+
+```shell
+port 6481
+daemonize yes
+logfile "logs/6481.log"
+dbfilename "dump6481.rdb"
+dir "/home/www/programs/redis/master-slave/data"
+slaveof 127.0.0.1 6479
+
+```
+
+
+
+现在有三个redis服务
+|实例|端口|
+|---|---|
+|master|6479|
+|slave1|6480|
+|slave2|6481|
+
+
+**在master节点查看复制的信息**
+```shell
+[www@localhost master-slave]$ redis-cli -p 6479
+127.0.0.1:6479> info replication
+# Replication
+role:master #表示是master节点
+connected_slaves:2 #两个slave
+slave0:ip=127.0.0.1,port=6480,state=online,offset=43,lag=0
+slave1:ip=127.0.0.1,port=6481,state=online,offset=43,lag=0
+master_repl_offset:43
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:42
+
+```
+
+**在slave节点查看复制的信息**
+```shell
+127.0.0.1:6480> info replication
+# Replication
+role:slave #是从节点
+master_host:127.0.0.1 #master ip
+master_port:6479 #master port
+master_link_status:up
+master_last_io_seconds_ago:7
+master_sync_in_progress:0
+slave_repl_offset:141
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6480> 
+
+```
+
+
+
+#### 切换主节点
+下面 6480端口的redis 是6479的slave节点，现在要切换到6579这个端口的redis去
+1. 注意 slaveof no one 不会删掉数据
+2. 切换master后 slave会删除所有数据 
+
+**下面是一个切换过程**
+
+```shell
+127.0.0.1:6480> slaveof no one #d断开与master的链接
+OK
+127.0.0.1:6480> info replication #已经不是slave了
+# Replication
+role:master
+connected_slaves:0
+master_repl_offset:4283
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6480> keys * #数据还在
+1) "c"
+2) "g"
+3) "i"
+4) "a"
+5) "e"
+6) "k"
+7) "aa"
+127.0.0.1:6480> slaveof 127.0.0.1 6579 #master切换到 6579
+OK
+127.0.0.1:6480> keys * #数据已经清空了。 
+(empty list or set)
+127.0.0.1:6480> info replication #master已经是6579了
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6579
+master_link_status:up
+master_last_io_seconds_ago:3
+master_sync_in_progress:0
+slave_repl_offset:29
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_repl_offset:0
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+127.0.0.1:6480> 
+
+```
+
+**在线上一定要特别小心**
+
+####  减少延迟 repl-disable-tcp-nodelay
+系统为了减少网络开销，有一个参数tcp-nodelay,如果开启，不管有多少数据，立即发送出去。如果关闭的话，系统会数据积累到一定量才发出去，这样延时就加大了。
+```shell
+repl-disable-tcp-nodelay no #表示不禁用 tcp_nodelay 也就是开启tcp_nodelay, 立即发送
+```
+
+
+
+#### 建立复制过程
+
