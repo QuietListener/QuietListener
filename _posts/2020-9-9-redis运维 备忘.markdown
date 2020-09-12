@@ -533,3 +533,35 @@ slave0:ip=127.0.0.1,port=6480,state=online,offset=43,lag=0
 https://www.cnblogs.com/svan/p/7366397.html
 
 
+
+### 部署的要注意的问题
+#### 1. 读写分离
+读写分离需要注意 master与slave的延迟，可以通过 
+>master_repl_offset:26111
+与
+>slave0:ip=127.0.0.1,port=6481,state=online,offset=26111,lag=0
+中的offset的差值来观察，当大于有个阈值的时候通知客户端，不要再读了slave了。
+
+
+#### 2. 主从配置不一致
+1. 主从之间有点配置是可以不一致的，比如aof 是否开启。
+2. 有的配置必须一致，比如 maxmemory,hash-max-ziplist-entries等
+
+**maxmemory不一样**:，slave小于master，如果slave的数据量超过了maxmemory，会根据maxmemory-policy进行淘汰，导致数据不一致。
+**hash-max-ziplist-entries不一样**: master和salve存的数据一样，但是占用的内存会有很大的差异。
+
+#### 3. 避免全量复制
+1. 某节点不包括任何主节点信息: 会出发全量同步。 如果必须这样的话可以在低峰时候做。
+2. **复制积压缓冲区**(repl_backlog_size)太小: 如果主从断开连接后，从节点再次连接发送psync offset runid请求部分复制，如果偏移量不在**复制积压缓冲区**中，
+会退化为**全量复制**。
+解决办法: 统计高峰时候 mster_repl_offset，计算一分钟的差值，规划一个合理的repl_backlog_size值。
+
+#### 4.复制风暴
+1. 主节点复制风暴
+一台master如果连接了多个slave的话，当master重启后，多个slave会同时进行**全量复制**，可能将master的网络带宽打满。
+**应对方法**：减少slave的量，一台一台地进行
+
+2. 单机多实例复制风暴
+如果一台机器上部署多个redis的master实例，如果这台机器出现网络故障，等ta恢复的时候，会有大量从节点针对这台机器进行全量复制，可能将磁盘或者网络带宽打满。
+**应对方法**:master尽量不要部署在同一台机器上。 或者 主节点故障后提供故障转移机制，避免恢复后全量复制。
+
