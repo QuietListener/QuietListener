@@ -447,3 +447,60 @@ master_link_status:down #与master的链接状态是下线状态
 
 
 
+#### 同步细节
+##### 1. 偏移量
+1. 主从节点都会维护自己的偏移量
+2. master 节点处理完命令后会把偏移量做累加
+>master_repl_offset:3697
+3. slave  收到主节点发送的命令后也会累加自己的偏移量
+>slave_repl_offset:491
+4. slave 会定时上报自己的复制偏移量给master
+> slave0:ip=127.0.0.1,port=6481,state=online,offset=3697,lag=1
+
+**注意**
+master_repl_offset - slave_offset 判断主从复制健康程度。
+
+##### 2. Run Id
+1. 每一个节点都会有一个40位的字符串作为运行id。redis不是用ip:port来区分节点的，是用runId来区分的。 
+2. runid在redis重启后会改变。
+如果修改了配置 比如修改hash-max-ziplist-value后，需要重新加载才能生效。可以使用**debug reload**，保持runId不变的情况下重新加载rdb。 **redbug reload 会生成新的rdb，清空数据，再加载rdb 会有较长时间的阻塞。**
+
+##### 3。 psync (partial sync)部分复制
+>psync master-runid offset
+offset 是slave 当前的复制偏移量
+
+1. slave发送psync给master。 如果是第一次offset是-1
+2. master根据情况返回。 如果返回**fullresync runid offset** 从节点会全量复制。如果返回**CONTINUE** 从节点执行部分复制。
+
+#### 全量复制
+1. slave发送psync给master 主节点返回了  **fullresync runid offset** 决定全量复制。
+salve的log如下
+```shell
+21721:S 12 Sep 09:37:18.280 * Partial resynchronization not possible (no cached master)
+21721:S 12 Sep 09:37:18.333 * Full resync from master: 7e99c7f4f2897a26f8c52d6764cd0f2b13e4bd0f:491
+```
+
+2. master会执行bgsave保存rdb文件到本地
+3. master发送rdb给从文件
+这个过程中如果rdb非常大，发送时间操作了**rpl-timeout**，从节点会放弃接受rdb文件并清理已下载的文件，导致全量复制失败。
+4. master发送rdb过程中，接受到的新的写命令放入**复制客户端缓冲区**（client-output-buffer-limit）内，当发完毕后再将缓冲区数据发送给slave。
+
+如果在发送期间 复制客户端满了，会宣告复制失败，所以如果流量很大需要把client-output-buffer-limit调大一点。
+5. salve接受完rdb文件和**复制客户端缓冲区**中的数据后，清空自己数据，并加载rdb文件。
+
+```java
+21721:S 12 Sep 09:37:18.738 * MASTER <-> SLAVE sync: receiving 56 bytes from master #接受master数据完成
+21721:S 12 Sep 09:37:18.738 * MASTER <-> SLAVE sync: Flushing old data #清除自己的数据
+21721:S 12 Sep 09:37:18.738 * MASTER <-> SLAVE sync: Loading DB in memory #加载master发来的rdb和复制客户端缓冲区中的数据
+21721:S 12 Sep 09:37:18.738 * MASTER <-> SLAVE sync: Finished with success #加载完成
+
+```
+6. 如果加载完了 salve开启了 aof功能，会立即bgrewriteaof操作。
+7. 结束
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-fullsync.png)
+
+
+**整个过程非常耗时，经验值是6G内存2分钟**
+
+
+
