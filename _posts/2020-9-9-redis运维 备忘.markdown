@@ -419,3 +419,31 @@ repl-disable-tcp-nodelay no #表示不禁用 tcp_nodelay 也就是开启tcp_node
 
 #### 建立复制过程
 
+1. 执行slaveof masterip port 后，slave保存主节点的信息。 但是与主节点的链接状态是down(下线)状态。
+```shell
+127.0.0.1:6480> info replication
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6479
+master_link_status:down #与master的链接状态是下线状态
+
+```
+
+2. slave 内部定时任务(每秒执行一次) 与主节点建立连接(主节点端口24555)，如果连接失败会一直重试，知道执行slaveof on one为止。
+当链接成功后会看到日志
+
+```java
+21721:S 12 Sep 09:37:18.279 * Connecting to MASTER 127.0.0.1:6479
+21721:S 12 Sep 09:37:18.279 * MASTER <-> SLAVE sync started
+
+```
+
+3. slave 发送ping命令，检查套接字是否可用，master是否可以接受处理命令 如果失败，断开连接，回到上一步的状态。
+4. 权限验证
+5. 同步数据集。
+主节点会将所有数据发送到从节点(非常耗时)。
+6. 命令持续复制。
+
+
+

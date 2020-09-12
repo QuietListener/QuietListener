@@ -1,0 +1,69 @@
+---
+layout: post
+title: centos7模拟弱网络环境
+date: 2020-9-9 14:32:00
+categories:  java maven
+---
+
+在虚拟机执行
+```shell
+[www@localhost master-slave]$ ifconfig
+eno16777736: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.231.149  netmask 255.255.255.0  broadcast 192.168.231.255
+        inet6 fe80::20c:29ff:fe6e:bebb  prefixlen 64  scopeid 0x20<link>
+        ether 00:0c:29:6e:be:bb  txqueuelen 1000  (Ethernet)
+        RX packets 6495  bytes 998851 (975.4 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 2614  bytes 225530 (220.2 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 0  (Local Loopback)
+        RX packets 305862  bytes 21344997 (20.3 MiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 305862  bytes 21344997 (20.3 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+[www@localhost master-slave]$ su root
+密码：
+ABRT 已检测到 '1' 个问题。预了解详细信息请执行：abrt-cli list --since 1599789041
+[root@localhost master-slave]#  tc qdisc add dev eno16777736  root netem delay 150ms 50ms
+```
+
+
+
+**tc qdisc add dev eno16777736  root netem delay 150ms 50ms**将网卡eno16777736延迟改为150ms,左右波动50ms
+ping一下
+
+```java
+➜  Documents ping 192.168.231.149                                                                    
+PING 192.168.231.149 (192.168.231.149): 56 data bytes
+64 bytes from 192.168.231.149: icmp_seq=0 ttl=64 time=138.339 ms
+64 bytes from 192.168.231.149: icmp_seq=1 ttl=64 time=157.705 ms
+64 bytes from 192.168.231.149: icmp_seq=2 ttl=64 time=180.443 ms
+64 bytes from 192.168.231.149: icmp_seq=3 ttl=64 time=116.069 ms
+64 bytes from 192.168.231.149: icmp_seq=4 ttl=64 time=100.106 ms
+64 bytes from 192.168.231.149: icmp_seq=5 ttl=64 time=134.069 ms
+64 bytes from 192.168.231.149: icmp_seq=6 ttl=64 time=151.415 ms
+64 bytes from 192.168.231.149: icmp_seq=7 ttl=64 time=188.056 ms
+64 bytes from 192.168.231.149: icmp_seq=8 ttl=64 time=155.454 ms
+```
+
+
+移除限制
+```java
+[root@localhost master-slave]# tc qdisc del dev eno16777736 root netem
+[root@localhost master-slave]# 
+
+```
+
+```java
+➜  Documents ping 192.168.231.149
+PING 192.168.231.149 (192.168.231.149): 56 data bytes
+64 bytes from 192.168.231.149: icmp_seq=0 ttl=64 time=0.303 ms
+64 bytes from 192.168.231.149: icmp_seq=1 ttl=64 time=0.318 ms
+64 bytes from 192.168.231.149: icmp_seq=2 ttl=64 time=0.549 ms
+
+```
