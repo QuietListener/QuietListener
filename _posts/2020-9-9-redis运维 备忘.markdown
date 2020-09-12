@@ -504,3 +504,32 @@ salve的log如下
 
 
 
+
+#### 部分复制(psync)
+ 当slave正在复制master时候，如果网络闪断，或者命令对视，从节点会要求补发丢失的命令数据。 如果主节点**复制积压缓冲区**内存在这不恩数据就可以直接发送给从节点。
+
+ 1. master和slave失去链接
+ 2. master响应命令并将写命令存放子啊**复制积压缓冲区**，默认1M
+ 3. 当主从连接恢复后，从节点将自生复制的offset和master的runid发送给master
+ 4. master验证了runnid与自己一致后，根据offset在自己的**复制积压缓冲区**中寻找数据，如果在缓冲区中，向从节点发送**CONTINUE**命令，表示可以进行部分复制。
+ 5.master根据offset把**复制积压缓冲区**中的数据发送给slave
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/redis-psync.png)
+
+
+#### 心跳
+1. master默认每10s发送ping命令给salve。通过repl-ping-slave-period来控制发送频率
+2. slave默认每1秒发送replconf ack offset 上报offset给master
+
+#### 异步复制
+1. master接受到写命令执行后立即返回客户端
+2. 异步发送给slave
+
+master和slave之间会有延迟，lag=0 就是延迟的量
+```shell
+slave0:ip=127.0.0.1,port=6480,state=online,offset=43,lag=0
+```
+
+一篇文章
+https://www.cnblogs.com/svan/p/7366397.html
+
+
