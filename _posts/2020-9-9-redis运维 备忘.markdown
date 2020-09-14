@@ -306,6 +306,7 @@ slaveof 127.0.0.1 6479
 
 
 现在有三个redis服务
+
 |实例|端口|
 |---|---|
 |master|6479|
@@ -411,6 +412,7 @@ repl_backlog_histlen:0
 
 ####  减少延迟 repl-disable-tcp-nodelay
 系统为了减少网络开销，有一个参数tcp-nodelay,如果开启，不管有多少数据，立即发送出去。如果关闭的话，系统会数据积累到一定量才发出去，这样延时就加大了。
+
 ```shell
 repl-disable-tcp-nodelay no #表示不禁用 tcp_nodelay 也就是开启tcp_nodelay, 立即发送
 ```
@@ -420,14 +422,14 @@ repl-disable-tcp-nodelay no #表示不禁用 tcp_nodelay 也就是开启tcp_node
 #### 建立复制过程
 
 1. 执行slaveof masterip port 后，slave保存主节点的信息。 但是与主节点的链接状态是down(下线)状态。
+
 ```shell
 127.0.0.1:6480> info replication
-# Replication
+ # Replication
 role:slave
 master_host:127.0.0.1
 master_port:6479
 master_link_status:down #与master的链接状态是下线状态
-
 ```
 
 2. slave 内部定时任务(每秒执行一次) 与主节点建立连接(主节点端口24555)，如果连接失败会一直重试，知道执行slaveof on one为止。
