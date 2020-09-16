@@ -567,3 +567,199 @@ https://www.cnblogs.com/svan/p/7366397.html
 如果一台机器上部署多个redis的master实例，如果这台机器出现网络故障，等ta恢复的时候，会有大量从节点针对这台机器进行全量复制，可能将磁盘或者网络带宽打满。
 **应对方法**:master尽量不要部署在同一台机器上。 或者 主节点故障后提供故障转移机制，避免恢复后全量复制。
 
+
+
+
+### 3. 阻塞的问题
+
+单线程的redis最怕的就是阻塞
+
+#### 1. 使用的api不合理
+例如大量使用O(n)时间复制读的命令
+例如hgetall，可以使用hmge代替
+
+可以查看slowlog slowlog get {n}发现慢查询
+
+#### 2. 大对象
+> redis-cli -h ip -p port bigkeys 
+
+可以扫描大对象
+
+#### 3.cpu饱和
+redis是单线程，是cpu密集型。
+例如ziplist的复杂度是o(n)到o(n平方)之间，但是省内存。如果过度要求省内存，把hash-max-ziplist-entries 调得很高的话，有可能会过多消耗cpu。导致cpu饱和
+
+可以用下面的命令查看每秒处理的命令个数
+**如果每秒处理命令个数不多，但是cpu却很高的话，就可能是上面的问题**
+```shell  
+[www@localhost master-slave]$ redis-cli --stat -p 6479
+------- data ------ --------------------- load -------------------- - child -
+keys       mem      clients blocked requests            connections          
+7          1.53M    1       0       82377 (+0)          13          
+7          1.53M    1       0       82380 (+3)          13          
+7          1.53M    1       0       82383 (+3)          13          
+7          1.53M    1       0       82386 (+3)          13          
+7          1.53M    1       0       82389 (+3)          13          
+7          1.53M    1       0       82392 (+3)          13  
+```
+
+#### 4 rdb或者aof fork时候柱塞
+```shell
+127.0.0.1:6479> info stats
+# Stats
+total_connections_received:14
+total_commands_processed:83398
+instantaneous_ops_per_sec:1
+total_net_input_bytes:3152585
+total_net_output_bytes:135388
+instantaneous_input_kbps:0.07
+instantaneous_output_kbps:0.00
+rejected_connections:0
+sync_full:3
+sync_partial_ok:6
+sync_partial_err:0
+expired_keys:0
+evicted_keys:0
+keyspace_hits:0
+keyspace_misses:0
+pubsub_channels:0
+pubsub_patterns:0
+latest_fork_usec:26191 #上次fork使用时间 微妙
+migrate_cached_sockets:0
+127.0.0.1:6479> 
+
+```
+
+避免使用过大的实例
+
+
+#### 5 AOF刷盘
+
+看这里
+https://dbawsp.com/2010.html
+
+
+redis在aof持久化，会调用fsync刷盘。如果主线程发现距离上一次的fsync成功超过了2秒，为了数据安全**回阻塞主线程知道fsync执行完**。
+出现这种情况多半是 aofrewrite导致磁盘io被打满了。
+会看到下面这种日志
+```log
+
+3921:S 24 Jul 21:01:02.081 * Asynchronous AOF fsync is taking too long (disk is busy?). Writing the AOF buffer without waiting for fsync to complete, this may slow down Redis.
+3921:S 24 Jul 21:01:04.084 * Asynchronous AOF fsync is taking too long (disk is busy?). Writing the AOF buffer without waiting for fsync to complete, this may slow down Redis.
+
+
+```
+**可以将no-appendfsync-on-rewrite 设置为 yes，在aofrewrite的时候，aof不调用fsync**，危险的是如果宕机，可能丢失数据。
+
+```shell
+auto-aof-rewrite-percentage               100
+auto-aof-rewrite-min-size                 1gb
+no-appendfsync-on-rewrite                 yes   
+```
+
+
+#### 6 cpu竞争
+1. 与其他cpu密集型的服务竞争
+2. 如果redis绑定到某个cpu上，子进程可能会与主进程竞争cpu
+
+#### 6.内存不足或者maxmemory设置太大导致使用swap
+
+可以用下面命令查看 redis的swap使用情况
+```shell
+[www@localhost master-slave]$ cat /proc/21720/smaps | grep Swap
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+
+
+```
+
+如果有较多的大于0的使用，需要优化配置了。
+
+#### 7网络问题
+1. 网络闪断  
+  避免redis客户端与redis服务器跨机房
+
+2.  redis拒绝连接.  
+
+#默认与客户端连接数，大于这个数，就会拒绝连接。
+maxclients 10000 决定了连接上限。
+
+可以看rejected_connections知道拒绝了多少个连接
+
+```java
+127.0.0.1:6479> info stats
+# Stats
+total_connections_received:16
+total_commands_processed:88240
+instantaneous_ops_per_sec:1
+total_net_input_bytes:3336550
+total_net_output_bytes:143479
+instantaneous_input_kbps:0.05
+instantaneous_output_kbps:0.00
+rejected_connections:0  //拒绝连接的个数
+sync_full:3
+sync_partial_ok:6
+sync_partial_err:0
+expired_keys:0
+evicted_keys:0
+keyspace_hits:0
+keyspace_misses:0
+pubsub_channels:0
+pubsub_patterns:0
+latest_fork_usec:26191
+migrate_cached_sockets:0
+
+```
+
+3. redis没有主动关闭无效连接
+如果有客户端平凡的启动或销毁，**redis默认不会关闭无效的链接**，这回导致redis连接快速消耗。
+可以用下面参数主动关闭redis无效链接。
+
+```shell
+## 下面是reids主动关闭无效连接的配置
+#空闲的client多久会被关闭
+timeout: 600
+
+#redis主动向空闲客户端发起ack请求，判断连接有没有效果
+tcp-keepalive yes
+
+## end 
+
+```
+
+4. linux系统的 进程最大打开文件数限制和tcp端口backlog限制
+**linux系统每个进程对打开文件数有限制 一般是1024，可以增大这个值到65535**
+
+```shell
+[www@localhost master-slave]$ ulimit -n
+1024
+[www@localhost master-slave]$ su root
+密码：
+[root@localhost master-slave]# ulimit -n 65535  
+```
+
+**tcp 端口也有backlog限制**
+socket编程中listen有一个参数。backlog是tcp请求队列的长度
+int listen(int sockfd, int backlog);
+
+真正的长度其实是  min(/proc/sys/net/core/somaxconn ,backlog).
+所以要改的话需要执行
+```shell
+[root@localhost master-slave]# echo 511 > /proc/sys/net/core/somaxconn
+```
+
+```shell
+#backlog大小，还需要调整 /proc/sys/net/core/somaxconn ，系统最终取二者较小的一个
+#[root@localhost master-slave]# echo 511 > /proc/sys/net/core/somaxconn
+tcp-backlog 511
+
+```
