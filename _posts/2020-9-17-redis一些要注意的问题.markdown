@@ -1,0 +1,14 @@
+---
+layout: post
+title: redis一些要注意的问题
+date: 2020-9-17 14:32:00
+categories:  java maven
+---
+
+# 1.业务上的问题
+## 1. big key
+## 2. hot key
+## 3. 雪崩
+## 4. 穿透
+## 5. 分布式锁
+
