@@ -8,6 +8,9 @@ categories:  java maven
 # 1.业务上的问题
 ## 1. big key
 ## 2. hot key
+
+https://www.cnblogs.com/leeego-123/p/11588429.html
+
 ## 3. 雪崩
 ## 4. 穿透
 ## 5. 分布式锁
