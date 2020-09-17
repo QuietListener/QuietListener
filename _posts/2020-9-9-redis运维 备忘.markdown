@@ -763,3 +763,112 @@ int listen(int sockfd, int backlog);
 tcp-backlog 511
 
 ```
+
+
+
+### 3. 内存
+
+#### 1.一些指标
+```shell
+[www@localhost master-slave]$ redis-cli -p 6479
+127.0.0.1:6479> info memory
+# Memory
+used_memory:1598128
+used_memory_human:1.52M #redis内存分配器分配内存总量
+used_memory_rss:8118272 #从操作系统看redis进程内存占用物理内存总量
+used_memory_peak:1635696 
+used_memory_peak_human:1.56M #内存使用最大值，used_memory使用的峰值
+used_memory_lua:36864
+mem_fragmentation_ratio:5.08 #used_memory_rss/used_memory 内存碎片率
+mem_allocator:jemalloc-3.6.0
+
+```
+
+比较重要的是 mem_fragmentation_ratio = used_memory_rss/used_memory
+当 mem_fragmentation_ratio > 1 说明有内存碎片   
+
+当 used_memory_rss/used_memory < 1 说明有内存被交换到磁盘上了，**这个要特别注意**，因为磁盘io很耗时。
+
+
+#### 2.内存分类
+##### 1. 对象内存
+存放用户所有数据，每次创建键值对 至少需要创建2个对象 key对象和value对象。所以健也需要消耗内存，**应该避免长健**
+
+##### 2. 缓冲内存
+###### 1. 客户端缓冲区
+输入缓冲无法控制，输出可以使用client-output-buffer-limit 控制。
+
+1. 普通客户端，一般可以忽略，但是如果客户端很多的话，就不能忽略了。 
+下面的参数是不限制
+```shell
+client-output-buffer-limit normal 0 0 0
+```
+
+2. 主从同步
+当组从同步的时候，缓冲区最大256M,最小64M,如果持续60秒缓冲区大于64M就关闭客户端。
+
+```shell
+client-output-buffer-limit slave 256mb 64mb 60
+```
+
+3. 订阅发布的客户端
+缓冲区最大8M,最小2M,如果持续60秒缓冲区大于2MM就关闭客户端
+
+```shell
+client-output-buffer-limit pubsub 8mb 2mb 60
+```
+**参考资料**
+https://blog.csdn.net/damanchen/article/details/101075757
+https://www.cnblogs.com/pk-tiger/p/11866423.html
+
+
+
+##### 2. 复制积压缓冲区
+复制积压缓冲区 一个redis实例只有一个，用于psync，可以设置大一点例如，防止全量同步。
+***repl-backlog-size 100MB**
+
+
+##### 3. aof缓冲区 
+在aof重写期间保存最近的写命令，
+
+
+#### 3. 子进程内存消耗
+在fork的时候，回使用copy-on-write的时候，如果有新的写命令会复制一份父进程修改页的完整拷贝。如果开启了Linux的内存的Transparent Huge Page(THP) 机制，在复制的时候，每次复制4KB内存会变成复制2MB 这会大大增加内存消耗。所以需要关闭THP机制。 
+**在共并发的情况下，开启THP 很可能触发swap或者OOM**
+
+
+
+#### 4. 管理内存
+##### 1. maxmemory设置最大可以使用内存
+maxmemory限制的是redis实际使用的内存，也就是used_memory对应的内存。但是由于**内存碎片的存在**，实际消耗的内存比maxmemory大。
+所以需要预留一些内存。
+##### 2. 可以动态调整 maxmemory 
+
+##### 3. 内存回收-删除过期健  
+
+redis删除过期健使用**惰性删除**加**定时删除**
+
+1. 惰性删除
+当客户端读取一个有超时属性的key时候，如果已经过期了，会执行删除并返回空。
+2. 定时使出
+redis内部有一个定时任务，默认10s执行一次
+
+##### 3. 内存回收-内存溢出策略
+1. noeviction
+不删数据 ，拒绝所有写入操作
+
+2. allkey-lru 
+lru算法删除,直到腾出足够空间
+
+3. allkeys-random 
+随机算法删除,直到腾出足够空间
+
+4. volatile-lru 
+lru算法删除过期健,直到腾出足够空间，如果没有就退回到noeviction
+
+5. volatile-random 
+随机删除过期健,直到腾出足够空间，如果没有就退回到noeviction
+
+6. volatile-ttl
+根据ttl 删除最近要过期健,直到腾出足够空间，如果没有就退回到noeviction
+
