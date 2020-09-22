@@ -872,3 +872,19 @@ lru算法删除过期健,直到腾出足够空间，如果没有就退回到noev
 6. volatile-ttl
 根据ttl 删除最近要过期健,直到腾出足够空间，如果没有就退回到noeviction
 
+
+
+
+###  哨兵Sentinel
+
+```shell
+port 26379
+logfile "logs/sentinel-26379.log"
+dir "/home/www/programs/redis/sentinel/data"
+
+#sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
+sentinel monitor mymaster 127.0.0.1 6479 2
+sentinel config-epoch mymaster 0
+sentinel leader-epoch mymaster 0
+
+```
