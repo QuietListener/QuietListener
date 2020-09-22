@@ -877,6 +877,68 @@ lru算法删除过期健,直到腾出足够空间，如果没有就退回到noev
 
 ###  哨兵Sentinel
 
+#### 1. maser-slave 模式
+
+master slave 模式 下当master出现问题了，需要进行手动主从切换,**无法做到高可用**
+步骤为:
+1. 对某个从节点执行 slaveof no one
+2. 将客户端指向新的主节点
+3. 调整其他redis从节点去复制新的主节点，如果原来的主节点恢复，也去复制新的主节点。
+
+#### 2. 哨兵模式 实现高可用
+
+#### 1. 基本
+1. 哨兵模式是一个分布式架构，包括sentinel节点和redis节点。
+2. 每一个哨兵(Sentinel)都会其他哨兵和redis节点(主节点和从节点)进行监控。
+3. 当发现有节点不可达的时候，对其进行下线操作。
+4. 当redis主节点不可达的时候，Sentinel会选举一个leader来进行故障转移，并将变化通知应用方(client)
+
+
+#### 2. 例子
+1. redis集群: 1个master和1个slave组成的      
+2. sentinel集群: 3个Sentinel实例
+
+##### redis配置
+master 在 6479端口
+slave  在 6480端口
+1. master配置
+```shell
+port 6479
+#daemonize yes
+#logfile "logs/6480.log"
+dbfilename "dump6480.rdb"
+dir "/home/www/programs/redis/master-slave/data"
+```
+
+2. slave配置
+```shell
+port 6480
+#daemonize yes
+#logfile "logs/6480.log"
+dbfilename "dump6480.rdb"
+dir "/home/www/programs/redis/master-slave/data"
+
+slaveof 127.0.0.1 6479
+
+```
+
+3. 启动后的redis集群信息
+```shell
+[www@localhost master-slave]$ redis-cli -p 6479  info replication
+# Replication
+role:master
+connected_slaves:1
+slave0:ip=127.0.0.1,port=6480,state=online,offset=15,lag=0
+master_repl_offset:15
+repl_backlog_active:1
+repl_backlog_size:5000000
+repl_backlog_first_byte_offset:2
+repl_backlog_histlen:14
+[www@localhost master-slave]$
+
+```
+
+##### 哨兵配置
 ```shell
 port 26379
 logfile "logs/sentinel-26379.log"
@@ -886,5 +948,58 @@ dir "/home/www/programs/redis/sentinel/data"
 sentinel monitor mymaster 127.0.0.1 6479 2
 sentinel config-epoch mymaster 0
 sentinel leader-epoch mymaster 0
+
+```
+
+```shell
+port 26380
+logfile "logs/sentinel-26379.log"
+dir "/home/www/programs/redis/sentinel/data"
+
+#sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
+sentinel monitor mymaster 127.0.0.1 6479 2
+sentinel config-epoch mymaster 0
+sentinel leader-epoch mymaster 0
+```
+
+```shell
+port 26381
+logfile "logs/sentinel-26379.log"
+dir "/home/www/programs/redis/sentinel/data"
+
+#sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
+sentinel monitor mymaster 127.0.0.1 6479 2
+sentinel config-epoch mymaster 0
+sentinel leader-epoch mymaster 0
+```
+
+##### 启动哨兵集群
+```shell
+[www@localhost sentinel]$ cat start_all.sh 
+nohup ../redis-3.0.7/src/redis-server redis-sentinel-26379.conf  --sentinel >> logs/26379.log  2>&1 &
+nohup ../redis-3.0.7/src/redis-server redis-sentinel-26380.conf  --sentinel >> logs/26380.log  2>&1 &
+nohup ../redis-3.0.7/src/redis-server redis-sentinel-26381.conf --sentinel >> logs/26381.log  2>&1 &
+[www@localhost sentinel]$ bash start_all.sh 
+[www@localhost sentinel]$ ps -aux | grep redis
+www       55639  0.0  0.2  20164  5160 pts/2    S+   15:39   0:00 redis-cli -p 6480
+www       56396  0.1  0.4 149036  9996 pts/0    Sl   16:01   0:00 ../redis-3.0.7/src/redis-server *:6479
+www       56397  0.1  0.3 140844  7712 pts/0    Sl   16:01   0:00 ../redis-3.0.7/src/redis-server *:6480
+www       56536  1.0  0.3 140840  7700 pts/1    Sl   16:03   0:02 ../redis-3.0.7/src/redis-server *:26380 [sentinel]
+www       56537  0.9  0.3 140840  7752 pts/1    Sl   16:03   0:01 ../redis-3.0.7/src/redis-server *:26381 [sentinel]
+www       56689  0.8  0.1 140840  4300 pts/1    Sl   16:06   0:00 ../redis-3.0.7/src/redis-server *:26379 [sentinel]
+
+
+```
+
+##### 验证哨兵
+```shell
+[www@localhost sentinel]$  redis-cli  -p 26379 info Sentinel
+# Sentinel
+sentinel_masters:1
+sentinel_tilt:0
+sentinel_running_scripts:0
+sentinel_scripts_queue_length:0
+master0:name=mymaster,status=ok,address=127.0.0.1:6479,slaves=2,sentinels=3
+[www@localhost sentinel]$ 
 
 ```
