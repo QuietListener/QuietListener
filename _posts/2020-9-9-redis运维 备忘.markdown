@@ -1003,3 +1003,13 @@ master0:name=mymaster,status=ok,address=127.0.0.1:6479,slaves=2,sentinels=3
 [www@localhost sentinel]$ 
 
 ```
+
+获取名字为mymaster集群的master信息
+```shell
+[www@localhost sentinel]$ redis-cli -p 26379
+26379> sentinel get-master-addr-by-name mymaster
+1) "127.0.0.1"
+2) "6479"
+
+```
+##### 
