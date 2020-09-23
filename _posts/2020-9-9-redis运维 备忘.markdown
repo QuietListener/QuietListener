@@ -1033,4 +1033,79 @@ master0:name=mymaster,status=ok,address=127.0.0.1:6479,slaves=2,sentinels=3
 2) "6479"
 
 ```
-##### 
+#### sentinel 几个重要参数
+
+##### 1. sentinel monitor<mastername> <ip> <port> <quorum>
+例如 sentinel monitor mymaster 127.0.0.1 6479 2
+1. sentinel监控127.0.0.1 6479 这个主节点
+2. 判断主节点不可达 至少需要2个sentinel同意 
+3. mymaster是主节点的别名
+4. 至少需要 MAX(quorum，sentinel节点个数/2+1) 个节点统一才能选出一个sentinel领导者
+
+##### 2. sentinel down after milliseconds <mastername> <times>
+例如 sentinel down-after-milliseconds mymaster 30000
+1. 每个sentinel节点定期发送ping判断redis数据节点和其他Sentinel节点，如果在下面时间没有回复，就判断为节点不可达
+
+##### 3.sentinel parallel syncs <mastername> <nums>
+sentinel parallel-syncs mymaster 1
+1. Sentinel对redis进行故障转移时候，原来的从节点会向新的主节点发起复制，这个参数控制同时发起复制的个数
+2. 设置得太大可能会将master的io打满
+
+
+##### 4. sentinel failover-timeout  <mastername> <times>
+例如  sentinel failover-timeout mymaster 180000
+
+下面是故障转移的过程：  
+a）选出合适从节点。  
+b）晋升选出的从节点为主节点(执行 slaveof no one)
+c）命令其余从节点复制新的主节点。  
+d）等待原主节点恢复后命令它去复制新的主节点。  
+
+
+1. 如果对主节点故障转移失败，俺么下次再对该主节点做故障转移的时间是2*failover-time. **相当于一个退避**
+2. 如果在 b阶段执行slaveof no one失败(从节点失败) 当此过程抄错failover-timeout时候，就认为故障转移失败。
+3. b阶段成功，sentinel会执行 info 确认从节点晋升为master成功，如果此过程执行时间超过 failover-time,就认为故障转移失败。
+4. c阶段执行时间超过failover-time(不包括复制时间)，就认为故障转移失败。 
+
+
+
+##### 5. sentinel  notification-script <master-name> <script-path>
+这个参数是在 故障转移期间，一些告警界别的Sentinel事件，例如主观下线，客观下线，会复发这个脚本。
+script 如下所示
+```shell
+#! /bin/sh
+#获取参数
+msg=$*
+echo msg
+exit 0
+[www@localhost sentinel]$ 
+
+```
+
+##### 5. sentinel client-reconfig-script <master-name> <script-path>
+在故障转移结束后，发送转移结果的相关参数
+
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/sentinel-set.png) 
+
+
+
+#### sentinel可以监控多个redis集群
+```shell
+port 26379
+logfile "logs/sentinel-26379.log"
+dir "/home/www/programs/redis/sentinel/data"
+
+#mymaster 第一个集群
+sentinel monitor mymaster 127.0.0.1 6479 2
+sentinel down-after-milliseconds mymaster 30000
+sentinel parallel-syncs mymaster 1
+sentinel failover-timeout mymaster 180000
+
+#mymaster1 第二个集群
+sentinel monitor mymaster1 127.0.0.1 6979 2
+sentinel down-after-milliseconds mymaster1 20000
+sentinel parallel-syncs mymaster1 1
+sentinel failover-timeout mymaster1 180000
+
+```
