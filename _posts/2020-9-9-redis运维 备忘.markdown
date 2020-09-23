@@ -946,31 +946,52 @@ dir "/home/www/programs/redis/sentinel/data"
 
 #sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
 sentinel monitor mymaster 127.0.0.1 6479 2
-sentinel config-epoch mymaster 0
-sentinel leader-epoch mymaster 0
+
+#每个sentinel节点定期发送ping判断redis数据节点和其他Sentinel节点，如果在下面时间没有回复，就判断为节点不可达
+sentinel down-after-milliseconds mymaster 30000
+
+#Sentinel对redis进行故障转移时候，原来的从节点会向新的主节点发起复制，这个参数控制同时发起复制的个数
+sentinel parallel-syncs mymaster 1
+
+#故障转移超时时间
+sentinel failover-timeout mymaster 180000
 
 ```
 
 ```shell
 port 26380
-logfile "logs/sentinel-26379.log"
+logfile "logs/sentinel-26380.log"
 dir "/home/www/programs/redis/sentinel/data"
 
 #sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
 sentinel monitor mymaster 127.0.0.1 6479 2
-sentinel config-epoch mymaster 0
-sentinel leader-epoch mymaster 0
+
+#每个sentinel节点定期发送ping判断redis数据节点和其他Sentinel节点，如果在下面时间没有回复，就判断为节点不可达
+sentinel down-after-milliseconds mymaster 30000
+
+#Sentinel对redis进行故障转移时候，原来的从节点会向新的主节点发起复制，这个参数控制同时发起复制的个数
+sentinel parallel-syncs mymaster 1
+
+#故障转移超时时间
+sentinel failover-timeout mymaster 180000
 ```
 
 ```shell
 port 26381
-logfile "logs/sentinel-26379.log"
+logfile "logs/sentinel-26381.log"
 dir "/home/www/programs/redis/sentinel/data"
 
 #sentinel监控127.0.0.1 6479 这个主节点，判断主节点失败 至少需要2个sentinel同意 mymaster是主节点的别名
 sentinel monitor mymaster 127.0.0.1 6479 2
-sentinel config-epoch mymaster 0
-sentinel leader-epoch mymaster 0
+
+#每个sentinel节点定期发送ping判断redis数据节点和其他Sentinel节点，如果在下面时间没有回复，就判断为节点不可达
+sentinel down-after-milliseconds mymaster 30000
+
+#Sentinel对redis进行故障转移时候，原来的从节点会向新的主节点发起复制，这个参数控制同时发起复制的个数
+sentinel parallel-syncs mymaster 1
+
+#故障转移超时时间
+sentinel failover-timeout mymaster 180000
 ```
 
 ##### 启动哨兵集群
