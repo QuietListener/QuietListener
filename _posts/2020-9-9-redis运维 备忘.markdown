@@ -1109,3 +1109,159 @@ sentinel parallel-syncs mymaster1 1
 sentinel failover-timeout mymaster1 180000
 
 ```
+
+#### sentinel客户端原理
+1. 遍历sentinel节点获取一个可用的
+2. 通过sentinel get-master-addr-by-name master-name这个api获取对应主节点的相关信息。
+3. 验证主节点(role 或者 info replication)是真正主节点(为了防止在故障转移期间主节点的变化)
+
+#### sentinel 客户端操作
+
+##### 1. sentinel masters
+展示所有被监控的master状态与相关统计信息
+
+##### 2. sentinel master <master name>
+展示名字为 <master name>的主节点以及相关统计信息
+
+##### 3. sentinel slaves <master name>
+展示主节点名字为 <master name>的从节点以及相关统计信息
+
+##### 4. sentinel sentinels <master name>
+展示指定<master name>的sentinels节点集合
+
+##### 5. sentinel get-master-addr-by-name <master name>
+展示指定<master name>的主节点的ip和端口
+
+##### 6. sentinel reset <pattern>
+对符合pattern的主节点的配置进行重置，包括清除主节点相关状态，从新发现从节点和sentinel节点。
+
+##### 7 sentinel failover <master name>
+最指定的<master name> 的主节点进行强制故障转移(不用和其他sentinel协商)，当故障转移后其他sentinel节点找故障转移结果进行更新自己信息。
+
+##### 8 sentinel ckquorum <master name>
+检查可达的sentinel是否达到<quorum>的个数。如果返回ok表示可以进行故障转移。
+
+##### 9 sentinel flushconfig
+将sentinel的配置刷新到磁盘上
+
+##### 10 sentinel remove <master name>
+取消对<master name> 的主节点的监控，仅仅对当前sentinel有效。
+
+##### 11 sentinel monitor <master name> <ip> <port> <quorum>
+和配置中一样 
+
+##### 12 sentinel is-master-down-by-addr
+sentinel节点用来交换对主节点是否下线的判断，还可以用来选举领导者。
+
+
+
+#### java客户端。
+```java
+package andy.com.internet.redis;
+
+import redis.clients.jedis.*;
+
+import java.util.*;
+
+public class JedisSentinelManager {
+    private int maxTotal = 200;
+    private int poolMaxWaitMs = 10;
+    private int timeOutMs = 100;
+    private String ip;
+    private int port;
+    private String password;
+
+    private JedisSentinelPool jedisPool = null;
+
+
+    public void init() {
+
+        JedisPoolConfig config = new JedisPoolConfig();
+        config.setMaxTotal(maxTotal);
+        config.setMaxWaitMillis(poolMaxWaitMs);
+        config.setMaxIdle(maxTotal);
+        config.setMinIdle(4);
+        config.setBlockWhenExhausted(true);
+        config.setTestWhileIdle(true);
+        if (password == null || password.trim().equals("")) {
+            password = null;
+        }
+
+        Set<String> sentinels = new HashSet<>();
+        sentinels.add("192.168.231.149:26379");
+        sentinels.add("192.168.231.149:26380");
+        sentinels.add("192.168.231.149:26381");
+
+        jedisPool = new JedisSentinelPool("mymaster",sentinels, config);
+    }
+
+    public void destroy() {
+        jedisPool.close();
+    }
+
+    public Jedis getJedis() {
+        return jedisPool.getResource();
+    }
+
+
+    public String get(String key) {
+
+        try (Jedis jedis = getJedis()) {
+            return jedis.get(key);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public void set(String key, String value, int expire) {
+        try (Jedis jedis = getJedis()) {
+            jedis.setex(key, expire, value);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+    public Long del(String key) {
+
+        try (Jedis jedis = getJedis()) {
+            return jedis.del(key);
+        } catch (Exception e) {
+            throw e;
+        }
+    }
+
+
+
+}
+
+```
+
+#### sentinel原理
+##### 三个定时任务
+###### 1. 每隔10每个sentinel会向主节点和从节点发送info命令获取拓扑结构。
+这个定时任务可以完成    
+1. 像master发送info可以获取从节点信息。(所以sentinel不用显示配置从节点)
+2. 当有新的从节点加入时候，会自动感知出来。
+3. 当节点不可达或者故障转移后，可以通过info命令试试更新拓扑信息。
+
+
+###### 2. 每个2秒每个sentinel节点像数据节点的__sentinel__:hello 频道上发送该sentinel对主节点的判断，同事也会订阅该频道。
+这个定时任务可以完成    
+
+1. 发现新的sentinel节点，并与其建立连接(通过订阅主节点的__sentinel__:hello了解其他主节点的信息。)
+2. sentinel节点之间交换主节点的状态。
+
+###### 3. 每隔1秒，每隔sentinel会像主节点，从节点，其余sentinel发送一条ping命令作为心跳检测。
+sentinel会对其他所有的sentinel， 主节点，从节点进行监控。
+
+
+##### 下线
+###### 1. 主观下线
+ sentinel没1秒对主节点，从节点，和其他sentinel发送ping，如果这些节点操作了down-after-milliseconds都没有回复。就认为节点失败，这叫做**主观下线**
+###### 2. 客观下线
+ 如果主观下线的是主节点，该sentinel会向其他的sentinel发送**sentinel is-master-down-by-addr**向其他主节点询问对主节点是否下线的判断。如果超过了<quorum>个都做出下线决定，就叫做**客观下线**
+
+###### 3. 选举
+sentinel使用raft算法实现领导选举leader，由leader来进行下线处理。
+
+
