@@ -30,7 +30,7 @@ Runtime.getRuntime()
 ## 例子
 1. Slf4j LoggerFactory
 2. Spring中的 BeanFactory
-3. AQS 只需要实现 getState() setState(int value) ,compareAndSetState(int expect,int update)
+3. AQS 只需要实现 tryRequire() tryRelease()
 
 
 # 7. 建造者(builder)模式
