@@ -5,7 +5,7 @@ date: 2019-10-29 14:32:00
 categories:  java review
 ---
 
-# 线程池
+# 线程池  
 ## 1. Executor 
  ```java
  /**
@@ -21,8 +21,9 @@ categories:  java review
  public interface Executor {
     void execute(Runnable command);
 }
- ```
- ## 2. executor 的初衷
+```
+
+## 2. executor 的初衷
  
  >An object that executes submitted {@link Runnable} tasks. This
  > interface provides a way of decoupling task submission from the
