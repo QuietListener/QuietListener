@@ -2371,3 +2371,57 @@ mysql> select @@global.tx_isolation
 
 
 
+
+
+# mysql 优化 explain
+https://maplefix.top/archives/mysql-explain
+在函数中使用索引列
+```sql
+mysql> explain select * from People where CHARACTER_LENGTH(last_name) = 1;
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+| id | select_type | table  | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | People | NULL       | ALL  | NULL          | NULL | NULL    | NULL |    5 |   100.00 | Using where |
++----+-------------+--------+------------+------+---------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+需要重点关注的属性:
+## 1. type
+
+ type所显示的是查询使用了哪种类型，type包含的类型包括如下图所示的几种，从好到差依次是:
+**null > system > const > eq_ref > ref > range > index > all**
+
+一般来说，得保证查询至少达到range级别，最好能达到ref。
+
+1. system： 表只有一行记录（等于系统表），这是const类型的特列，平时不会出现，这个也可以忽略不计
+2.  const： 表示通过索引一次就找到了，const用于比较primary key 或者unique索引。因为只匹配一行数据，所以很快。如将主键置于where列表中，MySQL就能将该查询转换为一个常量。
+3.  explain select * from appadded where appid="12";
+4. eq_ref： 唯一性索引扫描，对于每个索引键，表中只有一条记录与之匹配。常见于主键或唯一索引扫描
+explain select * from appadded ad left join app a on ad.appid=a.appid;
+5. ref： 非唯一性索引扫描，返回匹配某个单独值的所有行，本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以他应该属于查找和扫描的混合体。
+explain select * from appadded ad,appversion av where ad.appid=av.appid;
+6. range： 只检索给定范围的行，使用一个索引来选择行，key列显示使用了哪个索引，一般就是在你的where语句中出现between、< 、>、in等的查询，这种范围扫描索引比全表扫描要好，因为它只需要开始于索引的某一点，而结束于另一点，不用扫描全部索引。
+explain select * from appadded where appid in("12","13");
+7. index： Full Index Scan，Index与All区别为Index类型只遍历索引树。这通常比All快，因为索引文件通常比数据文件小。（也就是说虽然All和Index都是读全表，但Index是从索引中读取的，而All是从硬盘读取的）
+explain select appid from appadded;
+8. all： Full Table Scan 将遍历全表以找到匹配的行
+explain select * from appadded;
+
+
+## 2. rows
+  表示MySQL根据表统计信息及索引选用情况，估算的找到所需的记录所需要读取的行数
+
+
+
+## 3. extra
+包含不适合在其他列中显式但十分重要的额外信息，包含以下几种情况：
+
+1. Using where：表明使用了where过滤
+2. Using temporary：使用了用临时表保存中间结果，MySQL在对查询结果排序时使用临时表。常见于排序order by和分组查询group by
+3. **Using filesort**：说明MySQL会对数据使用一个外部的索引排序，而不是按照表内的索引顺序进行读取。MySQL中无法利用索引完成的排序操作称为“文件排序” **这个不能容忍**
+4. Using join buffer：表明使用了连接缓存,比如说在查询的时候，多表join的次数非常多，那么将配置文件中的缓冲区的join buffer调大一些。
+5. Impossible where：where子句的值总是false，不能用来获取任何元组。
+6. Select tables optimized away：在没有GROUP BY子句的情况下，基于索引优化MIN/MAX操作或者对于MyISAM存储引擎优化COUNT(*)操作，不必等到执行阶段再进行计算，查询执行计划生成的阶段即完成优化。
+7. Using index：表示相应的select操作中使用了覆盖索引（Covering Index），避免访问了表的数据行，效率不错。如果同时出现using where，表明索引被用来执行索引键值的查找；如果没有同时出现using where，表明索引用来读取数据而非执行查找动作。
+8. Distinct：优化distinct操作，在找到第一匹配的元组后即停止找同样值的动作。
+
