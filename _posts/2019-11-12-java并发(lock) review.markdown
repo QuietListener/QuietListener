@@ -684,6 +684,196 @@ AQS = acquire+release+state ，两类方法+一个状态
 
 
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/aqs-queue2.png) 
- 
+
 
  ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/aqs-queue3.png) 
+
+
+
+
+
+ ```java
+
+ 
+ /**
+     * Acquires in exclusive mode, ignoring interrupts.  Implemented
+     * by invoking at least once {@link #tryAcquire},
+     * returning on success.  Otherwise the thread is queued, possibly
+     * repeatedly blocking and unblocking, invoking {@link
+     * #tryAcquire} until success.  This method can be used
+     * to implement method {@link Lock#lock}.
+     *
+     * @param arg the acquire argument.  This value is conveyed to
+     *        {@link #tryAcquire} but is otherwise uninterpreted and
+     *        can represent anything you like.
+     */
+    public final void acquire(int arg) {
+        if (!tryAcquire(arg) &&
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            selfInterrupt();
+    }
+```
+ 1. 这个方法是每个使用aqs都要掉的方法，比如ReentrantLock 的lock.lock()方法就调用的 acquire(1).
+ 2. tryAcquire 这个方法需要用户实现，如果返回true表示获取锁成功，否则调用 **acquireQueued(addWaiter(Node.EXCLUSIVE), arg)** 经现场加入到队列尾部。
+ 下面是ReentrantLock的实现。
+ 如果c == 0 
+ 表示没有现场获取这个锁，直接使用 ompareAndSetState(0, acquires) 如果成功， 使用setExclusiveOwnerThread(current)设置当前线程互斥第获取锁。返回true。
+如果 c ！= 0
+表示锁已经被其他线程获取了， if (current == getExclusiveOwnerThread())表示是被自己获取的，直接返回true。
+
+否则后去锁失败 返回 false。执行  **acquireQueued(addWaiter(Node.EXCLUSIVE), arg)**
+
+```java
+    //ReentrantLock 的非公平锁实现代码
+     protected final boolean tryAcquire(int acquires) {
+            return nonfairTryAcquire(acquires);
+        }
+ //ReentrantLock 的非公平锁实现代码
+    final boolean nonfairTryAcquire(int acquires) {
+            final Thread current = Thread.currentThread();
+            int c = getState();
+            if (c == 0) {
+                if (compareAndSetState(0, acquires)) {
+                    setExclusiveOwnerThread(current);
+                    return true;
+                }
+            }
+            else if (current == getExclusiveOwnerThread()) {
+                int nextc = c + acquires;
+                if (nextc < 0) // overflow
+                    throw new Error("Maximum lock count exceeded");
+                setState(nextc);
+                return true;
+            }
+            return false;
+        }
+```
+
+调用 acquireQueued(addWaiter(Node.EXCLUSIVE), arg) ，当前线程在“死循环”中尝试获取同步状态，而只有前驱节点是头节点才能够尝试获取同步状态。
+
+```java
+     /**
+     * Acquires in exclusive uninterruptible mode for thread already in
+     * queue. Used by condition wait methods as well as acquire.
+     *
+     * @param node the node
+     * @param arg the acquire argument
+     * @return {@code true} if interrupted while waiting
+     */
+    final boolean acquireQueued(final Node node, int arg) {
+        boolean failed = true;
+        try {
+            boolean interrupted = false;
+            for (;;) {
+                final Node p = node.predecessor(); //前驱节点
+                if (p == head && tryAcquire(arg)) { //注意这里也会调用tryAcquire方法
+                    setHead(node);
+                    p.next = null; // help GC
+                    failed = false;
+                    return interrupted;
+                }
+                if (shouldParkAfterFailedAcquire(p, node) &&
+                    parkAndCheckInterrupt())
+                    interrupted = true;
+            }
+        } finally {
+            if (failed)
+                cancelAcquire(node);
+        }
+    }
+```
+
+
+
+想队列中加入node，compareAndSetTail(Nodeexpect,Nodeupdate)方法来确保节点能够被线程安全添加。在enq(finalNodenode)方法中，同步器通过“死循环”来保证节点的正确添加，在“死循环”中只有通过CAS将节点设置成为尾节点之后，当前线程才能从该方法返回，否则，当前线程不断地尝试设置。可以看出，enq(finalNodenode)方法将并发添加节点的请求通过CAS变得“串行化”了。
+
+
+```sql
+
+/**
+     * Creates and enqueues node for current thread and given mode.
+     *
+     * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
+     * @return the new node
+     */
+    private Node addWaiter(Node mode) {
+        Node node = new Node(Thread.currentThread(), mode);
+        // Try the fast path of enq; backup to full enq on failure
+        Node pred = tail;
+        if (pred != null) {
+            node.prev = pred;
+            if (compareAndSetTail(pred, node)) {
+                pred.next = node;
+                return node;
+            }
+        }
+        enq(node);
+        return node;
+    }
+
+
+
+    /**
+     * Inserts node into queue, initializing if necessary. See picture above.
+     * @param node the node to insert
+     * @return node's predecessor
+     */
+    private Node enq(final Node node) {
+        for (;;) {
+            Node t = tail;
+            if (t == null) { // Must initialize
+                if (compareAndSetHead(new Node()))
+                    tail = head;
+            } else {
+                node.prev = t;
+                if (compareAndSetTail(t, node)) {
+                    t.next = node;
+                    return t;
+                }
+            }
+        }
+    }
+
+```
+
+
+
+释放锁的代码 释放锁，并唤醒双端队列中的下一个线程。
+```java
+    /**
+     * Releases in exclusive mode.  Implemented by unblocking one or
+     * more threads if {@link #tryRelease} returns true.
+     * This method can be used to implement method {@link Lock#unlock}.
+     *
+     * @param arg the release argument.  This value is conveyed to
+     *        {@link #tryRelease} but is otherwise uninterpreted and
+     *        can represent anything you like.
+     * @return the value returned from {@link #tryRelease}
+     */
+    public final boolean release(int arg) {
+        if (tryRelease(arg)) {
+            Node h = head;
+            if (h != null && h.waitStatus != 0)
+                unparkSuccessor(h);//唤醒后继者
+            return true;
+        }
+        return false;
+    }
+
+
+
+     // ReentrantLock的tryRelease方法 
+     protected final boolean tryRelease(int releases) {
+            int c = getState() - releases;
+            if (Thread.currentThread() != getExclusiveOwnerThread())
+                throw new IllegalMonitorStateException();
+            boolean free = false;
+            if (c == 0) {
+                free = true;
+                setExclusiveOwnerThread(null); 
+            }
+            setState(c);
+            return free;
+        }
+
+```
