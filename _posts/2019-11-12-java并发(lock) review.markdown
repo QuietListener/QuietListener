@@ -877,3 +877,13 @@ AQS = acquire+release+state ，两类方法+一个状态
         }
 
 ```
+
+
+
+### Condition
+1. Condition定义了等待/通知两种类型的方法，当前线程调用这些方法时，需要提前获取到Condition对象关联的锁。Condition对象是由Lock对象（调用Lock对象的newCondition()方法）创建出来的，换句话说，Condition是依赖Lock对象的。
+
+2. 
+ConditionObject是同步器AbstractQueuedSynchronizer的内部类，因为Condition的操作需要获取相关联的锁，所以作为同步器的内部类也较为合理。**每个Condition对象都包含着一个队列（以下称为等待队列），该队列是Condition对象实现等待/通知功能的关键。**
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/condition1.png) 
