@@ -672,3 +672,18 @@ class OnShotLatch {
 #### AQS 总结
 AQS = acquire+release+state ，两类方法+一个状态
 用AQS实现Synchronizer只需要实现tryAcquire，tryAcquireShared,tryRelease,tryReleaseShared四个方法并操作state变量。
+
+#### AQS 具体实现
+1. 同步器依赖内部的同步队列（一个FIFO双向队列）来完成同步状态的管理，当前线程获取同步状态失败时，同步器会将当前线程以及等待状态等信息构造成为一个节点（Node）并将其加入同步队列，同时会阻塞当前线程，当同步状态释放时，会把首节点中的线程唤醒，使其再次尝试获取同步状态。
+
+2. 同步队列中的节点（Node）用来保存获取同步状态失败的线程引用、等待状态以及前驱和后继节点，节点的属性类型与名称以及描述如表55所示。
+
+当一个线程成功地获取了同步状态（或者锁），其他线程将无法获取到同步状态，转而被构造成为节点并加入到同步队列中，而这个加入队列的过程必须要保证线程安全，因此同步器提供了一个基于CAS的设置尾节点的方法：compareAndSetTail(Nodeexpect,Nodeupdate)，它需要传递当前线程“认为”的尾节点和当前节点，只有设置成功后，当前节点才正式与之前的尾节点建立关联
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/aqs-queue.png) 
+
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/aqs-queue2.png) 
+ 
+
+ ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/aqs-queue3.png) 
