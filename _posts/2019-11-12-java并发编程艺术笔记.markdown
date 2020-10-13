@@ -757,3 +757,21 @@ https://quietlistener.github.io/java/review/2019/10/29/java%E5%B9%B6%E5%8F%91(lo
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/chashmap1.png)
 
 
+### 4.细节
+
+#### 1. 参数
+1. ConcurrentHashMap初始化方法是通过initialCapacity、loadFactor和concurrencyLevel等几个参数来初始化
+2. segments数组的长度ssize是通过concurrencyLevel计算得出的。
+concurrencyLevel的最小的2的N次方值来作为segments数组的长度。假如concurrencyLevel等于14、15或16，ssize都会等于16，即容器里锁的个数也是16。
+
+3. 定位到segment
+ConcurrentHashMap会首先使用Wang/Jenkinshash的变种算法对元素的hashCode进行一次再散列。
+
+## ConcurrentLinkedQueue
+ConcurrentLinkedQueue是一个基于链接节点的**无界**线程安全队列，它采用先进先出的规则对节点进行排序，当我们添加一个元素的时候，它会添加到队列的尾部；当我们获取一个元素时，它会返回队列头部的元素。它采用了“waitfree”算法（即**CAS**算法）来实现，
+
+## 阻塞队列 BlockingQueue
+### what?
+阻塞队列（BlockingQueue）是一个支持两个附加操作的队列。这两个附加的操作支持阻塞的插入和移除方法。
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/blockingqueue1.png)
+
