@@ -25,12 +25,14 @@ Runtime.getRuntime()
 ## 例子
 1. spring JdbcTemplate
 2. spring RedisTemplate
+3. AQS 只需要实现 tryRequire() tryRelease()
 
 # 6. 工厂(factory)模式
 ## 例子
 1. Slf4j LoggerFactory
 2. Spring中的 BeanFactory
-3. AQS 只需要实现 tryRequire() tryRelease()
+3. Executors
+
 
 
 # 7. 建造者(builder)模式
