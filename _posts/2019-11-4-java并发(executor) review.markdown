@@ -217,7 +217,3 @@ java线程的stop已经Deprecated了，推荐使用interrupt来结束线程,这�
 
 
  
-
-# 参考
-1. [SpringCloud微服务如何优雅停机及源码分析](https://www.cnblogs.com/trust-freedom/p/10744683.html)
-1. [SpringCloud服务的平滑上下线](https://juejin.im/post/5cf63899f265da1b9253c7f4)

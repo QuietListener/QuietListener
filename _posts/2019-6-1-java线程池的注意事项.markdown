@@ -139,3 +139,5 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 >  and so reject the task.
 
 只有在不能继续queue任务的时候，也就是队列满了的时候才会考虑添加一个 task。所以如果队列没有满的情况下，最多只有corePoolSize个线程在执行。
+
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/threadpoolExecutor1.png)

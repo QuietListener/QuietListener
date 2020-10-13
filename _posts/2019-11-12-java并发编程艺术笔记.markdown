@@ -796,9 +796,26 @@ ConcurrentLinkedQueue是一个基于链接节点的**无界**线程安全队列�
 ·SynchronousQueue：一个不存储元素的阻塞队列。
 ·LinkedTransferQueue：一个由链表结构组成的无界阻塞队列。
 
-### 怎么实现阻塞队列
+#### 怎么实现阻塞队列
 一个Reentralock和两个Condition(notFull,notEmpty)。两个condition相当于两个等待队列。
 
 
 
+### 并发工具类
+#### 等待多线程完成的CountDownLatch
+CountDownLatch允许一个或多个线程等待其他线程完成操作。
 
+#### 同步屏障 CyclicBarrier
+CyclicBarrier的字面意思是可循环使用（Cyclic）的屏障（Barrier）。它要做的事情是，让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续运行。
+
+##### 应用场景
+CyclicBarrier可以用于多线程计算数据，最后合并计算结果的场景。例如先用多线程处理每个sheet里的银行流水，都执行完之后，得到每个sheet的日均银行流水，最后，再用**barrierAction**用这些线程的计算结果，计算出整个Excel的日均银行流水，
+
+#### CountdownLatch 和 CyclicBarrier的区别
+CountDownLatch的计数器只能使用一次，而CyclicBarrier的计数器可以使用reset()方法重置。所以CyclicBarrier能处理更为复杂的业务场景。例如，如果计算发生错误，可以重置计数器，并让线程重新执行一次。
+ 
+#### 信号量 Semaphore
+Semaphore（信号量）是用来控制同时访问特定资源的线程数量
+##### 应用场景
+1. Semaphore可以用于做流量控制，特别是公用资源有限的应用场景，比如数据库连接。
+2. springcloud 可以配置为信号量模式，空气某一个rpc调用的上限
