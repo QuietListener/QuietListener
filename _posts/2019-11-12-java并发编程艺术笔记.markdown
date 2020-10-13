@@ -775,3 +775,30 @@ ConcurrentLinkedQueue是一个基于链接节点的**无界**线程安全队列�
 阻塞队列（BlockingQueue）是一个支持两个附加操作的队列。这两个附加的操作支持阻塞的插入和移除方法。
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/blockingqueue1.png)
 
+### 7个阻塞队列
+#### ·ArrayBlockingQueue：
+一个由数组结构组成的有界阻塞队列。
+#### ·LinkedBlockingQueue：
+一个由链表结构组成的有界阻塞队列。
+
+#### ·LinkedBlockingDeque：
+一个由链表结构组成的双向阻塞队列。
+#### ·PriorityBlockingQueue：
+一个支持优先级的无界阻塞队列，可以自定义类实现compareTo()方法来指定元素排序规则，或者初始化PriorityBlockingQueue时，指定构造参数Comparator来对元素进行排序。需要注意的是不能保证同优先级元素的顺序。
+
+
+#### ·DelayQueue：
+一个使用优先级队列实现的无界阻塞队列。使用·PriorityBlockingQueue：实现
+。队列中的元素必须实现Delayed接口，在创建元素时可以指定多久才能从队列中获取当前元素。只有在延迟期满时才能从队列中提取元素。
+##### 使用场景
+定时任务调度(**延时队列**)：使用DelayQueue保存当天将会执行的任务和执行时间，一旦从DelayQueue中获取到任务就开始执行，比如TimerQueue就是使用DelayQueue实现的。
+
+·SynchronousQueue：一个不存储元素的阻塞队列。
+·LinkedTransferQueue：一个由链表结构组成的无界阻塞队列。
+
+### 怎么实现阻塞队列
+一个Reentralock和两个Condition(notFull,notEmpty)。两个condition相当于两个等待队列。
+
+
+
+
