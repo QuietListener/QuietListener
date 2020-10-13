@@ -317,6 +317,10 @@ BeanFactory
 
 # 操作形模式
 ## 模板方法(Template Method)模式
+1. spring JdbcTemplate
+2. spring RedisTemplate
+3. AQS 只需要实现 tryRequire() tryRelease()
+
 ## 策略模式
 ## 命令模式
 ## 解释器模式
