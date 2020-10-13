@@ -297,8 +297,13 @@ https://cloud.tencent.com/developer/article/1162235
 
 # 构造型模式
 ## Builder构建者模式
-## 工厂方法模式
-## 抽象工厂模式
+guava Cache
+GsonBuilder
+
+## 工厂模式
+简单工厂模式，工厂方法模式，抽象工厂模式
+https://developer.aliyun.com/article/725085
+
 ## 原型模式
 ## 备忘录模式
 
