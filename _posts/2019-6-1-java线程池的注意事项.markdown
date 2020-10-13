@@ -32,6 +32,23 @@ java线程池用得很多，主要的实现类是 **ThreadPoolExecutor**是**Exe
  * 对于IO密集型可以使用 maximumPoolSize=2*CPU数目+1;
  * 混合型的: maximumPoolSize=CPU数据*(1+waitTime/computeTime) 比如核心数为4，一个任务使用4ms为IO，1ms秒计算，那就选取 (1+4)*4=20。这是cpu跑满的情况，如果你只想cpu利用率为50%。那就是20\*0.5=10;
 
+##### 考虑因素
+1. 任务的性质：CPU密集型任务、IO密集型任务和混合型任务。
+2. 任务的优先级：高、中和低。
+3. 任务的执行时间：长、中和短。
+4. 任务的依赖性：是否依赖其他系统资源，如数据库连接。
+##### 对策
+1. CPU密集型任务应配置尽可能小的线程，如配置Ncpu+1个线程的线程池。由于IO密集型任务线程并不是一直在执行任务，则应配置尽可能多的线程，如2*Ncpu。
+2. 优先级不同的任务可以使用优先级队列PriorityBlockingQueue来处理。它可以让优先级高的任务先执行。
+
+3. **建议使用有界队列**。有界队列能增加系统的稳定性和预警能力，可以根据需要设大一点儿，比如几千。有一次，我们系统里后台任务线程池的队列和线程池全满了，不断抛出抛弃任务的异常，现是数据库出现了问题，导致执行SQL变得非常缓慢，因为后台任务线程池里的任务全是需要向数据库查询和插入数据的，所以导致线程池里的工作线程全部阻塞，任务积压在线程池里。如果当时我们设置成无界队列，那么线程池的队列就会越来越多，有可能会撑满内存，导致整个系统不可用。
+
+
+#### 线程池监控
+
+重写线程池的beforeExecute、afterExecute和terminated方法，也可以在任务执行前、执行后和线程池关闭前执行一些代码来进行监控。
+
+
 #### 2.优雅地关闭pool
 注意: shutdown 和 shutdownNow的语义。
  
@@ -141,3 +158,8 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 只有在不能继续queue任务的时候，也就是队列满了的时候才会考虑添加一个 task。所以如果队列没有满的情况下，最多只有corePoolSize个线程在执行。
 
 ![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/threadpoolExecutor1.png)
+
+
+
+
+
