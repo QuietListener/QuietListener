@@ -301,9 +301,13 @@ guava Cache
 GsonBuilder
 
 ## 工厂模式
+### 为什么要出现工厂方法。
+解耦： 如果用new的话,创建者和使用者耦合在一起了。使用工厂方法的话，创建者是工厂。
+#### 
 简单工厂模式，工厂方法模式，抽象工厂模式
 https://developer.aliyun.com/article/725085
 
+抽象工厂是为了解决 如果使用工厂方法的话 工厂方法的类个数会爆炸。
 
 Executors 
 BeanFactory
