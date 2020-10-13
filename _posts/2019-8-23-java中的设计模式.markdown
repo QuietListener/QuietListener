@@ -50,3 +50,258 @@ https://www.ibm.com/developerworks/cn/java/j-lo-adapter-pattern/index.html
 # 10. 观察者(Observer)模式
 ##
 1. jdk自带 java.util.observable
+
+
+
+# 接口型模式
+类的接口是类允许其他类对象访问的方法与字段集。接口通常代表一种承诺，即方法需要实现接口方法名表示的操作.
+
+## Adapter 适配器模式
+模式所涉及的角色有：
+1. 目标(Target)角色：这就是所期待得到的接口。注意：由于这里讨论的是类适配器模式，因此目标不可以是类。
+2. 源(Adapee)角色：现在需要适配的接口。
+3. 适配器(Adaper)角色：适配器类是本模式的核心。适配器把源接口转换成目标接口。显然，这一角色不可以是接口，而必须是具体类。
+
+
+```java
+package andy.com.designpattern.type_interface.adapter;
+
+
+
+/**
+ * 类的适配器模式
+ * 模式所涉及的角色有：
+ * 1. 目标(Target)角色：这就是所期待得到的接口。注意：由于这里讨论的是类适配器模式，因此目标不可以是类。
+ * 2. 源(Adapee)角色：现在需要适配的接口。
+ * 3. 适配器(Adaper)角色：适配器类是本模式的核心。适配器把源接口转换成目标接口。显然，这一角色不可以是接口，而必须是具体类。
+ */
+public class AdaptorClassTest {
+
+
+    /**
+     * 现有的类
+     */
+    static class Adaptee {
+        /**
+         * 已经有的方法
+         *
+         * @return
+         */
+        public void existsMethod() {
+            System.out.println("已有的方法");
+        }
+    }
+
+
+    /**
+     * 现在需要的接口
+     */
+    static interface Target {
+        /**
+         * 原adaptee有的方法
+         */
+        public void existsMethod();
+
+        /**
+         * 原adaptee没有的方法
+         */
+        public void newMethod();
+    }
+
+    /**
+     * 适配器
+     */
+    static class Adapter extends Adaptee implements Target {
+
+        @Override
+        public void newMethod() {
+            System.out.println("新的方法");
+        }
+    }
+
+
+    public static void main(String[] args) {
+        Target t = new Adapter();
+        t.existsMethod();//调用老方法
+        t.newMethod();//调用新方法
+    }
+
+}
+```
+
+```java
+package andy.com.designpattern.type_interface.adapter;
+
+
+/**
+ * 对象的适配器模式
+ * 模式所涉及的角色有：
+ * 1. 目标(Target)角色：这就是所期待得到的接口。注意：由于这里讨论的是类适配器模式，因此目标不可以是类。
+ * 2. 源(Adapee)角色：现在需要适配的接口。
+ * 3. 适配器(Adaper)角色：适配器类是本模式的核心。适配器把源接口转换成目标接口。
+ */
+public class AdaptorObjectTest {
+
+
+    /**
+     * 现有的类
+     */
+    static class Adaptee {
+        /**
+         * 已经有的方法
+         *
+         * @return
+         */
+        public void existsMethod() {
+            System.out.println("已有的方法");
+        }
+    }
+
+
+    /**
+     * 现在需要的接口
+     */
+    static interface Target {
+        /**
+         * 原adaptee有的方法
+         */
+        public void existsMethod();
+
+        /**
+         * 原adaptee没有的方法
+         */
+        public void newMethod();
+    }
+
+    /**
+     * 适配器
+     */
+    static class Adapter implements Target {
+
+        private Adaptee adaptee;
+
+        public Adapter(Adaptee adaptee) {
+            this.adaptee = adaptee;
+        }
+
+        @Override
+        public void existsMethod() {
+            this.adaptee.existsMethod();
+        }
+
+        @Override
+        public void newMethod() {
+            System.out.println("新的方法");
+        }
+    }
+
+
+    public static void main(String[] args) {
+        Adaptee adaptee = new Adaptee();
+        Target t = new Adapter(adaptee);
+        t.existsMethod();//调用老方法
+        t.newMethod();//调用新方法
+    }
+
+}
+```
+
+## Facade 外观(门面)模式
+### 为什么引入
+外部与一个子系统的通信必须通过一个统一的外观对象进行，为子系统中的一组接口提供一个一致的界面，外观模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。
+根据“单一职责原则”，在软件中将一个系统划分为若干个子系统有利于降低整个系统的复杂性，一个常见的设计目标是使子系统间的通信和相互依赖关系达到最小，而达到该目标的途径之一就是引入一个外观对象，它为子系统的访问提供了一个简单而单一的入口。
+
+### 在以下情况下可以使用外观模式：
+
+1. 当要为一个复杂子系统提供一个简单接口时可以使用外观模式。该接口可以满足大多数用户的需求，而且用户也可以越过外观类直接访问子系统。
+2. 客户程序与多个子系统之间存在很大的依赖性。引入外观类将子系统与客户以及其他子系统解耦，可以提高子系统的独立性和可移植性。
+3. 在层次化结构中，可以使用外观模式定义系统中每一层的入口，层与层之间不直接产生联系，而通过外观类建立联系，降低层之间的耦合度。
+
+### 抽象外观类的引入解决外观类的去缺点
+外观模式最大的缺点在于违背了“开闭原则”，当增加新的子系统或者移除子系统时需要修改外观类，可以通过引入抽象外观类在一定程度上解决该问题，客户端针对抽象外观类进行编程。
+
+```java
+package andy.com.designpattern.type_interface.facade;
+
+/**
+ * 外观(门面模式)模式
+ */
+public class FacadeTest {
+
+    static class SystemA{
+        public void ops(){
+            System.out.println("SystemA Operation");
+        }
+    }
+
+    static class SystemB{
+        public void ops(){
+            System.out.println("SystemB Operation");
+        }
+    }
+
+    static class SystemC{
+        public void ops(){
+            System.out.println("SystemC Operation");
+        }
+    }
+
+
+    /**
+     * 外观类
+     */
+    static public class Facade{
+
+        /**
+         * 提供一个统一接口
+         */
+        public void wrapOperation(){
+            SystemA a = new SystemA();
+            SystemB b = new SystemB();
+            SystemC c = new SystemC();
+
+            a.ops();
+            b.ops();
+            c.ops();
+        }
+    }
+
+    public static void main(String[] args) {
+        Facade f = new Facade();
+        f.wrapOperation();
+    }
+}
+
+```
+
+
+## 合成模式 Composite模式
+## 桥接模式(Bridge)
+
+# 责任模式
+## 单例模式
+## 观察者模式
+## 调停者模式
+## 代理模式
+## 责任链模式
+## 享元模式(Fly Weight )
+
+# 构造型模式
+## Builder构建者模式
+## 工厂方法模式
+## 抽象工厂模式
+## 原型模式
+## 备忘录模式
+
+# 操作形模式
+## 模板方法(Template Method)模式
+## 策略模式
+## 命令模式
+## 解释器模式
+## 状态(state)模式
+
+# 扩展模式
+## 装饰器模式
+## 迭代器模式
+## 访问者模式
+
