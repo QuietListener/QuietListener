@@ -304,6 +304,10 @@ GsonBuilder
 简单工厂模式，工厂方法模式，抽象工厂模式
 https://developer.aliyun.com/article/725085
 
+
+Executors 
+BeanFactory
+
 ## 原型模式
 ## 备忘录模式
 
