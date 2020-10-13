@@ -275,7 +275,7 @@ public class FacadeTest {
 ```
 
 
-## 合成模式 Composite模式
+## 组合模式 Composite模式
 ## 桥接模式(Bridge)
 
 # 责任模式
