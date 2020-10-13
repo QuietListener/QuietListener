@@ -734,3 +734,26 @@ lock可以
 ## AQS队列同步器
 
 https://quietlistener.github.io/java/review/2019/10/29/java%E5%B9%B6%E5%8F%91(lock)-review.html
+
+
+
+
+# 并发容器
+## ConcurrentHashMap
+### 1. why ConcurrentHashMap
+在并发编程中使用HashMap可能导致程序死循环。而使用线程安全的HashTable效率又非常低下，基于以上两个原因，便有了ConcurrentHashMap.
+
+### ConcurrentHashMap好在哪里?
+1. 锁分段技术可有效提升并发访问率
+
+2. HashTable容器在访问HashTable的线程都必须竞争同一把锁，假如容器里有多把锁，每一把锁用于锁容器其中一部分数据，那么当多线程访问容器里不同数据段的数据时，线程间就不会存在锁竞争，从而可以有效提高并发访问效率，这就是ConcurrentHashMap所使用的**锁分段**技术。
+
+### 3.  具体实现
+1. ConcurrentHashMap是由Segment数组结构和HashEntry数组结构组成。
+2. Segment是一种可重入锁（ReentrantLock），在ConcurrentHashMap里扮演锁的角色；
+3. HashEntry则用于存储键值对数据。
+4. 一个ConcurrentHashMap里包含一个**Segment数组**。Segment的结构和HashMap类似，是一种数组和链表结构。一个Segment里包含一个HashEntry数组，每个HashEntry是一个链表结构的元素，每个Segment守护着一个HashEntry数组里的元素，当对HashEntry数组的数据进行修改时，必须首先获得与它对应的Segment锁，如图62所
+
+![部署](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/chashmap1.png)
+
+
