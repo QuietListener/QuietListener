@@ -380,7 +380,7 @@ public class TemplateMethodTest {
             System.out.println("do a nice logic ");
         }
     }
-    
+
     /**
      * 强制子类实现 userLogic 逻辑
      */
@@ -401,9 +401,99 @@ public class TemplateMethodTest {
 }
 
 ```
-1. spring JdbcTemplate
-2. spring RedisTemplate
-3. AQS 只需要实现 tryRequire() tryRelease()
+
+1. AQS 只需要实现 tryRequire() tryRelease()
+2. Arrays.sort() 传入的对象需要实现 Comparable的接口的子类，必须实现compareTo 也有模板方法的意思。
+3. Spring 中的模板方法
+```java
+public abstract class AbstractApplicationContext extends 
+DefaultResourceLoader implements ConfigurableApplicationContext {
+...
+
+@Override
+	public void refresh() throws BeansException, IllegalStateException {
+		synchronized (this.startupShutdownMonitor) {
+			// Prepare this context for refreshing.
+			prepareRefresh();
+
+			// Tell the subclass to refresh the internal bean factory.
+			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+			// Prepare the bean factory for use in this context.
+			prepareBeanFactory(beanFactory);
+
+			try {
+				// Allows post-processing of the bean factory in context subclasses.
+				postProcessBeanFactory(beanFactory);
+
+				// Invoke factory processors registered as beans in the context.
+				invokeBeanFactoryPostProcessors(beanFactory);
+
+				// Register bean processors that intercept bean creation.
+				registerBeanPostProcessors(beanFactory);
+
+				// Initialize message source for this context.
+				initMessageSource();
+
+				// Initialize event multicaster for this context.
+				initApplicationEventMulticaster();
+
+				// Initialize other special beans in specific context subclasses.
+				onRefresh();
+
+				// Check for listener beans and register them.
+				registerListeners();
+
+				// Instantiate all remaining (non-lazy-init) singletons.
+				finishBeanFactoryInitialization(beanFactory);
+
+				// Last step: publish corresponding event.
+				finishRefresh();
+			}
+
+			catch (BeansException ex) {
+				if (logger.isWarnEnabled()) {
+					logger.warn("Exception encountered during context initialization - " +
+							"cancelling refresh attempt: " + ex);
+				}
+
+				// Destroy already created singletons to avoid dangling resources.
+				destroyBeans();
+
+				// Reset 'active' flag.
+				cancelRefresh(ex);
+
+				// Propagate exception to caller.
+				throw ex;
+			}
+
+			finally {
+				// Reset common introspection caches in Spring's core, since we
+				// might not ever need metadata for singleton beans anymore...
+				resetCommonCaches();
+			}
+		}
+	}
+...
+
+
+	/**
+	 * Template method which can be overridden to add context-specific refresh work.
+	 * Called on initialization of special beans, before instantiation of singletons.
+	 * <p>This implementation is empty.
+	 * @throws BeansException in case of errors
+	 * @see #refresh()
+	 */
+	protected void onRefresh() throws BeansException {
+		// For subclasses: do nothing by default.
+	}
+
+}
+``` 
+refresh 就是一个模板方法， onRefresh 就是一个需要子类自己实现的方法。
+
+
+
 
 ## 策略模式
 ## 命令模式
