@@ -1,0 +1,14 @@
+---
+layout: post
+title: 互联网常用算法
+date: 2020-10-12 14:32:00
+categories:  java maven
+---
+
+# 1. lru算法
+
+# 2. 一致hash算法
+https://www.cnblogs.com/lpfuture/p/5796398.html
+
+代码
+https://github.com/QuietListener/newcodebase/tree/master/algorithm/src/main/java/andy/com/algorighm/internet/consistentHash
