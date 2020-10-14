@@ -5,10 +5,28 @@ date: 2020-10-12 14:32:00
 categories:  java maven
 ---
 
-# 1. lru算法
+# 1. lru算法 用于缓存
+https://www.cnblogs.com/wyq178/p/9976815.html
 
-# 2. 一致hash算法
+# 2. 一致hash算法 分布式缓存，负载均衡
 https://www.cnblogs.com/lpfuture/p/5796398.html
 
 代码
 https://github.com/QuietListener/newcodebase/tree/master/algorithm/src/main/java/andy/com/algorighm/internet/consistentHash
+
+# 3. 倒排索引算法 索引搜索，lucence
+
+# 4. page rank 算法
+https://www.cnblogs.com/rubinorth/p/5799848.html
+
+# 5. 布隆过滤算法 bloomfilter
+## 基本思想
+Bloom-Filter算法的核心思想就是利用多个不同的Hash函数来解决“冲突”。
+计算某元素x是否在一个集合中，首先能想到的方法就是将所有的已知元素保存起来构成一个集合R，然后用元素x跟这些R中的元素一一比较来判断是否存在于集合R中；我们可以采用链表等数据结构来实现。但是，随着集合R中元素的增加，其占用的内存将越来越大。试想，如果有几千万个不同网页需要下载，所需的内存将足以占用掉整个进程的内存地址空间。即使用MD5，UUID这些方法将URL转成固定的短小的字符串，内存占用也是相当巨大的。
+
+于是，我们会想到用Hash table的数据结构，运用一个足够好的Hash函数将一个URL映射到二进制位数组（位图数组）中的某一位。如果该位已经被置为1，那么表示该URL已经存在。
+
+Hash存在一个冲突（碰撞）的问题，用同一个Hash得到的两个URL的值有可能相同。为了减少冲突，我们可以多引入几个Hash，**如果通过其中的一个Hash值我们得出某元素不在集合中，那么该元素肯定不在集合中。** 只有在所有的Hash函数告诉我们该元素在集合中时，才能确定该元素存在于集合中。这便是Bloom-Filter的基本思想。
+
+
+https://www.cnblogs.com/zhxshseu/p/5289871.html
