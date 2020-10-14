@@ -214,6 +214,8 @@ JDK中体现：
 ### 为什么引入
 外部与一个子系统的通信必须通过一个统一的外观对象进行，为子系统中的一组接口提供一个一致的界面，外观模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。
 根据“单一职责原则”，在软件中将一个系统划分为若干个子系统有利于降低整个系统的复杂性，一个常见的设计目标是使子系统间的通信和相互依赖关系达到最小，而达到该目标的途径之一就是引入一个外观对象，它为子系统的访问提供了一个简单而单一的入口。
+### jdk例子
+tomcat 的 HttpServletRequest 实现就是一个Facade。
 
 ### 在以下情况下可以使用外观模式：
 
@@ -295,6 +297,8 @@ public class FacadeTest {
 看看这个就够了
 https://cloud.tencent.com/developer/article/1162235
 
+### jdk例子
+kafka中的producer拦截器 组成一个拦截器链 org.apache.kafka.clients.producer.ProducerInterceptor
 
 
 ## 享元模式(Fly Weight )
