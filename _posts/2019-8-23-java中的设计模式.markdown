@@ -23,9 +23,7 @@ Runtime.getRuntime()
 
 # 5. 模板方法模式
 ## 例子
-1. spring JdbcTemplate
-2. spring RedisTemplate
-3. AQS 只需要实现 tryRequire() tryRelease()
+1. AQS 只需要实现 tryRequire() tryRelease()
 
 # 6. 工厂(factory)模式
 ## 例子
@@ -497,6 +495,9 @@ refresh 就是一个模板方法， onRefresh 就是一个需要子类自己实�
 
 ## 策略模式
 ## 命令模式
+1. 将命令用command进行封装
+2. 解决的问题：通过command对象将调用者invoker和命令执行者receiver的解耦
+3. 添加新逻辑只需要添加新的Command即可，不用修改已有的代码。
 1. hystrix
 https://cloud.tencent.com/developer/article/1477400
 
