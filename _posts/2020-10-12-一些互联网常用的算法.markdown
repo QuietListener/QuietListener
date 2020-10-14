@@ -30,3 +30,4 @@ Hash存在一个冲突（碰撞）的问题，用同一个Hash得到的两个URL
 
 
 https://www.cnblogs.com/zhxshseu/p/5289871.html
+https://blog.csdn.net/zhaoyunxiang721/article/details/41123007
