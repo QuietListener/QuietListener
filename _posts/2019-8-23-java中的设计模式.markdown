@@ -204,6 +204,12 @@ public class AdaptorObjectTest {
 }
 ```
 
+
+### jdk中的例子
+JDK中体现：
+（1）java.io.InputStreamReader（该类继承了Read类，但要创建它的对象必须在构造函数中传入一个InputStream）(InputStream→Reader 字节到字符)
+（2）java.io.OutputStreamWriter(OutputStream)
+
 ## Facade 外观(门面)模式
 ### 为什么引入
 外部与一个子系统的通信必须通过一个统一的外观对象进行，为子系统中的一组接口提供一个一致的界面，外观模式定义了一个高层接口，这个接口使得这一子系统更加容易使用。
