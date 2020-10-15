@@ -223,3 +223,62 @@ ls /brokers
 
 
 
+
+# 配置 
+## 服务器端
+1. log.retention.{hours|minutes|ms} 消息留存时间
+2. •log.retention.bytes 消息留存大小
+3. unclean.leader.election.enable
+该参数默认值是false，即表明如果发生这种情况，Kafka不允许从剩下存活的非ISR副本中选择一个当leader。
+4. message.max.bytes 消息最大字节数
+5. min.insync.replicas
+该参数其实是与producer端的acks参数配合使用的。关于acks含义的介绍，我们留到第4章中详细展开。这里只需要了解acks=1表示producer端寻求最高等级的持久化保证，而min.insync.replicas也只有在acks=1时才有意义。它指定了broker端必须成功响应clients消息发送的最少副本数。假如broker端无法满足该条件，则clients的消息发送并不会被视为成功。它与acks配合使用可以令Kafka集群达成最高等级的消息持久化。在实际使用中如果用户非常在意被发送的消息是否真的成功写入了所有副本，那么推荐将参数设置为副本数1。举一个例子，假设某个topic的每个分区的副本数是3，那么推荐设置该参数为2，这样我们就能够容忍一台broker宕机而不影响服务；若设置参数为3，那么只要任何一台broker宕机，整个Kafka集群将无法继续提供服务。因此用户需要在高可用和数据一致性之间取得平衡。
+
+
+## Producer参数
+### 1. bootstrap.servers 
+服务器地址
+### 2. key.serializer value.serializer
+可以和value进行序列化
+### 3. acks(重要)
+1. acks=0：设置成0表示producer完全不理睬leaderbroker端的处理结果。此时，producer发送消息后立即开启下一条消息的发送，根本不等待leaderbroker端返回结果。由于不接收发送结果，因此在这种情况下producer.send的回调也就完全失去了作用，即用户无法通过回调机制感知任何发送过程中的失败，所以acks=0时producer并不保证消息会被成功发送。但凡事有利就有弊，由于不需要等待响应结果，通常这种设置下producer的吞吐量是最高的
+2. acks=all或者1：表示当发送消息时，leaderbroker不仅会将消息写入本地日志，同时还会等待ISR中所有其他副本都成功写入它们各自的本地日志后，才发送响应结果给producer。显然当设置acks=all时，只要ISR中至少有一个副本是处于“存活”状态的，那么这条消息就肯定不会丢失，因而可以达到最高的消息持久性，但通常这种设置下producer的吞吐量也是最低的。
+3. acks=1：是0和all折中的方案，也是默认的参数值。producer发送消息后leaderbroker仅将该消息写入本地日志，然后便发送响应结果给producer，而无须等待ISR中其他副本写入该消息。那么此时只要该leaderbroker一直存活，Kafka就能够保证这条消息不丢失。这实际上是一种折中方案，既可以达到适当的消息持久性，同时也保证了producer端的吞吐量。
+
+### 4. retries
+### 5. max.in.flight.requests.per.connection=1
+设置该参数为1主要是为了防止topic同分区下的消息乱序问题。这个参数的实际效果其实限制了producer在单个broker连接上能够发送的未响应请求的数量。因此，如果设置成1，则producer在某个broker发送响应之前将无法再给该broker发送PRODUCE请求。
+### 6. compression.type
+### 7. batch.size(重要)
+batch.size是producer最重要的参数之一！它对于调优producer吞吐量和延时性能指标都有着非常重要的作用。前面提到过，producer会将发往同一分区的多条消息封装进一个batch中。当batch满了的时候，producer会发送batch中的所有消息。不过，producer并不总是等待batch满了才发送消息，很有可能当batch还有很多空闲空间时producer就发送该batch。显然，batch的大小就显得非常重要。通常来说，一个小的batch中包含的消息数很少，因而一次发送请求能够写入的消息数也很少，所以producer的吞吐量会很低；但若一个batch非常之巨大，那么会给内存使用带来极大的压力，因为不管是否能够填满，producer都会为该batch分配固定大小的内存。因此batch.size参数的设置其实是一种时间与空间权衡的体现。batch.size参数默认值是16384，即16KB。这其实是一个非常保守的数字。在实际使用过程中合理地增加该参数值，通常都会发现producer的吞吐量得到了相应的增加。
+
+### 8. linger.ms(重要)
+上面说到batch.size时，我们提到了消息没有填满batch也可以被发送的情况。这是为什么呢？难道不是等batch满了再发送比较好吗？实际上这也是一种权衡，即吞吐量与延时之间的权衡。linger.ms参数就是控制消息发送延时行为的。该参数默认值是0，表示消息需要被立即发送，无须关心batch是否已被填满，大多数情况下这是合理的，毕竟我们总是希望消息被尽可能快地发送。不过这样做会拉低producer吞吐量，毕竟producer发送的每次请求中包含的消息数越多，producer就越能将发送请求的开销摊薄到更多的消息上，从而提升吞吐量。
+
+### 9.max.request.size
+官网中给出的解释是，该参数用于控制producer发送请求的大小。实际上该参数控制的是producer端能够发送的最大消息大小。由于请求有一些头部数据结构，因此包含一条消息的请求的大小要比消息本身大。不过姑且把它当作请求的最大尺寸是安全的。如果producer要发送尺寸很大的消息，那么这个参数就是要被设置的。默认的1048576字节太小了，通常无法满足企业级消息的大小要求。
+
+
+## Consumer参数
+### 1. session.timeout.ms
+consumer消息处理逻辑的最大时间——倘若consumer两次poll之间的间隔超过了该参数所设置的阈值，那么coordinator就会认为这个consumer已经追不上组内其他成员的消费进度了，因此会将该consumer实例“踢出”组，该consumer负责的分区也会被分配给其他consumer。在最好的情况下，这会导致不必要的rebalance，因为consumer需要重新加入group。更糟的是，对于那些在被踢出group后处理的消息，consumer都无法提交位移——这就意味着这些消息在rebalance之后会被重新消费一遍。
+
+### 2. max.poll.interval.ms
+这个参数就是用于设置消息处理逻辑的最大时间的。假设用户的业务场景中消息处理逻辑是把消息“落地”到远程数据库中，且这个过程平均处理时间是2分钟，那么用户仅需要将max.poll.interval.ms设置为稍稍大于2分钟的值即可，而不必为session.timeout.ms也设置这么大的值。
+
+### 3. auto.offset.reset
+指定了无位移信息或位移越界（即consumer要消费的消息的位移不在当前消息日志的合理区间范围）时Kafka的应对策略。特别要注意这里的无位移信息或位移越界，只有满足这两个条件中的任何一个时该参数才有效果。
+
+目前该参数有如下3个可能的取值：  
+1. earliest：指定从最早的位移开始消费。注意这里最早的位移不一定就是0。
+2. latest：指定从最新处位移开始消费。
+3. none：指定如果未发现位移信息或位移越界，则抛出异常。笔者在实际使用过程中几乎从未见过将该参数设置为none的用法，因此该值在真实业务场景中使用甚少。
+
+###  4. enable.auto.commit
+该参数指定consumer是否自动提交位移。若设置为true，则consumer在后台自动提交位移；否则，用户需要手动提交位移。对于有较强“精确处理一次”语义需求的用户来说，最好将该参数设置为false，由用户自行处理位移提交问题。
+
+### 5. max.poll.records
+单词拉最大数量
+
+### 6. heartbeat.interval.ms
+这里的关键在于要搞清楚consumergroup的其他成员如何得知要开启新一轮rebalance——当coordinator决定开启新一轮rebalance时，它会将这个决定以REBALANCE_IN_PROGRESS异常的形式“塞进”consumer心跳请求的response中，这样其他成员拿到response后才能知道它需要重新加入group。显然这个过程越快越好，而heartbeat.interval.ms就是用来做这件事情的。
