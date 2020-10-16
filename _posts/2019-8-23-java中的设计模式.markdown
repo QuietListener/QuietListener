@@ -501,7 +501,39 @@ DefaultResourceLoader implements ConfigurableApplicationContext {
 refresh 就是一个模板方法， onRefresh 就是一个需要子类自己实现的方法。
 
 
+4. thrift的AbstractNonblockingServer
 
+```java
+public abstract class AbstractNonblockingServer extends TServer {
+    protected final Logger LOGGER = LoggerFactory.getLogger(this.getClass().getName());
+    final long MAX_READ_BUFFER_BYTES;
+    final AtomicLong readBufferBytesAllocated = new AtomicLong(0L);
+
+    public AbstractNonblockingServer(AbstractNonblockingServer.AbstractNonblockingServerArgs args) {
+        super(args);
+        this.MAX_READ_BUFFER_BYTES = args.maxReadBufferBytes;
+    }
+
+/*
+* 模板方法
+*/
+    public void serve() {
+        if (this.startThreads()) {
+            if (this.startListening()) {
+                this.setServing(true);
+                this.waitForShutdown();
+                this.setServing(false);
+                this.stopListening();
+            }
+        }
+    }
+
+...
+...
+
+}
+
+```
 
 ## 策略模式
 #### 设计模式——策略模式及在jdk中的应用(ThreadPoolExecutor 4种拒绝策略)
