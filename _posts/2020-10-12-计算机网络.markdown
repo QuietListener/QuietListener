@@ -1,0 +1,12 @@
+---
+layout: post
+title: 计算机网络
+date: 2020-10-12 14:32:00
+categories:  java maven
+---
+
+# 1. tcp
+
+# 2. tcp自定义协议
+
+# 3. 一个服务器
