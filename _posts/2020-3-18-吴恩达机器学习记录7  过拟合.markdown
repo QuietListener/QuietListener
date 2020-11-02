@@ -7,7 +7,7 @@ categories:  机器学习
 
 
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 ## 1. 欠拟合，过拟合
 1. 欠拟合(underfitting): 对训练数据，欠拟合会有很大的偏差(bias)

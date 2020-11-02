@@ -5,7 +5,7 @@ date: 2020-3-17 14:32:00
 categories:  机器学习
 ---
 
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
 
 # 1. what
 ## 1. 有多个变量(以预测房屋价格为例)
