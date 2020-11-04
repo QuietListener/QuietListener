@@ -441,3 +441,122 @@ SpringAOP 自己调用本类的方法是不会拦截的。
         return null;
     }
 ```
+
+
+# spring 事务的基本流程
+
+## 1 下面这个类就是 整个事务的流程代码(使用@Transaction的情况下)
+```java
+
+public abstract class TransactionAspectSupport implements BeanFactoryAware, InitializingBean {
+    ...
+/**
+	 * General delegate for around-advice-based subclasses, delegating to several other template
+	 * methods on this class. Able to handle {@link CallbackPreferringPlatformTransactionManager}
+	 * as well as regular {@link PlatformTransactionManager} implementations.
+	 * @param method the Method being invoked
+	 * @param targetClass the target class that we're invoking the method on
+	 * @param invocation the callback to use for proceeding with the target invocation
+	 * @return the return value of the method, if any
+	 * @throws Throwable propagated from the target invocation
+	 */
+	@Nullable
+	protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targetClass,
+			final InvocationCallback invocation) throws Throwable {
+
+		// If the transaction attribute is null, the method is non-transactional.
+		TransactionAttributeSource tas = getTransactionAttributeSource();
+		final TransactionAttribute txAttr = (tas != null ? tas.getTransactionAttribute(method, targetClass) : null);
+		final PlatformTransactionManager tm = determineTransactionManager(txAttr);
+		final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
+
+		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
+			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+
+            /**
+            * 1. TransactionInfo 很重要。((DefaultTransactionStatus) status).getTransaction() 会得到一个
+            * DatasourceTransactionObject ，这个对象里有一个ConnectionHolder，holder里面存放了Connection对象
+            * 
+            * 2. createTransactionIfNecessary()这个函数在调用过程中，会取的connection，并调用TransactionSynchronizationManager.bindResource 将 connection绑定到当前线程(使用ThreadLocal)
+
+              3. 使用 DataSourceUtils.getConnection 最终也是调用 TransactionSynchronizationManager 来绑定到当前线程。
+            */
+			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification); 
+			Object retVal = null;
+			try {
+				// This is an around advice: Invoke the next interceptor in the chain.
+				// This will normally result in a target object being invoked.
+				retVal = invocation.proceedWithInvocation();
+			}
+			catch (Throwable ex) {
+				// target invocation exception
+				completeTransactionAfterThrowing(txInfo, ex);
+				throw ex;
+			}
+			finally {
+				cleanupTransactionInfo(txInfo);
+			}
+			commitTransactionAfterReturning(txInfo);
+			return retVal;
+		}
+
+		else {
+			final ThrowableHolder throwableHolder = new ThrowableHolder();
+
+			// It's a CallbackPreferringPlatformTransactionManager: pass a TransactionCallback in.
+			try {
+				Object result = ((CallbackPreferringPlatformTransactionManager) tm).execute(txAttr, status -> {
+					TransactionInfo txInfo = prepareTransactionInfo(tm, txAttr, joinpointIdentification, status);
+					try {
+						return invocation.proceedWithInvocation();
+					}
+					catch (Throwable ex) {
+						if (txAttr.rollbackOn(ex)) {
+							// A RuntimeException: will lead to a rollback.
+							if (ex instanceof RuntimeException) {
+								throw (RuntimeException) ex;
+							}
+							else {
+								throw new ThrowableHolderException(ex);
+							}
+						}
+						else {
+							// A normal return value: will lead to a commit.
+							throwableHolder.throwable = ex;
+							return null;
+						}
+					}
+					finally {
+						cleanupTransactionInfo(txInfo);
+					}
+				});
+
+				// Check result state: It might indicate a Throwable to rethrow.
+				if (throwableHolder.throwable != null) {
+					throw throwableHolder.throwable;
+				}
+				return result;
+			}
+			catch (ThrowableHolderException ex) {
+				throw ex.getCause();
+			}
+			catch (TransactionSystemException ex2) {
+				if (throwableHolder.throwable != null) {
+					logger.error("Application exception overridden by commit exception", throwableHolder.throwable);
+					ex2.initApplicationException(throwableHolder.throwable);
+				}
+				throw ex2;
+			}
+			catch (Throwable ex2) {
+				if (throwableHolder.throwable != null) {
+					logger.error("Application exception overridden by commit exception", throwableHolder.throwable);
+				}
+				throw ex2;
+			}
+		}
+	}
+
+```
+
+...
+}
