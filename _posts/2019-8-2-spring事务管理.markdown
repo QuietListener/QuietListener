@@ -560,3 +560,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 
 ...
 }
+
+
+## 总结一下Spring Transaction的本质
+1. 事务相关的Connection对象，在事务开始的时候获取，使用TransactionSynchronizationManager，将connection对象与当前线程绑定(使用ThreadLocal)。
+2. 不管是在Spring中如果要使用当前线程绑定的Connection对象，还是在mybatis中需要使用Connection都会去TransactionSynchronizationManager中获取。保证取到的Connection对象是同一个对象。
