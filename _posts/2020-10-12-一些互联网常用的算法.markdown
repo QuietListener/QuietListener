@@ -34,4 +34,7 @@ https://blog.csdn.net/zhaoyunxiang721/article/details/41123007
 
 
 
-# 6.
+# 6.内服分配算法
+指针碰撞
+空闲列表
+伙伴算法
