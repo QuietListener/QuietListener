@@ -465,6 +465,7 @@ redis支持集合的增删改查，和集合的交集，并集，差集等操作
 
 2. skiplist（跳表）
 读写效率高
+跳表:https://www.jianshu.com/p/9d8296562806
 
 ```shell
 127.0.0.1:6379> zadd z2  10 a
