@@ -2425,3 +2425,8 @@ explain select * from appadded;
 7. Using index：表示相应的select操作中使用了覆盖索引（Covering Index），避免访问了表的数据行，效率不错。如果同时出现using where，表明索引被用来执行索引键值的查找；如果没有同时出现using where，表明索引用来读取数据而非执行查找动作。
 8. Distinct：优化distinct操作，在找到第一匹配的元组后即停止找同样值的动作。
 
+
+## 范式
+https://www.cnblogs.com/linjiqin/archive/2012/04/01/2428695.html
+
+
