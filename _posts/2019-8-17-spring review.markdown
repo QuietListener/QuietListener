@@ -702,3 +702,14 @@ public class TestCondition {
 ```
 
 
+
+## @DependsOn
+
+```java
+@Componnet
+@DependsOn("classB")
+public class A{
+
+}
+```
+classB先于A实例初始化
