@@ -38,3 +38,4 @@ https://blog.csdn.net/zhaoyunxiang721/article/details/41123007
 指针碰撞
 空闲列表
 伙伴算法
+https://www.cnblogs.com/cherishui/p/4246133.html
