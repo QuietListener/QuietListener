@@ -2197,6 +2197,7 @@ tip:
 Innodb通过Force Log at Commit实现持久性，在事务commit时候必须所有日志都写入到日志文件进行持久化，会调用fsync，commit才算完成。 redo log是顺序写。
 
 undo log会用来帮助实现mvcc和回滚的。undu log 需要随机读写。
+undo log 记录的修改之前的值，redo log 记录的是修改后的值。
 
 **innodb_flush_log_at_trx_commit 控制 redo log的刷盘策略。**
 1 表示写重做日志，每次都调用fsync刷盘，
