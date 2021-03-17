@@ -39,3 +39,10 @@ https://blog.csdn.net/zhaoyunxiang721/article/details/41123007
 空闲列表
 伙伴算法
 https://www.cnblogs.com/cherishui/p/4246133.html
+
+
+# 7.延迟队列
+时间轮算法
+https://yfscfs.gitee.io/post/%E4%BB%A4%E4%BA%BA%E6%83%8A%E8%89%B3%E7%9A%84%E6%97%B6%E9%97%B4%E8%BD%AE%E7%AE%97%E6%B3%95timingwheel/
+
+redis zset+轮询也可以
