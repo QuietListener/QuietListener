@@ -179,4 +179,3 @@ public class TestMokito1 extends BaseTest {
 1. @mock和@spy不受spring管理 
 2. @mockBean和@spyBean受spring管理，会自动替换@Autowired的注入
 3. 一个方法没有mock spy会调用真实方法返回真实值，   mock默认不执行有返回值，直接返回null。
-4. 
