@@ -65,3 +65,20 @@ swift的枚举可以带参数
 ## mvvm
 viewModel将model和view解耦
 ![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/202210-02-mvvm.png)
+
+## @State
+1. View一般是不可变的。View只是按照模型(model)中的数据显示。但是View中也可以有一些自己的数据，比如动画的时间，@State一般用在View中，作为View中的私有的数据。
+
+2. @State还有  @ObservedObject的功能，@State的参数改变了，会rebuild View的Body。
+
+3. @State修饰的参数会指向内存的某个地方，@State修饰的数据生命周期于View的生命周期相同，rebuild View会重新指向这个内存，不会清除@State的数据的。
+
+## 控制
+private private(set)
+
+private 可以修饰 函数 struct 参数等。
+
+
+## 修改参数
+    let 表示一旦赋值就不可改变
+    var 表示属性可以被改变
