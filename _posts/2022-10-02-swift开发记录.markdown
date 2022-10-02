@@ -1,0 +1,21 @@
+---
+layout: post
+title: swift开发记录
+date: 2022-10-2 20:32:00
+categories:  客户端
+---
+
+# 一些概念
+## struct vs class
+不同点
+|  struct   | class  |
+|  ----  | ----  | 
+| 传值  | 传引用|
+| 被传值或者赋值的时候会copy  | 传的事引用不会copy|
+| copy on write是不可变的  | 引用计数|
+| 用在函数式编程  | 用于面向对象编程|
+| 不可以继承  | 可以继承(单根继承)|
+| 如果需要改变需要显示指定(mutating)  |可以改变|
+|一般用在view等|一般用在vm|
+
+
