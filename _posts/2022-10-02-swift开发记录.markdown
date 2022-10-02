@@ -58,7 +58,10 @@ struct MemoryGame<CardContent> where CardContent :Equatable{
 }
 ```
 
+## enum枚举
+swift的枚举可以带参数
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2022-10-02-enum.png)
 
 ## mvvm
-
+viewModel将model和view解耦
 ![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/202210-02-mvvm.png)
