@@ -19,3 +19,46 @@ categories:  客户端
 |一般用在view等|一般用在vm|
 
 
+
+## generics 泛型
+
+跟java差不多
+
+```swift
+//表示 CardContent是Equatable的可以用 == 进行比较
+struct MemoryGame<CardContent> where CardContent :Equatable{
+
+
+    struct Card{
+        var content: CardContent;
+    }
+}
+
+```
+
+
+## 函数
+函数是第一等公民，可以作为参数来传递
+
+(Int,Int) -> Card 表示可以接受一个两个参数是Int返回Card的函数： 
+```swift
+
+//表示 CardContent是Equatable的可以用 == 进行比较
+struct MemoryGame<CardContent> where CardContent :Equatable{
+    
+    var cards: Array<Card>  = Array<Card>();
+    var onlyFaceUpCardIndex: Int?;
+    
+    init(_ count: Int,createCard: (Int,Int) -> Card){
+        for index in 0..<count {
+            cards.append(createCard(index,index*2))
+            cards.append(createCard(index,index*2+1))
+        }
+    }
+}
+```
+
+
+## mvvm
+
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/202210-02-mvvm.png)
