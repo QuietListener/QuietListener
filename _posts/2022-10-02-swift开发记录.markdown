@@ -82,3 +82,16 @@ private 可以修饰 函数 struct 参数等。
 ## 修改参数
     let 表示一旦赋值就不可改变
     var 表示属性可以被改变
+
+## computed variable 可计算的属性
+```swift
+
+var onlyFaceUpCardIndex: Int? {
+        get{ //get获取值的时候执行
+            cards.indices.filter({cards[$0].isFaceUp == true}).oneAndOnly
+        }
+        set{ //赋值的时候执行 newValue是赋的新值
+            cards.indices.forEach({index in cards[index].isFaceUp = index==newValue})
+        }
+    }
+```
