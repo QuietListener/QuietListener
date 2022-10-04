@@ -96,6 +96,27 @@ var onlyFaceUpCardIndex: Int? {
     }
 ```
 
+
+
+## extention
+扩展一个类
+```swift
+
+//扩展一个类
+extension Array{
+    var oneAndOnly: Element?{
+        if(self.count == 1){
+           return self.first
+        }else{
+           return nil
+        }
+    }
+}
+
+```
+
+
+
 ## 布局 Layout
 
 1. HStack 
@@ -125,3 +146,46 @@ var onlyFaceUpCardIndex: Int? {
 
 }
 ```
+
+## protocol 就是接口
+
+定了了方法参数但是没有“实现”
+``` swift
+protocal Moveable{
+    func move(by :Int)
+    var hasMoved: Bool {get}
+    var distanceFromStart: Int {get}
+}
+```
+
+可以继承
+```swift
+//可以继承
+protocal Vehicle : Moveable{
+    var passagerCount: Int {get set}
+}
+
+//class实现protocal
+class Car: Vehicle{
+    //必须实现move这个方法
+}
+
+//可以实现多个protocal
+class Car : Vehicle, leasable, Impoundable{
+
+}
+```
+
+怎么使用protocal，可以用 **extention** 来 给protocal一个默认实现。extention是需要实现protocal的方法和参数的。**extention**和实现了swift的 **面向protocal编程** 
+
+protocal和generics(泛型)
+
+```swift 
+
+
+protocal Identifiable{
+    associatedtype ID where ID: Hashable; //注意泛型用法不是 Identifiable<ID>
+    var id: ID {get}
+}
+```
+
