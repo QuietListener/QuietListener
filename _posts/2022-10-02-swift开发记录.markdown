@@ -95,3 +95,33 @@ var onlyFaceUpCardIndex: Int? {
         }
     }
 ```
+
+## 布局 Layout
+
+1. HStack 
+2. VStack
+3. ZStack
+4. LazyVStack
+5. ScrollView 
+6. Spacer 
+7. Divider
+8. RoundedRectangle
+9. GeometryReader 用来获取父View的大小
+10. @ViewBuilder
+    @ViewBuilder可以用在方法和参数上 
+    @ViewBuilder用在方法上 可以 List of View
+    ZStack的源码中 content也是一个@ViewBuilder修饰的
+```swift
+@available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+@frozen public struct ZStack<Content> : View where Content : View {
+
+    /// Creates an instance with the given alignment.
+    ///
+    /// - Parameters:
+    ///   - alignment: The guide for aligning the subviews in this stack on both
+    ///     the x- and y-axes.
+    ///   - content: A view builder that creates the content of this stack.
+    @inlinable public init(alignment: Alignment = .center, @ViewBuilder content: () -> Content)
+
+}
+```
