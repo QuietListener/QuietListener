@@ -1,0 +1,26 @@
+---
+layout: post
+title: netty
+date: 2022-10-8 14:32:00
+categories:  测试
+---
+
+
+## Pipleline和ChannelHandler
+
+ pipline 
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2022-10-9-pipline.png)
+
+
+channleHandler
+![redis](https://raw.githubusercontent.com/QuietListener/quietlistener.github.io/master/images/2022-10-9-pipline.png)
+
+
+
+1. pipline是一个双向链表，里面放着 ChannelHandler。
+2. InboundHandler 处理读数据  OutboundHandler 处理写数据
+
+3. 执行顺序
+   inbound是按加入pipline的顺序执行(从双向链表头部开始执行)
+   outbound是按加入pipline相反的顺序执行(凶双向链表尾部开始执行)
+   
