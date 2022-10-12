@@ -23,4 +23,4 @@ channleHandler
 3. 执行顺序
    inbound是按加入pipline的顺序执行(从双向链表头部开始执行)
    outbound是按加入pipline相反的顺序执行(凶双向链表尾部开始执行)
-   
+
