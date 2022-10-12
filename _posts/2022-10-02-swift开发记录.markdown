@@ -186,7 +186,44 @@ protocal和generics(泛型)
 
 protocal Identifiable{
     associatedtype ID where ID: Hashable; //注意泛型用法不是 Identifiable<ID>
-    var id: ID {get}
+    var id: ID {get} 
 }
 ```
 
+
+## ViewModifier
+使用ViewModifier protocal
+使用GeometryEffect
+
+.padding .foregroundColor这些都是ViewModifier
+
+//例子
+Circle().modifier(Cardify(isFaceup: card.isFaceUp));
+
+## 动画
+### implicit animation
+
+withAnimation(.linear(duration:2))
+
+## transition
+
+Text("aa").transition(AnyTranstion.scale);
+
+为transition设置特定的animation
+.transition(AnyTranstion.opacity.animation(.leaner(duration:20)))
+
+
+.onAppear(func) 在view显示的时候回调方法
+
+```swift
+  ZStack(){
+            Pie(startAngle: Angle(degrees: 0),endAngle: Angle(degrees: 90))
+                        .padding(4)
+                        .opacity(0.5)
+                    //proxy.size 用来获取父View的信息 长宽
+                    Text(card.content)
+                    .rotationEffect(Angle(degrees: card.isMatched ? 360 : 0)) //如果匹配上了就旋转360度。
+                    .animation(Animation.linear(duration: 1).repeatForever(autoreverses: false)) //rotationEffect持续1秒钟，并且一直循环，不用倒回去(autoreverses)
+                    .font(font(proxy.size))
+                    .scaleEffect(scale(size: proxy.size))
+```
