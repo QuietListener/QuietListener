@@ -46,3 +46,5 @@ https://www.cnblogs.com/cherishui/p/4246133.html
 https://yfscfs.gitee.io/post/%E4%BB%A4%E4%BA%BA%E6%83%8A%E8%89%B3%E7%9A%84%E6%97%B6%E9%97%B4%E8%BD%AE%E7%AE%97%E6%B3%95timingwheel/
 
 redis zset+轮询也可以
+
+#8 ngram算法

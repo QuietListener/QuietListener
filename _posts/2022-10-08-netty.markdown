@@ -24,3 +24,57 @@ channleHandler
    inbound是按加入pipline的顺序执行(从双向链表头部开始执行)
    outbound是按加入pipline相反的顺序执行(凶双向链表尾部开始执行)
 
+curl -i -X POST \
+   -H "Content-Type:application/json" \
+   -H "sign:bbb" \
+   -H "channel:aaa" \
+   -H "timstamp:1212121212" \
+   -d \
+'{
+  "page":1,
+  "pageSize":100,
+  "skuId":39,
+  "chapterIds":[7663],
+  "version":"1_44",
+  "componentNames":["imageList"],
+  "attrAndKeyWords":{
+  "data.attrs.imageList":"jpeg"
+  }
+}' \
+ 'http://192.168.10.11:8000/api/v1/adult/course/online/rpc/searchComponentData'
+
+
+
+
+
+ curl 'https://term-unlock-abp.dev-env.baicizhan.com/api/v1/adult/course/basic/term/createTermCourse' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: zh-CN,zh;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/json' \
+  -H 'Cookie: access_token=VRhXJIpnGXIOOQC5hpu8kw==; abp_user_token=v9EN+0vwbZF2ZlM0cY3Nj62QgN/VnfrDNI2Sd/z7lHu48oCdvqMH7Rpd/e0h19ZvNy8D9nUPoYf5Uy82W4xG5/udWudxYHrSu4dT2Qfk3RBpaOwwdV4mRAtMLtnEWvjn19pmxIVwxg5tjuvfbeU0ABsbSJ0soayofG8YS7R/PFNRgKoDIEWDLitGL7qUy97LugSsyHwa3lz4ykfCNX+/Z31bevs65rpPwsg2XtL6FLfxpqHC46DbH5KCHclcyq3tApA55aAIIl6X134xSdh0a7BoEmwb2mFaxiehJ2Rr1mrs9Ram6pPF53R/nNaj7fRjdXb1eXIsCBkMAjGdtxhp+iPfaNNqCX4CWi3eLHwEdn/6mx7XzcztjeS/o1LXZBzbbS8tdfngGFhdpRm+Bo5juXgjsFLAljaBQcRhdC1Ddz2bTRgB/VjKhZPK0udabr0x6YRjis8pejD+xpO0BcKKtVbmPdeY7frR7p3q0LVYdfK7Jp4puKylCSDpwm8FnexRmx8YmOEoAbl1xwJ0FYRwlvChGyxqifRQKQIf/4Ko9mUzFX8n++TxyWdEi9ePDj8Q; acw_tc=0bde432216680725203663901e00f4067fc358591e0a30986f918dc33bd8ef' \
+  -H 'Origin: http://mytest.baicizhan.com' \
+  -H 'Referer: http://mytest.baicizhan.com/course/phasedSale/products?skuId=13&skuName=%E6%B5%8B%E8%AF%95copyfrom4-2&spuId=1' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36' \
+  --data-raw '{"skuId":13,"spuId":1,"price":100,"startSellingTimeStamp":1668096000414,"endSellingTimeStamp":1668268799000,"startCourseTimeStamp":1668268800337,"endCourseTimeStamp":1669268799000}' \
+  --compressed \
+  --insecure
+  1668268800337
+  1668268800336
+
+
+
+  curl 'http://mytest.baicizhan.com/api/v1/adult/course/basic/term/createOrUpdateSkuSellInfo' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: zh-CN,zh;q=0.9' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/json' \
+  -H 'Cookie: access_token=VRhXJIpnGXIOOQC5hpu8kw==; abp_user_token=v9EN+0vwbZF2ZlM0cY3Nj62QgN/VnfrDNI2Sd/z7lHu48oCdvqMH7Rpd/e0h19ZvNy8D9nUPoYf5Uy82W4xG5/udWudxYHrSu4dT2Qfk3RBpaOwwdV4mRAtMLtnEWvjn19pmxIVwxg5tjuvfbeU0ABsbSJ0soayofG8YS7R/PFNRgKoDIEWDLitGL7qUy97LugSsyHwa3lz4ykfCNX+/Z31bevs65rpPwsg2XtL6FLfxpqHC46DbH5KCHclcyq3tApA55aAIIl6X134xSdh0a7BoEmwb2mFaxiehJ2Rr1mrs9Ram6pPF53R/nNaj7fRjdXb1eXIsCBkMAjGdtxhp+iPfaNNqCX4CWi3eLHwEdn/6mx7XzcztjeS/o1LXZBzbbS8tdfngGFhdpRm+Bo5juXgjsFLAljaBQcRhdC1Ddz2bTRgB/VjKhZPK0udabr0x6YRjis8pejD+xpO0BcKKtVbmPdeY7frR7p3q0LVYdfK7Jp4puKylCSDpwm8FnexRRNJYNZm1ocC4DnnmFQT2o/JujGzU4RkiItycVWQ4TAgjbJAke16eZgieMDzLuZ7T; acw_tc=0a5cc90216684135461046730e016a7bd2d2053e5dea1941f4429b34e047a0' \
+  -H 'Origin: http://mytest.baicizhan.com' \
+  -H 'Referer: http://mytest.baicizhan.com/course/phasedSale' \
+  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36' \
+  --data-raw '{"imageType":0,"priceList":[1],"bczSyncToSss":false,"scheduleType":1,"strategy":1,"unlockTimeType":1,"unlockBetweenLessonType":1,"unlockScale":1,"exceptLessonIds":[735],"exceptLessonUnlockType":2,"imageUrl":"https://abp.bczcdn.com/e32c4f9470d2d8933cffd00c2d36695a13a4.png","skuId":1,"spuId":1,"termScheduleConfig":{"scheduleType":1,"skuId":1,"strategy":1,"strategyContent":{"unlockBetweenLessonType":1,"unlockTimeType":1,"exceptLessonIds":[735],"exceptLessonUnlockType":2}}}' \
+  --compressed \
+  --insecure
+
+
