@@ -295,6 +295,8 @@ c7350838e38d :)
 ![部署](https://clickhouse.com/docs/assets/images/sparse-primary-indexes-09b-0a3561fdefc32a8186cd253bd350ee1e.png)
 
 **生成物化视图**
+
+
 ```sql
 c7350838e38d :) CREATE MATERIALIZED VIEW mv_term_id_user_id
                 ENGINE = MergeTree
@@ -326,7 +328,6 @@ c7350838e38d :)
 
 下面相通的sql在视图上执行一下。
 ```
-explain indexes=1
 SELECT
                     bcz_uid,
                     user_id,
@@ -405,12 +406,90 @@ c7350838e38d :)
 ```
 使用物理视图跳过了很多 Granules ( Granules: 75/28254        )
 
-。
 
 
 
 
 
+## 使用映射(projection)
+使用物化视图的话 需要手动指定查询哪个物化视图。对代码有侵入性。
+映射与物化视图原理类似，都是新建一个同步的隐藏表，但是对用户全透明，ta可以自动选择用哪个projection。
+
+![部署](https://clickhouse.com/docs/assets/images/sparse-primary-indexes-09c-f119a3e25f91776b8afb3f5c637435e4.png)
+
+
+先开起实验功能
+```sql
+SET allow_experimental_projection_optimization = 1;
+
+```
+先删除表的物理视图
+
+```sql
+c7350838e38d :) drop view tutorial.mv_term_id_user_id;;
+
+DROP VIEW tutorial.mv_term_id_user_id
+
+Query id: 594f6c37-207d-4eab-a899-410305361c6e
+
+Ok.
+
+0 rows in set. Elapsed: 0.012 sec. 
+
+c7350838e38d :) 
+
+```
+
+创建映射
+
+```sql
+c7350838e38d :) ALTER TABLE course_event_lesson_study
+                    ADD PROJECTION proj_term_id_user_id_1
+                    (
+                        SELECT *
+                       
+                ORDER BY (term_id, bcz_uid, server_time)
+                
+                    );
+
+ALTER TABLE course_event_lesson_study
+    ADD PROJECTION proj_term_id_user_id_1
+    (
+        SELECT *
+        ORDER BY (term_id, bcz_uid, server_time)
+    )
+
+Query id: 31e84528-4c9d-44ed-a072-4245f1b52014
+
+Ok.
+
+0 rows in set. Elapsed: 0.021 sec. 
+```
+
+物化projection：
+```sql
+c7350838e38d :) alter table course_event_lesson_study materialize projection proj_term_id_user_id_1;
+
+ALTER TABLE course_event_lesson_study
+    MATERIALIZE PROJECTION proj_term_id_user_id_1
+
+Query id: 34be3ba9-3ee3-4ebf-bad8-265b00544edb
+
+Ok.
+
+0 rows in set. Elapsed: 0.011 sec. 
+
+c7350838e38d :) 
+
+```
+
+
+
+删除 projection
+```sql
+ALTER TABLE course_event_lesson_study
+    DROP PROJECTION proj_term_id_user_id_1
+```
 
 # 参考资料
 1. https://clickhouse.com/docs/zh/guides/improving-query-performance/sparse-primary-indexes/
