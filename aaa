@@ -1,0 +1,58 @@
+docker run -it --rm --link some-clickhouse-server1:clickhouse-server yandex/clickhouse-client --host clickhouse-server
+docker run -d --name some-clickhouse-server1 --ulimit nofile=262144:262144 --volume=/Users/yangtingjun/Documents/data/click_house_database:/var/lib/clickhouse yandex/clickhouse-server
+
+docker run -i --rm --link some-clickhouse-server1:clickhouse-server yandex/clickhouse-client --host clickhouse-server --database=tutorial --multiquery  < /Users/yangtingjun/Downloads/2023-03-01-15-36-20_EXPORT_SQL_8315086_855_0.sql 
+
+ 
+ 
+ SELECT
+                                                    bcz_uid,
+                                                    user_id,
+                                                    sku_id,
+                                                    term_id,
+                                                    chapter_id,
+                                                    lesson_id,
+                                                    page_id,
+                                                    event_time,
+                                                    server_time,
+                                                    time_type,
+                                                    time,
+                                                    extra,
+                                                    updated_at,
+                                                    created_at
+                                                FROM course_event_lesson_study
+                                                WHERE (bcz_uid = 140703747) AND (term_id = 606) AND (sku_id = 9) AND (time_type = 3001) AND (lesson_id IN (149,151))
+
+
+                                                alter table course_event_lesson_study ADD INDEX  bcz_uid_idx bcz_uid TYPE set(0)  GRANULARITY 1
+                                                alter table course_event_lesson_study MATERIALIZE index bcz_uid_idx;
+
+                                                alter table course_event_lesson_study ADD INDEX  term_id_idx term_id TYPE set(0)  GRANULARITY 1
+                                                alter table course_event_lesson_study MATERIALIZE index term_id_idx;
+
+
+                                                alter table course_event_lesson_study DROP index bcz_uid_idx;
+                                                alter table course_event_lesson_study clear  index bcz_uid_idx;
+
+                                                alter table course_event_lesson_study ADD INDEX  bcz_uid_idx bcz_uid TYPE minmax  GRANULARITY 1;
+
+
+
+
+                                                 SELECT
+                                                    bcz_uid,
+                                                    user_id,
+                                                    sku_id,
+                                                    term_id,
+                                                    chapter_id,
+                                                    lesson_id,
+                                                    page_id,
+                                                    event_time,
+                                                    server_time,
+                                                    time_type,
+                                                    time,
+                                                    extra,
+                                                    updated_at,
+                                                    created_at
+                                                FROM course_event_lesson_study1
+                                                WHERE (bcz_uid = 140703747) AND (term_id = 606) AND (sku_id = 9) AND (time_type = 3001) AND (lesson_id IN (149,151))
