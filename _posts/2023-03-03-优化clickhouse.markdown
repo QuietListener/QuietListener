@@ -456,7 +456,7 @@ ALTER TABLE course_event_lesson_study
     ADD PROJECTION proj_term_id_user_id_1
     (
         SELECT *
-        ORDER BY (term_id, bcz_uid, server_time)
+        ORDER BY (term_id, bcz_uid)
     )
 
 Query id: 31e84528-4c9d-44ed-a072-4245f1b52014
@@ -492,4 +492,5 @@ ALTER TABLE course_event_lesson_study
 ```
 
 # 参考资料
-1. https://clickhouse.com/docs/zh/guides/improving-query-performance/sparse-primary-indexes/
+1.  https://clickhouse.com/docs/zh/guides/improving-query-performance/sparse-primary-indexes/
+2.  https://saintbacchus.github.io/2021/07/21/Clickhouse%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB-Projection%E8%B0%83%E7%A0%94/
