@@ -491,6 +491,45 @@ ALTER TABLE course_event_lesson_study
     DROP PROJECTION proj_term_id_user_id_1
 ```
 
+
+# 测试数据构造
+```sql
+SELECT
+    id,
+    text,
+    url
+FROM url('https://datasets-documentation.s3.amazonaws.com/hackernews/clickhouse_hacker_news.csv', CSVWithNames, 'id String,deleted String,type String,by String,time String,text String ,dead String,parent String,poll String,kids String,url String,score String,title String,parts String,descendants String')
+WHERE by = '3manuek'
+LIMIT 5
+
+```
+
+
+建表并且把测试数据插入到表中
+```sql
+CREATE TABLE hacker_news
+(
+    `id` UInt32,
+    `text` String,
+    `url` String
+)
+ENGINE = MergeTree
+PRIMARY KEY tuple()
+ORDER BY tuple()
+SETTINGS index_granularity = 8192
+
+INSERT INTO hacker_news SELECT
+                    id,
+                    text,
+                    url
+                FROM url('https://datasets-documentation.s3.amazonaws.com/hackernews/clickhouse_hacker_news.csv', CSVWithNames, 'id String,deleted String,type String,by String,time String,text String ,dead String,parent String,poll String,kids String,url String,score String,title String,parts String,descendants String')
+ ```               
+
+上面的数据可以用来测试性能
+
 # 参考资料
 1.  https://clickhouse.com/docs/zh/guides/improving-query-performance/sparse-primary-indexes/
 2.  https://saintbacchus.github.io/2021/07/21/Clickhouse%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB-Projection%E8%B0%83%E7%A0%94/
+
+
+
