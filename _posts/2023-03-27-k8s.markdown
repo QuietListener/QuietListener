@@ -1,9 +1,11 @@
 ---
 layout: post
 title: k8s
-date: 2023-03-08 14:32:00
+date: 2023-03-27 14:32:00
 categories:  开发
 ---
+
+1个月时间
 
 # 简介
 
