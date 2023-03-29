@@ -527,9 +527,11 @@ INSERT INTO hacker_news SELECT
 
 上面的数据可以用来测试性能
 
+
+
+# 测试用户
 # 参考资料
 1.  https://clickhouse.com/docs/zh/guides/improving-query-performance/sparse-primary-indexes/
 2.  https://saintbacchus.github.io/2021/07/21/Clickhouse%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB-Projection%E8%B0%83%E7%A0%94/
-
-
-
+3.  ClickHouse导入CSV文件跳过错误【译文】 https://www.jianshu.com/p/126cbcb716c1 
+4.  Clickhouse导入CSV文件 https://www.cnblogs.com/linzepeng/p/15127536.html
