@@ -33,6 +33,9 @@ Kubemetes是谷歌 基于内部的Borg、 Omega及其他谷歌内部系统实践
 2. 主节点：承载着 Kubernetes控制和管理整个集群系统的控制面板，工作节点：它们运行用户实际部署的应用
 
 
+### 安装
+参看这个 链接 https://www.cnblogs.com/tssc/p/15119756.html#_label2_0
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.23.0/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
 ### 控制面板
 controller
 控制面板用于控制集群并使它工作。它包含 多个组件，组件可以运行在单个主 节点上或者通过副本分别部署在多个主节点 以确保高可用性。 这些组件是 :
@@ -46,3 +49,159 @@ controller
 1. Docker、rtk :或者其他的容器类型
 2. Kubelet，它与 API 服务器通信，并管理它 所在节点的容器
 3. Kubernetes Service Proxy (kubenetes proxy)，它负责组件之间的负载均衡网络流量
+
+
+
+# 安装minikube试用
+https://kubernetes.io/zh-cn/docs/tutorials/hello-minikube/
+
+必须装 1.17以下的k8s才能与书《Kubernetes in action》对齐
+```shell
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.28.0/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+
+
+minikube start --vm-driver=vmware --registry-mirror=https://registry.docker-cn.com  --image-mirror-country cn --kubernetes-version=v1.16.3
+```
+
+
+运行第一个pod
+```shell
+kubectl run kubia --image=buptjunjun/kubia --port=8080  replicationcontroller "kubia" created
+```
+
+获取pod状态
+```shell 
+CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
+NAME    READY   STATUS              RESTARTS   AGE
+kubia   0/1     ContainerCreating   0          32s
+```
+
+获取pod详细信息
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl describe pod kubia
+Name:         kubia
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.123.132
+Start Time:   Fri, 31 Mar 2023 18:09:19 +0800
+Labels:       run=kubia
+Annotations:  <none>
+Status:       Pending
+IP:           172.17.0.5
+IPs:
+  IP:  172.17.0.5
+Containers:
+  kubia:
+    Container ID:  
+    Image:         buptjunjun/kubia
+    Image ID:      
+    Port:          8080/TCP
+    Host Port:     0/TCP
+    Args:
+      replicationcontroller
+      kubia
+      created
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qhqlz (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             False 
+  ContainersReady   False 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-qhqlz:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  3m24s                default-scheduler  Successfully assigned default/kubia to minikube
+  Warning  Failed     84s                  kubelet            Failed to pull image "buptjunjun/kubia": rpc error: code = Unknown desc = context deadline exceeded
+  Warning  Failed     84s                  kubelet            Error: ErrImagePull
+  Normal   BackOff    84s                  kubelet            Back-off pulling image "buptjunjun/kubia"
+  Warning  Failed     84s                  kubelet            Error: ImagePullBackOff
+  Normal   Pulling    72s (x2 over 3m23s)  kubelet            Pulling image "buptjunjun/kubia"
+CYA-mbp-3748:k8s yangtingjun$ 
+
+```
+
+
+报错 
+```shell
+  Warning  Failed     9m45s (x4 over 17m)   kubelet            Failed to pull image "buptjunjun/kubia": rpc error: code = Unknown desc = context deadline exceeded
+```
+修复
+```shell
+mbp3748:k8s junjun$ minikube ssh docker pull buptjunjun/kubia
+Using default tag: latest
+latest: Pulling from buptjunjun/kubia
+21f90b3df721: Retrying in 1 second 
+4e14c1a5f55c: Retrying in 1 second 
+9f4cbf65c5bf: Retrying in 1 second 
+```
+上面的方案还是不行。用下面的方法使用本地镜像。
+
+**minikube使用本地镜像**
+https://www.cnblogs.com/xiao2/p/16047455.html
+
+```shell
+# General
+minikube image load <IMAGE_NAME>
+# Example
+minikube image load pz/demo
+```
+
+1. 先执行 load 来加载本地image 然后再运行pod
+
+```shell
+CYA-mbp-3748:k8s yangtingjun$ minikube image load buptjunjun/kubia
+CYA-mbp-3748:k8s yangtingjun$ minikube image ls --format table
+|----------------------------------------------------|---------|---------------|--------|
+|                       Image                        |   Tag   |   Image ID    |  Size  |
+|----------------------------------------------------|---------|---------------|--------|
+| docker.io/kubernetesui/metrics-scraper             | <none>  | 115053965e86b | 43.8MB |
+| registry.k8s.io/coredns/coredns                    | v1.9.3  | 5185b96f0becf | 48.8MB |
+| k8s.gcr.io/pause                                   | 3.6     | 6270bb605e12e | 683kB  |
+| registry.aliyuncs.com/google_containers/echoserver | 1.10    | 365ec60129c54 | 95.4MB |
+| registry.k8s.io/kube-apiserver                     | v1.25.3 | 0346dbd74bcb9 | 128MB  |
+| registry.k8s.io/kube-scheduler                     | v1.25.3 | 6d23ec0e8b87e | 50.6MB |
+| registry.k8s.io/kube-controller-manager            | v1.25.3 | 6039992312758 | 117MB  |
+| registry.k8s.io/kube-proxy                         | v1.25.3 | beaaf00edd38a | 61.7MB |
+| docker.io/kubernetesui/dashboard                   | <none>  | 07655ddf2eebe | 246MB  |
+| registry.k8s.io/pause                              | 3.8     | 4873874c08efc | 711kB  |
+| registry.k8s.io/etcd                               | 3.5.4-0 | a8a176a5d5d69 | 300MB  |
+| gcr.io/k8s-minikube/storage-provisioner            | v5      | 6e38f40d628db | 31.5MB |
+| docker.io/buptjunjun/kubia                         | latest  | caf81ecb1de2a | 660MB  |
+|----------------------------------------------------|---------|---------------|--------|
+CYA-mbp-3748:k8s yangtingjun$ kubectl run kubia --image=buptjunjun/kubia --port=8080  bui replicationcontroller "kubia" created
+pod/kubia created
+CYA-mbp-3748:k8s yangtingjun$ 
+CYA-mbp-3748:k8s yangtingjun$ 
+CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
+NAME    READY   STATUS    RESTARTS   AGE
+kubia   1/1     Running   0          13s
+
+```
+
+
+2. 访问服务
+   pod只能内部访问。 创建 LoadBalancer 类型的服务，将创建一个外部的负载均衡，可以通过负载 均衡的公共 IP访问 pod
+
+
+
+
+1. 删除minikube 
+   https://gist.github.com/rahulkumar-aws/65e6fbe16cc71012cef997957a1530a3
