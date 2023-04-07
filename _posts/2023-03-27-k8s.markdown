@@ -36,6 +36,10 @@ Kubemetes是谷歌 基于内部的Borg、 Omega及其他谷歌内部系统实践
 ### 安装
 参看这个 链接 https://www.cnblogs.com/tssc/p/15119756.html#_label2_0
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.23.0/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
+
+一定要安装v1.7以下的k8s 不然书上的例子跑步起来。
+ minikube start --vm-driver=vmware   --image-mirror-country cn --kubernetes-version=v1.16.0
+
 ### 控制面板
 controller
 控制面板用于控制集群并使它工作。它包含 多个组件，组件可以运行在单个主 节点上或者通过副本分别部署在多个主节点 以确保高可用性。 这些组件是 :
@@ -59,10 +63,18 @@ https://kubernetes.io/zh-cn/docs/tutorials/hello-minikube/
 ```shell
 curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.28.0/minikube-darwin-amd64 && chmod +x minikube && sudo mv minikube /usr/local/bin/
 
-
-minikube start --vm-driver=vmware --registry-mirror=https://registry.docker-cn.com  --image-mirror-country cn --kubernetes-version=v1.16.3
+minikube start --vm-driver=vmware  --image-mirror-country cn --kubernetes-version=v1.16.0
 ```
 
+安装kubectl
+```shell
+CYA-mbp-3748:k8s yangtingjun$ curl -LO https://dl.k8s.io/release/v1.16.0/bin/darwin/amd64/kubectl
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   138  100   138    0     0    146      0 --:--:-- --:--:-- --:--:--   147
+100 50.5M  100 50.5M    0     0  5103k      0  0:00:10  0:00:10 --:--:-- 7190k
+CYA-mbp-3748:k8s yangtingjun$ chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+```
 
 运行第一个pod
 ```shell
@@ -186,16 +198,12 @@ CYA-mbp-3748:k8s yangtingjun$ minikube image ls --format table
 | gcr.io/k8s-minikube/storage-provisioner            | v5      | 6e38f40d628db | 31.5MB |
 | docker.io/buptjunjun/kubia                         | latest  | caf81ecb1de2a | 660MB  |
 |----------------------------------------------------|---------|---------------|--------|
-CYA-mbp-3748:k8s yangtingjun$ kubectl run kubia --image=buptjunjun/kubia --port=8080  bui replicationcontroller "kubia" created
-pod/kubia created
-CYA-mbp-3748:k8s yangtingjun$ 
-CYA-mbp-3748:k8s yangtingjun$ 
-CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
-NAME    READY   STATUS    RESTARTS   AGE
-kubia   1/1     Running   0          13s
 
 ```
 
+```shell
+
+```
 
 2. 访问服务
    pod只能内部访问。 创建 LoadBalancer 类型的服务，将创建一个外部的负载均衡，可以通过负载 均衡的公共 IP访问 pod
@@ -205,3 +213,7 @@ kubia   1/1     Running   0          13s
 
 1. 删除minikube 
    https://gist.github.com/rahulkumar-aws/65e6fbe16cc71012cef997957a1530a3
+
+
+
+ 
