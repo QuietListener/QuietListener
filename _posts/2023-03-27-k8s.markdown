@@ -57,6 +57,7 @@ controller
 
 
 # 安装minikube试用
+## 注意事项
 https://kubernetes.io/zh-cn/docs/tutorials/hello-minikube/
 
 必须装 1.17以下的k8s才能与书《Kubernetes in action》对齐
@@ -66,7 +67,7 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.28.0/minik
 minikube start --vm-driver=vmware  --image-mirror-country cn --kubernetes-version=v1.16.0
 ```
 
-安装kubectl
+## 安装kubectl
 ```shell
 CYA-mbp-3748:k8s yangtingjun$ curl -LO https://dl.k8s.io/release/v1.16.0/bin/darwin/amd64/kubectl
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -76,95 +77,9 @@ CYA-mbp-3748:k8s yangtingjun$ curl -LO https://dl.k8s.io/release/v1.16.0/bin/dar
 CYA-mbp-3748:k8s yangtingjun$ chmod +x kubectl && sudo mv kubectl /usr/local/bin/
 ```
 
-运行第一个pod
-```shell
-kubectl run kubia --image=buptjunjun/kubia --port=8080  replicationcontroller "kubia" created
-```
 
-获取pod状态
-```shell 
-CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
-NAME    READY   STATUS              RESTARTS   AGE
-kubia   0/1     ContainerCreating   0          32s
-```
+## 加载本地镜像
 
-获取pod详细信息
-```shell
-CYA-mbp-3748:k8s yangtingjun$ kubectl describe pod kubia
-Name:         kubia
-Namespace:    default
-Priority:     0
-Node:         minikube/192.168.123.132
-Start Time:   Fri, 31 Mar 2023 18:09:19 +0800
-Labels:       run=kubia
-Annotations:  <none>
-Status:       Pending
-IP:           172.17.0.5
-IPs:
-  IP:  172.17.0.5
-Containers:
-  kubia:
-    Container ID:  
-    Image:         buptjunjun/kubia
-    Image ID:      
-    Port:          8080/TCP
-    Host Port:     0/TCP
-    Args:
-      replicationcontroller
-      kubia
-      created
-    State:          Waiting
-      Reason:       ImagePullBackOff
-    Ready:          False
-    Restart Count:  0
-    Environment:    <none>
-    Mounts:
-      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qhqlz (ro)
-Conditions:
-  Type              Status
-  Initialized       True 
-  Ready             False 
-  ContainersReady   False 
-  PodScheduled      True 
-Volumes:
-  kube-api-access-qhqlz:
-    Type:                    Projected (a volume that contains injected data from multiple sources)
-    TokenExpirationSeconds:  3607
-    ConfigMapName:           kube-root-ca.crt
-    ConfigMapOptional:       <nil>
-    DownwardAPI:             true
-QoS Class:                   BestEffort
-Node-Selectors:              <none>
-Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
-                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
-Events:
-  Type     Reason     Age                  From               Message
-  ----     ------     ----                 ----               -------
-  Normal   Scheduled  3m24s                default-scheduler  Successfully assigned default/kubia to minikube
-  Warning  Failed     84s                  kubelet            Failed to pull image "buptjunjun/kubia": rpc error: code = Unknown desc = context deadline exceeded
-  Warning  Failed     84s                  kubelet            Error: ErrImagePull
-  Normal   BackOff    84s                  kubelet            Back-off pulling image "buptjunjun/kubia"
-  Warning  Failed     84s                  kubelet            Error: ImagePullBackOff
-  Normal   Pulling    72s (x2 over 3m23s)  kubelet            Pulling image "buptjunjun/kubia"
-CYA-mbp-3748:k8s yangtingjun$ 
-
-```
-
-
-报错 
-```shell
-  Warning  Failed     9m45s (x4 over 17m)   kubelet            Failed to pull image "buptjunjun/kubia": rpc error: code = Unknown desc = context deadline exceeded
-```
-修复
-```shell
-mbp3748:k8s junjun$ minikube ssh docker pull buptjunjun/kubia
-Using default tag: latest
-latest: Pulling from buptjunjun/kubia
-21f90b3df721: Retrying in 1 second 
-4e14c1a5f55c: Retrying in 1 second 
-9f4cbf65c5bf: Retrying in 1 second 
-```
-上面的方案还是不行。用下面的方法使用本地镜像。
 
 **minikube使用本地镜像**
 https://www.cnblogs.com/xiao2/p/16047455.html
@@ -201,19 +116,563 @@ CYA-mbp-3748:k8s yangtingjun$ minikube image ls --format table
 
 ```
 
+
+
+## 运行一个pods
 ```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl  run kubia --image=buptjunjun/kubia --port=8080  --generator=run/v1 replicationcontroller "kubia" 
+kubectl run --generator=run/v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
+replicationcontroller/kubia created
+```
+
+
+## 获取pod状态
+```shell 
+CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
+NAME          READY   STATUS    RESTARTS   AGE
+kubia-wzfrg   1/1     Running   0          11m
+CYA-mbp-3748:k8s yangtingjun$ 
+```
+
+## 获取pod详细信息
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl describe pod kubia
+Name:         kubia-wzfrg
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.123.132
+Start Time:   Fri, 07 Apr 2023 10:21:12 +0800
+Labels:       run=kubia
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.3
+IPs:
+  IP:           172.17.0.3
+Controlled By:  ReplicationController/kubia
+Containers:
+  kubia:
+    Container ID:  docker://af0f4f7bb3efa00fbab4a8a2e0a5217be72669b0c3331116e5dce54d729276a6
+    Image:         buptjunjun/kubia
+    Image ID:      docker-pullable://buptjunjun/kubia@sha256:dd9fe26acf20237ce685942a72c289ec8cd9a88e56e74f9b1f728d1bea1b1983
+    Port:          8080/TCP
+    Host Port:     0/TCP
+    Args:
+      replicationcontroller
+      kubia
+    State:          Running
+      Started:      Fri, 07 Apr 2023 10:22:36 +0800
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-tx94q (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-tx94q:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-tx94q
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age        From               Message
+  ----    ------     ----       ----               -------
+  Normal  Scheduled  <unknown>  default-scheduler  Successfully assigned default/kubia-wzfrg to minikube
+  Normal  Pulling    11m        kubelet, minikube  Pulling image "buptjunjun/kubia"
+  Normal  Pulled     10m        kubelet, minikube  Successfully pulled image "buptjunjun/kubia"
+  Normal  Created    10m        kubelet, minikube  Created container kubia
+  Normal  Started    10m        kubelet, minikube  Started container kubia
 
 ```
 
-2. 访问服务
-   pod只能内部访问。 创建 LoadBalancer 类型的服务，将创建一个外部的负载均衡，可以通过负载 均衡的公共 IP访问 pod
+## 访问内部的pod
+
+pod只能内部访问，创建一个Loadbalancer 可以外部访问
+
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl expose rc kubia --type=LoadBalancer --name kubia-http 
+service/kubia-http exposed
+
+CYA-mbp-3748:k8s yangtingjun$ kubectl get services
+NAME         TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1        <none>        443/TCP          41m
+kubia-http   LoadBalancer   10.110.247.198   <pending>     8080:30709/TCP   4m21s
+CYA-mbp-3748:k8s yangtingjun$ 
+
+```
+注意上面的  EXTERNAL-IP   是pending 需要一定时间才有。**但是minikube**一直在pending 有问题。
+解决办法如下 （ minikube tunnel）
+```shell
+CYA-mbp-3748:k8s yangtingjun$  minikube tunnel
+Password:
+Status:	
+	machine: minikube
+	pid: 38111
+	route: 10.96.0.0/12 -> 192.168.123.132
+	minikube: Running
+	services: [kubia-http]
+    errors: 
+		minikube: no errors
+		router: no errors
+		loadbalancer emulator: no errors
+
+
+```
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl get services
+NAME         TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1        <none>           443/TCP          73m
+kubia-http   LoadBalancer   10.110.247.198   10.110.247.198   8080:30709/TCP   36m
+CYA-mbp-3748:k8s yangtingjun$ 
+
+```
 
 
 
+## 水平伸缩
+查看当前的期望副本数(DESIRED)和实际副本数(CURRENT)
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl get replicationcontrollers
+NAME    DESIRED   CURRENT   READY   AGE
+kubia   1         1         1       29m
+```
+
+增加副本数到3
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl scale rc kubia --replicas=3
+replicationcontroller/kubia scaled
+CYA-mbp-3748:k8s yangtingjun$ kubectl get replicationcontrollers
+NAME    DESIRED   CURRENT   READY   AGE
+kubia   3         3         1       30m
+CYA-mbp-3748:k8s yangtingjun$ 
+CYA-mbp-3748:k8s yangtingjun$ kubectl get replicationcontrollers
+NAME    DESIRED   CURRENT   READY   AGE
+kubia   3         3         3       31m
+```
+
+查看所有pods
+```
+CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
+NAME          READY   STATUS    RESTARTS   AGE
+kubia-9d8w2   1/1     Running   0          3m36s
+kubia-brv2b   1/1     Running   0          3m36s
+kubia-wzfrg   1/1     Running   0          34m
+CYA-mbp-3748:k8s yangtingjun$ 
+```
+获取所有服务列表
+
+```shell
+CYA-mbp-3748:k8s yangtingjun$ minikube service list
+|----------------------|---------------------------|--------------|------------------------------|
+|      NAMESPACE       |           NAME            | TARGET PORT  |             URL              |
+|----------------------|---------------------------|--------------|------------------------------|
+| default              | kubernetes                | No node port |
+| default              | kubia-http                |         8080 | http://192.168.123.132:30709 |
+| kube-system          | kube-dns                  | No node port |
+| kubernetes-dashboard | dashboard-metrics-scraper | No node port |
+| kubernetes-dashboard | kubernetes-dashboard      | No node port |
+|----------------------|---------------------------|--------------|------------------------------|
+
+```
 
 1. 删除minikube 
    https://gist.github.com/rahulkumar-aws/65e6fbe16cc71012cef997957a1530a3
+   
+
+
+# POD 
+## 什么事POD
+1. Kubemetes 集群中的所有 pod 都在同一个共享网络地址空间中。
+2. POD中可以部署多个container
+3. 怎么决定要不要在POD中部署多个container
+  它们需要 一起运行还是可以在不同的主机上运行?
+  它们代表的是一个整体还是相互独立的组件?
+  它们必须一起进行扩缩容还是可 以分别进行?
+
+
+## 查看POD的配置
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl get po kubia-9d8w2  -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2023-04-07T02:51:54Z"
+  generateName: kubia-
+  labels:
+    run: kubia
+  name: kubia-9d8w2
+  namespace: default
+  ownerReferences:
+  - apiVersion: v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicationController
+    name: kubia
+    uid: 0b4dde74-1c83-4909-81fd-4f91db323cb4
+  resourceVersion: "2810"
+  selfLink: /api/v1/namespaces/default/pods/kubia-9d8w2
+  uid: 7cf81a5a-69d5-4008-a4b7-e2056a796250
+spec:
+  containers:
+  - args:
+    - replicationcontroller
+    - kubia
+    image: buptjunjun/kubia
+    imagePullPolicy: Always
+    name: kubia
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-tx94q
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: minikube
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: default-token-tx94q
+    secret:
+      defaultMode: 420
+      secretName: default-token-tx94q
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2023-04-07T02:51:54Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2023-04-07T02:52:36Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2023-04-07T02:52:36Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2023-04-07T02:51:54Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://7c22a2ec08eb77b6ea534b9210c459839ab8a0323049b0873bf82f7f0e9af6ce
+    image: buptjunjun/kubia:latest
+    imageID: docker-pullable://buptjunjun/kubia@sha256:dd9fe26acf20237ce685942a72c289ec8cd9a88e56e74f9b1f728d1bea1b1983
+    lastState: {}
+    name: kubia
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2023-04-07T02:52:35Z"
+  hostIP: 192.168.123.132
+  phase: Running
+  podIP: 172.17.0.6
+  podIPs:
+  - ip: 172.17.0.6
+  qosClass: BestEffort
+  startTime: "2023-04-07T02:51:54Z"
+CYA-mbp-3748:k8s yangtingjun$ 
+
+```
 
 
 
- 
+## 通过文件穿件pod
+文件kubia-mannual.yaml
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: kubia-mannual
+
+spec:
+  containers:
+    - image: buptjunjun/kubia
+      name: kubia
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+```
+
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl create -f kubia-manual.yaml 
+pod/kubia-mannual created
+CYA-mbp-3748:c2 yangtingjun$ kubectl get pods
+NAME            READY   STATUS    RESTARTS   AGE
+kubia-9d8w2     1/1     Running   0          161m
+kubia-brv2b     1/1     Running   0          161m
+kubia-mannual   1/1     Running   0          85s
+kubia-wzfrg     1/1     Running   0          3h12m
+```
+
+查看pod运行日志:
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl logs kubia-mannual
+Kubia server starting ...
+```
+
+-c指定容器
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl logs kubia-mannual -c kubia
+Kubia server starting ...
+CYA-mbp-3748:c2 yangtingjun$ 
+```
+
+
+## 通过端口转发向指定pod发送请求。
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl port-forward kubia-mannual 11000:8080
+Forwarding from 127.0.0.1:11000 -> 8080
+Forwarding from [::1]:11000 -> 8080
+```
+访问
+```shell
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ curl "localhost:11000"
+ you have hit kubia-mannual
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ 
+```
+使用端口转发可以用来测试特定的pod
+
+## 使用标签组织pod
+添加 **kubia-manual-v2.yaml**
+```
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: kubia-mannual-v2
+# 加入标签  
+  labels: 
+    creation_method: mannual
+    env: prod
+
+spec:
+  containers:
+    - image: buptjunjun/kubia
+      name: kubia
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+```
+
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl create -f kubia-manual-v2.yaml 
+pod/kubia-mannual-v2 created
+CYA-mbp-3748:c2 yangtingjun$ kubectl get po --show-labels
+NAME               READY   STATUS              RESTARTS   AGE     LABELS
+kubia-9d8w2        1/1     Running             0          179m    run=kubia
+kubia-brv2b        1/1     Running             0          179m    run=kubia
+kubia-mannual      1/1     Running             0          19m     <none>
+kubia-mannual-v2   0/1     ContainerCreating   0          15s     creation_method=mannual,env=prod
+kubia-wzfrg        1/1     Running             0          3h30m   run=kubia
+CYA-mbp-3748:c2 yangtingjun$ 
+```
+## 修改pod的leabel
+
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl label po kubia-mannual-v2 env=debug --overwrite
+pod/kubia-mannual-v2 labeled
+CYA-mbp-3748:c2 yangtingjun$ kubectl get po --show-labels
+NAME               READY   STATUS    RESTARTS   AGE     LABELS
+kubia-9d8w2        1/1     Running   0          3h5m    run=kubia
+kubia-brv2b        1/1     Running   0          3h5m    run=kubia
+kubia-mannual      1/1     Running   0          25m     <none>
+kubia-mannual-v2   1/1     Running   0          5m54s   creation_method=mannual,env=debug
+kubia-wzfrg        1/1     Running   0          3h36m   run=kubia
+CYA-mbp-3748:c2 yangtingjun$ 
+```
+
+
+## 用标签来过滤
+```shell
+
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ kubectl get po -l creation_method=mannual
+NAME               READY   STATUS    RESTARTS   AGE
+kubia-mannual-v2   1/1     Running   0          7m16s
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ kubectl get po -l env
+NAME               READY   STATUS    RESTARTS   AGE
+kubia-mannual-v2   1/1     Running   0          7m26s
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ kubectl get po -l creation_method!=mannual
+NAME            READY   STATUS    RESTARTS   AGE
+kubia-9d8w2     1/1     Running   0          3h8m
+kubia-brv2b     1/1     Running   0          3h8m
+kubia-mannual   1/1     Running   0          28m
+kubia-wzfrg     1/1     Running   0          3h39m
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ 
+```
+
+
+
+## 将pod调度到指定的node
+
+看看有的node
+```shell
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ kubectl get nodes --show-labels
+NAME       STATUS   ROLES    AGE     VERSION   LABELS
+minikube   Ready    master   4h10m   v1.16.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,kubernetes.io/arch=amd64,kubernetes.io/hostname=minikube,kubernetes.io/os=linux,minikube.k8s.io/commit=986b1ebd987211ed16f8cc10aed7d2c42fc8392f,minikube.k8s.io/name=minikube,minikube.k8s.io/primary=true,minikube.k8s.io/updated_at=2023_04_07T09_58_36_0700,minikube.k8s.io/version=v1.28.0,node-role.kubernetes.io/master=
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ 
+
+```
+minikube这个节点打上gpu=true的标签
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl label node minikube  gpu=rue
+node/minikube labeled
+CYA-mbp-3748:c2 yangtingjun$ kubectl get node  --show-labels
+NAME       STATUS   ROLES    AGE     VERSION   LABELS
+minikube   Ready    master   4h13m   v1.16.0   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,gpu=rue,kubernetes.io/arch=amd64,kubernetes.io/hostname=minikube,kubernetes.io/os=linux,minikube.k8s.io/commit=986b1ebd987211ed16f8cc10aed7d2c42fc8392f,minikube.k8s.io/name=minikube,minikube.k8s.io/primary=true,minikube.k8s.io/updated_at=2023_04_07T09_58_36_0700,minikube.k8s.io/version=v1.28.0,node-role.kubernetes.io/master=
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ kubectl get nodes -L gpu=true
+NAME       STATUS   ROLES    AGE     VERSION   GPU=TRUE
+minikube   Ready    master   4h14m   v1.16.0   
+CYA-mbp-3748:quietlistener.github.io yangtingjun$ 
+```
+
+新建一个配置文件
+kubia-gpu.yaml
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: kubia-gpu
+# 加入标签  
+  labels: 
+    creation_method: mannual
+    env: prod
+
+spec:
+#节点选择器要求kubernetes将pod部署到包含gpu=true的节点
+  nodeSelector:  
+    gpu: "true"
+  containers:
+    - image: buptjunjun/kubia
+      name: kubia
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+```
+
+创建node并，会被调度到gpu=true的节点
+
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl create -f kubia-manual-gpu.yaml 
+pod/kubia-gpu created
+CYA-mbp-3748:c2 yangtingjun$ kubectl get po --show-labels
+NAME               READY   STATUS    RESTARTS   AGE     LABELS
+kubia-9d8w2        1/1     Running   0          3h28m   run=kubia
+kubia-brv2b        1/1     Running   0          3h28m   run=kubia
+kubia-gpu          1/1     Running   0          30s     creation_method=mannual,env=prod
+kubia-mannual      1/1     Running   0          48m     <none>
+kubia-mannual-v2   1/1     Running   0          29m     creation_method=mannual,env=debug
+kubia-wzfrg        1/1     Running   0          3h59m   run=kubia
+CYA-mbp-3748:c2 yangtingjun$ 
+```
+
+## 命名空间namespace
+1. 一个pod可以有多个标签，但是一个pod只能属于一个命名空间，所以命名空间可以将pod分割成不重复的域中。
+2. 资源在命名空间中保持唯一，在不同命名空间可以重复。
+
+### 命名空间相关操作 
+列出所有命名空间
+```shell
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ kubectl get ns
+NAME                   STATUS   AGE
+default                Active   4h32m
+kube-node-lease        Active   4h32m
+kube-public            Active   4h32m
+kube-system            Active   4h32m
+kubernetes-dashboard   Active   4h8m
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ 
+```
+
+列出指定命名空间的pod
+```shell
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ kubectl get po --namespace=kube-system
+NAME                               READY   STATUS    RESTARTS   AGE
+coredns-67c766df46-x9cm4           1/1     Running   0          4h33m
+etcd-minikube                      1/1     Running   0          4h32m
+kube-apiserver-minikube            1/1     Running   0          4h32m
+kube-controller-manager-minikube   1/1     Running   0          4h33m
+kube-proxy-pch9n                   1/1     Running   0          4h33m
+kube-scheduler-minikube            1/1     Running   0          4h32m
+storage-provisioner                1/1     Running   1          4h33m
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ 
+```
+
+
+
+### 创建namespace
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl create -f  namespace-create-custom.yaml 
+namespace/custom-namespace created
+CYA-mbp-3748:c2 yangtingjun$ 
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ kubectl get ns
+NAME                   STATUS   AGE
+custom-namespace       Active   38s
+default                Active   4h39m
+kube-node-lease        Active   4h39m
+kube-public            Active   4h39m
+kube-system            Active   4h39m
+kubernetes-dashboard   Active   4h14m
+CYA-mbp-3748:apache-jmeter-5.4.3 yangtingjun$ 
+```
+
+在pod配置文件中指定namespace
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: kubia-mannual
+  #指定namespace
+  namespace: custom-namespace 
+
+spec:
+  containers:
+    - image: buptjunjun/kubia
+      name: kubia
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+```
+
+创建pod
+```shell
+CYA-mbp-3748:c2 yangtingjun$ kubectl create -f  kubia-manual-with-namespce.yaml 
+pod/kubia-mannual created
+CYA-mbp-3748:c2 yangtingjun$ kubectl get po --namespace=custom-namespace
+NAME            READY   STATUS    RESTARTS   AGE
+kubia-mannual   1/1     Running   0          69s
+CYA-mbp-3748:c2 yangtingjun$ 
+```
+**现在有两个name为kubia-mannual的pod一个在default空间一个在custom-namespace空间**
+
+
+## 删除/停止pod
+可以按p名字、标签、namespace来删除(停止)pod
+
+
+# 副本机制和其他控制器
