@@ -404,7 +404,7 @@ CYA-mbp-3748:k8s yangtingjun$
 
 
 
-## 通过文件穿件pod
+## 通过文件创建pod
 文件kubia-mannual.yaml
 ```yaml
 apiVersion: v1
@@ -675,4 +675,110 @@ CYA-mbp-3748:c2 yangtingjun$
 可以按p名字、标签、namespace来删除(停止)pod
 
 
+
+
+
 # 副本机制和其他控制器
+
+## pod健康
+### pod保活 探针
+Kubemetes 可 以通过存活探针 (liveness probe) 检查容器是否还在运行。 可以 为 pod 中的每个容器单独指定存活探针。 如果探测失败， Kubemetes 将定期执行探 针并重新启动容器。
+### 三种探针
+#### HTTP探针
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: kubia-liveness-probe
+
+spec:
+  containers:
+    - image: buptjunjun/kubia-unhealth
+      name: kubia
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      livenessProbe:   #存活探针
+        httpGet:
+          path: /
+          port: 8080     
+        initialDelaySeconds: 15 #15秒后才发起探测
+```
+
+
+## RplicationController ReplicaSets DeamonSets
+
+## Job 创建一次性任务
+
+
+# 服务 service
+   1.  创建服务，它的ip地址是不变的，
+   2.  通过穿件服务能让前端的pod通过环境变量或者dns或者服务名来访问后端服务。
+
+```shell
+CYA-mbp-3748:k8s yangtingjun$ minikube service list
+|----------------------|---------------------------|--------------|------------------------------|
+|      NAMESPACE       |           NAME            | TARGET PORT  |             URL              |
+|----------------------|---------------------------|--------------|------------------------------|
+| default              | kubernetes                | No node port |
+| default              | kubia-http                |         8080 | http://192.168.123.132:30709 |
+| kube-system          | kube-dns                  | No node port |
+| kubernetes-dashboard | dashboard-metrics-scraper | No node port |
+| kubernetes-dashboard | kubernetes-dashboard      | No node port |
+|----------------------|---------------------------|--------------|------------------------------|
+CYA-mbp-3748:k8s yangtingjun$ kubectl get svc
+NAME         TYPE           CLUSTER-IP       EXTERNAL-IP      PORT(S)          AGE
+kubernetes   ClusterIP      10.96.0.1        <none>           443/TCP          7d4h
+kubia-http   LoadBalancer   10.110.247.198   10.110.247.198   8080:30709/TCP   7d3h
+CYA-mbp-3748:k8s yangtingjun$ kubectl get pods
+NAME               READY   STATUS    RESTARTS   AGE
+kubia-9d8w2        1/1     Running   1          7d3h
+kubia-brv2b        1/1     Running   1          7d3h
+kubia-gpu          1/1     Running   1          7d
+kubia-mannual      1/1     Running   1          7d
+kubia-mannual-v2   1/1     Running   1          7d
+kubia-wzfrg        1/1     Running   1          7d4h
+CYA-mbp-3748:k8s yangtingjun$ kubectl exec kubia-9d8w2 -- curl -s http://10.110.247.198:8080
+ you have hit kubia-wzfrg
+CYA-mbp-3748:k8s yangtingjun$ 
+```
+
+
+查看环境变量
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl exec kubia-9d8w2 --  env
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=kubia-9d8w2
+KUBERNETES_SERVICE_PORT_HTTPS=443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_PORT_443_TCP_PORT=443
+KUBERNETES_PORT=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBIA_HTTP_PORT=tcp://10.110.247.198:8080
+KUBIA_HTTP_PORT_8080_TCP_ADDR=10.110.247.198
+KUBIA_HTTP_SERVICE_PORT=8080
+KUBIA_HTTP_PORT_8080_TCP=tcp://10.110.247.198:8080
+KUBIA_HTTP_PORT_8080_TCP_PROTO=tcp
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBIA_HTTP_SERVICE_HOST=10.110.247.198
+KUBIA_HTTP_PORT_8080_TCP_PORT=8080
+NPM_CONFIG_LOGLEVEL=info
+NODE_VERSION=7.10.1
+YARN_VERSION=0.24.4
+HOME=/root
+```
+
+其中 KUBIA_HTTP_SERVICE_HOST=10.110.247.198 和 KUBIA_HTTP_SERVICE_PORT=8080 表示kubia-http的的ip地址和端口
+
+通过dns访问
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl  exec -it kubia-9d8w2
+root@kubia-9d8w2:/# curl http://kubia-http:8080                             
+ you have hit kubia-wzfrg
+root@kubia-9d8w2:/# curl http://kubia-http.default:8080
+ you have hit kubia-brv2b
+root@kubia-9d8w2:/# curl http://kubia-http.default:8080
+```
