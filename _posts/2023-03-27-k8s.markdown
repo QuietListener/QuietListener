@@ -782,3 +782,38 @@ root@kubia-9d8w2:/# curl http://kubia-http.default:8080
  you have hit kubia-brv2b
 root@kubia-9d8w2:/# curl http://kubia-http.default:8080
 ```
+
+
+## endpoint
+服务并不是直接和后端的pod相连，有Endpoint介于二者之间。
+下面可以看到 kubia-http有Endpoint，通过selector来创建的。
+
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl describe svc kubia-http
+Name:                     kubia-http
+Namespace:                default
+Labels:                   run=kubia
+Annotations:              <none>
+Selector:                 run=kubia
+Type:                     LoadBalancer
+IP:                       10.110.247.198
+LoadBalancer Ingress:     10.110.247.198
+Port:                     <unset>  8080/TCP
+TargetPort:               8080/TCP
+NodePort:                 <unset>  30709/TCP
+Endpoints:                172.17.0.10:8080,172.17.0.5:8080,172.17.0.7:8080
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+CYA-mbp-3748:k8s yangtingjun$ 
+```
+
+endpoint就是暴露一个服务的ip地址和端口列表。
+选择器 Selector用于IP和端口列表然后存储在Endpoint资源中。当客户端链接到服务时候，服务代理悬着这些ip和端口中的一个，并将传入链接重定向在改位置监听的服务器。
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl get endpoints
+NAME         ENDPOINTS                                          AGE
+kubernetes   192.168.123.132:8443                               7d5h
+kubia-http   172.17.0.10:8080,172.17.0.5:8080,172.17.0.7:8080   7d4h
+
+```
