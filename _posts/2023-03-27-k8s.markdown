@@ -817,3 +817,88 @@ kubernetes   192.168.123.132:8443                               7d5h
 kubia-http   172.17.0.10:8080,172.17.0.5:8080,172.17.0.7:8080   7d4h
 
 ```
+
+## 保服务暴露给外部服务。
+### 使用NodePort
+将一组pod公开给外部客户端，创建一个服务 并将其类型设置为NodePort，NodePort服务可以在其所有节点上保留一个端口，并将传入的链接转发给作为服务部分的pod。
+
+
+## Ingress
+只需要暴露一个公网ip就可以通过主机名和路径来转发到的服务。有点像nginx
+
+查看和启动ingress
+```shell
+CYA-mbp-3748:k8s yangtingjun$ minikube addons list
+|-----------------------------|----------|--------------|--------------------------------|
+|         ADDON NAME          | PROFILE  |    STATUS    |           MAINTAINER           |
+|-----------------------------|----------|--------------|--------------------------------|
+| ambassador                  | minikube | disabled     | 3rd party (Ambassador)         |
+| auto-pause                  | minikube | disabled     | Google                         |
+| cloud-spanner               | minikube | disabled     | Google                         |
+| csi-hostpath-driver         | minikube | disabled     | Kubernetes                     |
+| dashboard                   | minikube | enabled ✅   | Kubernetes                     |
+| default-storageclass        | minikube | enabled ✅   | Kubernetes                     |
+| efk                         | minikube | disabled     | 3rd party (Elastic)            |
+| freshpod                    | minikube | disabled     | Google                         |
+| gcp-auth                    | minikube | disabled     | Google                         |
+| gvisor                      | minikube | disabled     | Google                         |
+| headlamp                    | minikube | disabled     | 3rd party (kinvolk.io)         |
+| helm-tiller                 | minikube | disabled     | 3rd party (Helm)               |
+| inaccel                     | minikube | disabled     | 3rd party (InAccel             |
+|                             |          |              | [info@inaccel.com])            |
+| ingress                     | minikube | disabled     | Kubernetes                     |
+| ingress-dns                 | minikube | disabled     | Google                         |
+| istio                       | minikube | disabled     | 3rd party (Istio)              |
+| istio-provisioner           | minikube | disabled     | 3rd party (Istio)              |
+| kong                        | minikube | disabled     | 3rd party (Kong HQ)            |
+| kubevirt                    | minikube | disabled     | 3rd party (KubeVirt)           |
+| logviewer                   | minikube | disabled     | 3rd party (unknown)            |
+| metallb                     | minikube | disabled     | 3rd party (MetalLB)            |
+| metrics-server              | minikube | disabled     | Kubernetes                     |
+| nvidia-driver-installer     | minikube | disabled     | Google                         |
+| nvidia-gpu-device-plugin    | minikube | disabled     | 3rd party (Nvidia)             |
+| olm                         | minikube | disabled     | 3rd party (Operator Framework) |
+| pod-security-policy         | minikube | disabled     | 3rd party (unknown)            |
+| portainer                   | minikube | disabled     | 3rd party (Portainer.io)       |
+| registry                    | minikube | disabled     | Google                         |
+| registry-aliases            | minikube | disabled     | 3rd party (unknown)            |
+| registry-creds              | minikube | disabled     | 3rd party (UPMC Enterprises)   |
+| storage-provisioner         | minikube | enabled ✅   | Google                         |
+| storage-provisioner-gluster | minikube | disabled     | 3rd party (Gluster)            |
+| volumesnapshots             | minikube | disabled     | Kubernetes                     |
+|-----------------------------|----------|--------------|--------------------------------|
+CYA-mbp-3748:k8s yangtingjun$ minikube addons enable ingress
+💡  ingress is an addon maintained by Kubernetes. For any concerns contact minikube on GitHub.
+You can view the list of minikube maintainers at: https://github.com/kubernetes/minikube/blob/master/OWNERS
+    ▪ Using image registry.cn-hangzhou.aliyuncs.com/google_containers/nginx-ingress-controller:v0.49.3
+    ▪ Using image registry.cn-hangzhou.aliyuncs.com/google_containers/kube-webhook-certgen:v1.5.1
+    ▪ Using image registry.cn-hangzhou.aliyuncs.com/google_containers/kube-webhook-certgen:v1.5.1
+🔎  Verifying ingress addon...
+🌟  启动 'ingress' 插件
+CYA-mbp-3748:k8s yangtingjun$ 
+```
+
+
+查看一下ingress服务是nginx实现的。
+```shell
+CYA-mbp-3748:k8s yangtingjun$ kubectl get po --all-namespaces
+NAMESPACE              NAME                                         READY   STATUS      RESTARTS   AGE
+custom-namespace       kubia-mannual                                1/1     Running     1          7d1h
+default                kubia-9d8w2                                  1/1     Running     1          7d5h
+default                kubia-brv2b                                  1/1     Running     1          7d5h
+default                kubia-wzfrg                                  1/1     Running     1          7d6h
+ingress-nginx          ingress-nginx-admission-create-w2n68         0/1     Completed   0          3m34s
+ingress-nginx          ingress-nginx-admission-patch-6hmqz          0/1     Completed   0          3m34s
+ingress-nginx          ingress-nginx-controller-964545c5f-bdhwn     1/1     Running     0          3m34s
+kube-system            coredns-67c766df46-x9cm4                     1/1     Running     1          7d6h
+kube-system            etcd-minikube                                1/1     Running     1          7d6h
+kube-system            kube-apiserver-minikube                      1/1     Running     1          7d6h
+kube-system            kube-controller-manager-minikube             1/1     Running     2          7d6h
+kube-system            kube-proxy-pch9n                             1/1     Running     1          7d6h
+kube-system            kube-scheduler-minikube                      1/1     Running     1          7d6h
+kube-system            storage-provisioner                          1/1     Running     7          7d6h
+kubernetes-dashboard   dashboard-metrics-scraper-7fb9859764-wtf5d   1/1     Running     1          7d6h
+kubernetes-dashboard   kubernetes-dashboard-59d54d6bc8-4l757        1/1     Running     2          7d6h
+CYA-mbp-3748:k8s yangtingjun$ 
+
+```
