@@ -13,6 +13,13 @@ categories:  开发
    
 经过考虑，打算在网关(springgateway)侧补齐这些功能。
 
+# spring gateway 一些基本概念。
+
+# 架构设计
+
+# 详细设计
+
+
 
 # 参考：
 
