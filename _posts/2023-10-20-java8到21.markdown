@@ -1,0 +1,19 @@
+---
+layout: post
+title: java8到21
+date: 2023-10-20 22:32:00
+categories:  开发
+---
+
+# 背景
+java21 有了虚拟线程，让我有了动力升级
+
+# 参考
+1.  java9 到 17 新特性
+    https://pdai.tech/md/java/java8up/java17.html
+    
+2.  java19新特性
+    https://zhuanlan.zhihu.com/p/533839229 
+
+3.  java21 新特性
+    https://www.21cto.com/article/7063262808363470
