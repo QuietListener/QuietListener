@@ -29,8 +29,3 @@ DDD（领域模型设计）算是一种非常高纬度的设计，属于“业�
 
 # 课程平台的DDD实践
 ## 课程平台有 两块大领域，一是课程内容制作，一块是用户期课。我们可以分为两个界限上下文。
-
-
-
-curl --location --request GET 'https://cap.test-env.baicizhan.com/api/v1/study/futureSkill/trainee/myCourses' \
---header 'access_token: vqR2cYHlEtdA6vQjtqI4lEp3ZLZMacaM2yuloqbYi24=' 
